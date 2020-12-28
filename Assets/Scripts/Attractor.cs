@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Attractor : MonoBehaviour
 {
-    public const float G = 667.4f;
+    public const float G = 66.74f;
     public Rigidbody body;
     public Rigidbody gravigaTarget;
     public float gravigaMultiplier = 1.0f;
@@ -18,7 +18,7 @@ public class Attractor : MonoBehaviour
         {
             if (this != attractor)
             {
-                if (gravigaTarget == attractor)
+                if (gravigaTarget == attractor.body)
                 {
                     Attract(attractor, gravigaMultiplier);
                 }
@@ -39,7 +39,7 @@ public class Attractor : MonoBehaviour
 
         Debug.Log(string.Format("distance: {0}", distance));
 
-        float forceMagnitude = ((body.mass * otherBody.mass) / Mathf.Pow(distance, 2));
+        float forceMagnitude = ((body.mass * otherBody.mass) / Mathf.Pow(distance, 2)) * G;
 
         Debug.Log(string.Format("forceMagnitude: {0}", forceMagnitude));
         Debug.Log(string.Format("gravigaMultiplier: {0}", gravigaMultiplier));
