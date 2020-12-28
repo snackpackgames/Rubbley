@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿// Adapted from https://github.com/Brackeys/Gravity-Simulation-Tutorial
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
