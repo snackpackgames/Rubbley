@@ -1,0 +1,22 @@
+name: Acquire Unity Activation File
+on: workflow_dispatch
+jobs:
+  activation:
+    name: Request manual activation file
+    runs-on: ubuntu-latest
+    steps:
+
+      # Acquire activation file
+      - name: Unity - Activate
+        id: getManualLicenseFile
+        uses: game-ci/unity-activate@v1.3
+        with:
+          unityVersion: 2019.4.16f1
+       
+      # Upload artifact
+      - name: Upload Activation File
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+        
