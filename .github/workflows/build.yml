@@ -26,7 +26,7 @@ jobs:
 
       # Build
       - name: Build Unity Project
-        uses: game-ci/unity-builder@v1.5
+        uses: game-ci/unity-builder@v2.0-aplha-5
         with:
           unityVersion: 2019.4.14f1
           targetPlatform: StandaloneWindows
