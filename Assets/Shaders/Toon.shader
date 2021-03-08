@@ -109,7 +109,7 @@
                 // how far along the rim the lighting should extend
 
                 float4 rimDot = 1 - dot(viewDir, normal);
-                float rimIntensity = rimDot * pow(NdotL, _RimThreshold);
+                float rimIntensity = rimDot * pow(NdotL * lightIntensity, _RimThreshold);
                 rimIntensity = smoothstep(_RimAmount - 0.01, _RimAmount + 0.01, rimIntensity);
 
                 // Determine the color of the rim lighting by adding the shader parameter (_RimColor)
