@@ -5,6 +5,7 @@ using UnityEngine;
 public class Orbit : MonoBehaviour
 {
     public float orbitSpeed = default;
+    public SphereCollider orbitTrigger = default;
     private float orbitRadius = default;
 
     private Rigidbody rbRef = default;
@@ -13,7 +14,6 @@ public class Orbit : MonoBehaviour
 
     void Awake()
     {
-        SphereCollider orbitTrigger = GetComponent<SphereCollider>();
         orbitRadius = orbitTrigger.radius;
         rbRef = GetComponentInParent<Rigidbody>();
     }
@@ -55,5 +55,6 @@ public class Orbit : MonoBehaviour
             Transform pivot = child.GetComponent<Transform>().parent.transform;
             pivot.rotation = pivot.rotation * Quaternion.Euler(0, 0, 1 * orbitSpeed);
         }
+
     }
 }
