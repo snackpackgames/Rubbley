@@ -1,0 +1,24 @@
+{
+  "extraKnownMarketplaces": {
+    "snackpackgames": {
+      "source": {
+        "source": "github",
+        "repo": "snackpackgames/snackpackgames-claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "snackpackgames-claude-plugins@snackpackgames": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(gh *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:docs.godotengine.org)"
+    ]
+  }
+}

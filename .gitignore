@@ -80,3 +80,7 @@ InitTestScene*.unity
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/unity,vscode
+
+# Claude Code
+.claude/settings.local.json
+.claude/worktrees/
