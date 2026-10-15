@@ -30,6 +30,10 @@ Two plugins are enabled in `.claude/settings.json`: `superpowers` and `snackpack
 /plugin install snackpackgames-claude-plugins@snackpackgames
 ```
 
+## Pull requests
+
+Before opening or updating a PR, follow the metadata checklist in [`CONTRIBUTING.md`](CONTRIBUTING.md): assignee, labels, linked issues, milestone.
+
 ## Agent skills
 
 ### Issue tracker
