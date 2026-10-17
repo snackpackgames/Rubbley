@@ -59,3 +59,21 @@ _Avoid_: pan, camera drag, look
 **Camera Zone**:
 A region of a level that widens the view while Rubbley is inside it, such as a boss arena. It can show more of the level but never less than Rubbley's size calls for.
 _Avoid_: camera trigger, framing volume
+
+### Characters
+
+**Character**:
+Any body that has a Floating Face and animates its body. It is an animation-side idea that cuts across the gravity classes: a Character can be a Celestial Body or a Passive Body.
+_Avoid_: NPC, actor, creature
+
+**Floating Face**:
+A flat 2D face that hovers just off one side of a body, showing its current Expression. It is a separate layer, not painted onto the body's surface. Any body can have one; Rubbley, planets and large enemies are the usual cases.
+_Avoid_: decal, face texture, portrait, face (unqualified)
+
+**Expression**:
+One named state a Floating Face can show, such as neutral, hurt or talking. It may be a single still or a short loop.
+_Avoid_: emotion, mood, emote
+
+**Reaction**:
+A Character's named response to something that happens to it, such as being hit, captured into Orbit or breaking apart. One Reaction sets the Expression, the body animation and where the eyes look, all together.
+_Avoid_: emote, animation event
