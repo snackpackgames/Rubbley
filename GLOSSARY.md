@@ -49,3 +49,13 @@ _Avoid_: shockwave, flick
 **Spin**:
 A brief shield all the way around Rubbley that deflects whatever hits it. Spin is about timing, not aiming.
 _Avoid_: deflector (as the move's name), parry
+
+### Camera
+
+**Nudge**:
+A temporary shift of the view away from Rubbley that the player holds to peek ahead. It springs back to centre when released and never pushes Rubbley off screen.
+_Avoid_: pan, camera drag, look
+
+**Camera Zone**:
+A region of a level that widens the view while Rubbley is inside it, such as a boss arena. It can show more of the level but never less than Rubbley's size calls for.
+_Avoid_: camera trigger, framing volume
