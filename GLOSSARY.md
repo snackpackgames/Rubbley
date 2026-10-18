@@ -70,6 +70,20 @@ _Avoid_: camera trigger, framing volume
 The weakest device Rubbley promises to run well on, which defines the support floor for its platform. Weaker devices may install the game but are unsupported.
 _Avoid_: low-end device, min spec (unqualified), test phone
 
+### Monetisation
+
+**Full Game**:
+Every level and feature Rubbley offers. It is what Steam and Epic sell and what the Unlock grants.
+_Avoid_: paid version, pro, premium (as a noun)
+
+**Free Tier**:
+The set of always-free levels anyone can play without paying. It is all itch.io offers and where mobile players start.
+_Avoid_: demo, lite, trial
+
+**Unlock**:
+The single one-time purchase on mobile that turns the Free Tier into the Full Game.
+_Avoid_: IAP (unqualified), upgrade, premium unlock
+
 ### Characters
 
 **Character**:
