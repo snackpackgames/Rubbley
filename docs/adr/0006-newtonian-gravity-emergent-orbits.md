@@ -1,6 +1,6 @@
 # Newtonian gravity between Celestial Bodies, with emergent orbits
 
-Gravity is Newtonian (equal and opposite forces), but only a few **Celestial Bodies** pull. Everything else is a **Passive Body**: it gets pulled but pulls nothing back. The GDD's mass rule ("the heavier body is the centre point") isn't coded anywhere. It follows from Newton, because the heavier body barely moves. Orbits are real physics, not scripted. An always-on capture assist nudges a slow, lighter body inside a Capture Radius toward a circular orbit, but the body stays dynamic, so Repel or a collision can still sling it out. Gravega moves are multipliers on the pairwise force: Attract is a multiplier above 1, Repel is negative, and Attract on self multiplies all of Rubbley's pairs.
+Gravity is Newtonian (equal and opposite forces), but only a few **Celestial Bodies** pull. Everything else is a **Passive Body**: it gets pulled but pulls nothing back. The GDD's mass rule ("the heavier body is the centre point") isn't coded anywhere. It follows from Newton, because the heavier body barely moves. Orbits are real physics, not scripted. An always-on capture assist nudges a slow, lighter body inside a Capture Radius toward a circular orbit, but the body stays dynamic, so Repel or a collision can still sling it out. Attract is a Gravega multiplier above 1 on the pairwise force, and Attract on self multiplies all of Rubbley's pairs. Repel is one-shot (see [ADR 0012](0012-aim-decides-the-move.md)): targeted Repel is an equal-and-opposite impulse along the Rubbley↔target line, divided by each body's mass, so the mass rule still decides who moves.
 
 ## Considered Options
 
@@ -14,5 +14,5 @@ Gravity is Newtonian (equal and opposite forces), but only a few **Celestial Bod
 - Inverse-square falloff is softened and cut off at a maximum range. Unity's `G` and masses are not carried over; all values are retuned and kept in tuning data.
 - Gravity Wells and Anchored Bodies use Area point gravity. Wells pull Rubbley too. Only bodies that both pull and move go through the GDScript seam.
 - Capture assist and Drift are separate force contributors next to the pairwise loop, not inside it.
-- Repel Pulse and Spin are impulses and collision shapes outside the gravity seam.
+- Targeted Repel, Repel Pulse, Gravity Ripple and Spin are impulses and collision shapes outside the gravity seam. A Gravity Ripple is a one-shot radial impulse from a point in space, divided by mass and falling off with distance. It pushes Rubbley too if he's in range, is weaker than a Repel Pulse and doesn't stun.
 - Each body type has a speed cap and light damping. Rubbley and projectiles use continuous collision detection.

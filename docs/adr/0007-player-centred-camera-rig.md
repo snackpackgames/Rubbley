@@ -13,7 +13,7 @@ The camera is a hand-rolled `CameraRig`: a `Node3D` outside Rubbley's tree with 
 ## Consequences
 
 - Follow lag and Nudge add into one offset, and a single `max_offset` (a fraction of the screen's short side) clamps it so Rubbley never leaves the screen. Screen shake and other effects add into the same offset later.
-- Nudge is a peek, not a pan. It springs back to centre when released. The camera exposes a device-agnostic nudge input; the input layer maps the right stick, Alt+drag and multi-touch drag onto it.
+- Nudge is a peek, not a pan. It springs back to centre when released. The camera exposes a device-agnostic nudge input; the input layer maps the right stick, WASD and two-finger drag onto it ([ADR 0012](0012-aim-decides-the-move.md)).
 - Zoom changes camera distance, not FOV. By default it keeps Rubbley's radius at a fixed fraction of the short side, between a minimum and maximum visible extent. **Camera Zones** (`Area3D` plus a framing resource, highest priority wins) can raise the visible extent but never shrink it below the size-driven value. Players have no zoom control, because pinch belongs to Attract and Repel.
 - Tuning lives in a resource: `follow_half_life`, `max_offset`, tilt and distance, nudge radius and spring, `rubbley_screen_fraction`, `min_extent`, `max_extent` and `zoom_half_life`. Its format follows whatever the tuning-data decision settles.
 - Desktop sees more along its long side than a portrait phone does, and leaderboards are global. We accept that advantage. If it ever matters, leaderboards could be split per input scheme.
