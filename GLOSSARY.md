@@ -60,6 +60,12 @@ _Avoid_: pan, camera drag, look
 A region of a level that widens the view while Rubbley is inside it, such as a boss arena. It can show more of the level but never less than Rubbley's size calls for.
 _Avoid_: camera trigger, framing volume
 
+### Platforms
+
+**Minimum-Spec Device**:
+The weakest device Rubbley promises to run well on, which defines the support floor for its platform. Weaker devices may install the game but are unsupported.
+_Avoid_: low-end device, min spec (unqualified), test phone
+
 ### Characters
 
 **Character**:
