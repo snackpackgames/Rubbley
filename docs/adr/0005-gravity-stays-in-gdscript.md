@@ -9,5 +9,6 @@ The pairwise gravity loop (the port of the Unity `Attractor`) is written in GDSc
 ## Consequences
 
 - The minimum-spec phone benchmark sets the body and tick-rate cap, and level design has to stay within it.
+- Until the benchmark runs, there is no cap. Building doesn't wait for the phone: desktop profiling only flags obvious problems, and it doesn't set a budget. The benchmark has to run before the first mobile release, store or closed test ([Benchmark N-body gravity on a minimum-spec phone](https://github.com/snackpackgames/Rubbley/issues/36)). Any cap, tick-rate change or performance refactor follows from its numbers, and levels built before then may need trimming to fit.
 - Cheap optimisations come first: compute each pair once (the Unity code computes every pair twice), use typed and packed arrays, and use Area point gravity for one-way wells that don't need mutual attraction.
 - GDExtension comes back only if the benchmark produces a cap the GDD can't accept. That decision needs a new ADR that supersedes this one.
