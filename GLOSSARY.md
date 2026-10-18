@@ -64,6 +64,28 @@ _Avoid_: pan, camera drag, look
 A region of a level that widens the view while Rubbley is inside it, such as a boss arena. It can show more of the level but never less than Rubbley's size calls for.
 _Avoid_: camera trigger, framing volume
 
+### Stats and Tuning
+
+**Mass**:
+How heavy Rubbley or any other body is. For Rubbley it is also his health and his size: damage takes Mass away, absorbed debris adds it, and he grows and shrinks with it.
+_Avoid_: health, HP, weight, size (as a separate stat)
+
+**Stamina**:
+The single pool that all three moves draw on. It drains while a move is used and refills while none is.
+_Avoid_: energy, mana, spin stamina (as a separate pool)
+
+**Stats**:
+A character's numbers that advancement can change, such as Mass limits, Stamina and Gravega strength.
+_Avoid_: attributes, tuning (for upgradeable values)
+
+**Stat Modifier**:
+One change to a single Stat, either added or multiplied, that lasts for good or for a set time. Upgrades, power-ups and consumables are all Stat Modifiers.
+_Avoid_: buff, perk, bonus
+
+**Tuning**:
+The fixed numbers that set how the game feels and how the simulation behaves, such as Capture Radius, speed caps, Drift strength and input thresholds. Advancement never changes them.
+_Avoid_: config, constants, settings (which are the player's options)
+
 ### Platforms
 
 **Minimum-Spec Device**:
