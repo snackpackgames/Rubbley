@@ -25,6 +25,10 @@ A Celestial Body that level design holds in place. It pulls but is never moved.
 A temporary point of pull that Rubbley places in empty space with an untargeted Attract. It pulls but is never pulled.
 _Avoid_: well (unqualified), black hole
 
+**Gravity Ripple**:
+A one-off push outward from a point in space, made with an untargeted Repel. It shoves everything nearby away, Rubbley included, but stuns nothing.
+_Avoid_: ripple (unqualified), shockwave, anti-well
+
 **Gravega**:
 Rubbley's power to change the gravity between himself and other bodies. Attract and Repel are uses of Gravega.
 _Avoid_: Graviga (the old name, dropped because it evokes the Final Fantasy spell)
