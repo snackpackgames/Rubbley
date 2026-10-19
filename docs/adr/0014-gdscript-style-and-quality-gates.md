@@ -5,10 +5,11 @@ Rubbley is GDScript-only and mostly agent-built, so nothing like a type checker 
 ## The standard
 
 - The official GDScript style guide is the standard. Rubbley's rules live in `docs/agents/gdscript-style.md`, linked from `CLAUDE.md`, and only list additions to the guide, never restate it. Code structure (scenes, autoloads, signals) is the architecture-conventions decision, not this page.
-- The page starts with three additions; more are added only when a review finds a real problem:
+- The page starts with four additions; more are added only when a review finds a real problem:
   - Glossary terms are used verbatim in names (`CelestialBody`, `celestial_body.gd`), and a glossary _Avoid_ term never appears in a name.
   - Every `class_name` script and every public method has a `##` doc comment.
   - Every `@warning_ignore` has a comment on the same line saying why.
+  - Gameplay randomness comes from an injected `RandomNumberGenerator`, never global `randf()`/`randi()` (ADR 0018).
 
 ## The gates
 
@@ -25,7 +26,8 @@ Rubbley is GDScript-only and mostly agent-built, so nothing like a type checker 
 1. finds Godot and checks it against `.godot-version`, then runs `godot --headless --import`;
 2. runs `godot --headless --check-only --script` on every `.gd` outside `addons/`, using the editor binary, since warnings exist only in debug builds;
 3. downloads the pinned formatter release into a gitignored `.tools/` on first use, then runs the format check and lint;
-4. exits non-zero if any gate fails. `--fix` applies the formatter instead of checking.
+4. checks that every skipped test carries a `quarantined-by: @<github-user> #<open issue>` reason (ADR 0018);
+5. exits non-zero if any gate fails. `--fix` applies the formatter instead of checking.
 
 Agents run it before every commit. In CI it runs before `scripts/test.sh` in the required PR check, and every gate blocks.
 

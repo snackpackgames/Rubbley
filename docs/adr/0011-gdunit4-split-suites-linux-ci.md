@@ -15,7 +15,7 @@ Tests use gdUnit4, vendored in `addons/gdUnit4/` and pinned to the release that 
 
 1. finds Godot from `$GODOT_BIN`, falling back to `godot` on PATH, and fails if its version doesn't match `.godot-version`;
 2. runs `godot --headless --import`;
-3. calls gdUnit4's `runtest.sh` for both suites by default, or for one suite or a path when asked;
+3. calls gdUnit4's `runtest.sh` for both suites by default, or for one suite or a path when asked, with `--fixed-fps` equal to the physics tick rate (ADR 0018);
 4. exits non-zero on any failure, and also on gdUnit4's warnings exit code (101), so warnings can't pile up.
 
 ## CI (GitHub Actions)
