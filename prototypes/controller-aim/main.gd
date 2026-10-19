@@ -10,6 +10,8 @@ enum Aim { SELF, BODY, POINT }
 const PARAM_ORDER := [
 	"deadzone", "cone_deg", "hysteresis_deg", "dist_bias_deg", "range_frac",
 	"reach_frac", "lockon_dist_frac", "snap_px", "release_grace_ms", "nudge_px",
+	"attract_accel", "self_attract_accel", "well_accel", "well_radius", "repel_impulse",
+	"pulse_impulse", "ripple_impulse", "effect_radius", "rubbley_share", "damping",
 ]
 const DEFAULTS := {
 	"deadzone": 0.2,          # radial, of stick length
@@ -22,11 +24,26 @@ const DEFAULTS := {
 	"snap_px": 60.0,          # absolute: snap radius around the free point
 	"release_grace_ms": 120.0, # keep last aim this long after the stick returns to rest
 	"nudge_px": 220.0,        # right stick camera peek
+	# Crude feedback physics: px/s² for held pulls, px/s for one-shot impulses.
+	# Not the ADR 0006 model; numbers don't carry over to Tuning.
+	"attract_accel": 1200.0,      # targeted Attract, body toward Rubbley
+	"self_attract_accel": 900.0,  # Attract on self, everything in effect_radius
+	"well_accel": 1100.0,         # Gravity Well pull, everything in well_radius
+	"well_radius": 320.0,
+	"repel_impulse": 900.0,       # targeted Repel
+	"pulse_impulse": 800.0,       # Repel Pulse, falls off over effect_radius
+	"ripple_impulse": 800.0,      # Gravity Ripple, falls off over effect_radius, moves Rubbley too
+	"effect_radius": 380.0,
+	"rubbley_share": 0.3,         # fraction of a pair force Rubbley feels
+	"damping": 0.5,               # velocity decay per second
 }
 const STEPS := {
 	"deadzone": 0.05, "cone_deg": 5.0, "hysteresis_deg": 2.5, "dist_bias_deg": 2.5,
 	"range_frac": 0.05, "reach_frac": 0.1, "lockon_dist_frac": 0.05, "snap_px": 10.0,
 	"release_grace_ms": 20.0, "nudge_px": 20.0,
+	"attract_accel": 100.0, "self_attract_accel": 100.0, "well_accel": 100.0, "well_radius": 20.0,
+	"repel_impulse": 100.0, "pulse_impulse": 100.0, "ripple_impulse": 100.0, "effect_radius": 20.0,
+	"rubbley_share": 0.05, "damping": 0.1,
 }
 const PRESS := 0.6
 const RELEASE := 0.4
@@ -37,6 +54,7 @@ var mode := Mode.HYBRID
 var dev := 0
 
 var rubbley := Vector2.ZERO
+var rub_vel := Vector2.ZERO
 var drift := false
 var drift_heading := 0.0
 var time := 0.0
@@ -95,7 +113,7 @@ func _regen() -> void:
 			"pos": anchor, "glow": glow, "r": rng.randf_range(14.0, 34.0) if glow else rng.randf_range(6.0, 16.0),
 			"anchor": anchor, "orbit_r": rng.randf_range(40.0, 150.0) if orbit else 0.0,
 			"speed": rng.randf_range(0.3, 1.0) * (1 if rng.randf() < 0.5 else -1), "phase": rng.randf() * TAU,
-			"name": "G%d" % n if glow else "",
+			"name": "G%d" % n if glow else "", "vel": Vector2.ZERO,
 		})
 		if glow:
 			n += 1
@@ -103,7 +121,8 @@ func _regen() -> void:
 	var c := rubbley + Vector2.from_angle(rng.randf() * TAU) * 320.0
 	for k in 3:
 		var p := c + Vector2.from_angle(k * TAU / 3.0) * 45.0
-		bodies.append({"pos": p, "glow": true, "r": 18.0, "anchor": p, "orbit_r": 0.0, "speed": 0.0, "phase": 0.0, "name": "C%d" % k})
+		bodies.append({"pos": p, "glow": true, "r": 18.0, "anchor": p, "orbit_r": 0.0, "speed": 0.0, "phase": 0.0, "name": "C%d" % k, "vel": Vector2.ZERO})
+	rub_vel = Vector2.ZERO
 	aim_target = -1
 	held_target = -1
 
@@ -115,9 +134,27 @@ func range_px() -> float:
 
 func _physics_process(delta: float) -> void:
 	time += delta
+	var damp := exp(-params.damping * delta)
 	for b in bodies:
 		if b.orbit_r > 0.0:
-			b.pos = b.anchor + Vector2.from_angle(b.phase + time * b.speed) * b.orbit_r
+			var ang: float = b.phase + time * b.speed
+			b.pos = b.anchor + Vector2.from_angle(ang) * b.orbit_r
+			b.vel = Vector2.from_angle(ang + PI / 2.0) * b.orbit_r * b.speed
+		else:
+			b.pos += b.vel * delta
+			b.vel *= damp
+		# Crude contact with Rubbley so pulled bodies don't pass through.
+		var to: Vector2 = b.pos - rubbley
+		var min_d: float = b.r + 22.0
+		if to.length() < min_d:
+			var n := to.normalized() if to.length() > 0.01 else Vector2.RIGHT
+			b.orbit_r = 0.0
+			b.pos = rubbley + n * min_d
+			var vn: float = (b.vel - rub_vel).dot(n)
+			if vn < 0.0:
+				b.vel -= n * vn * 1.3
+	rubbley += rub_vel * delta
+	rub_vel *= damp
 	if drift:
 		drift_heading += delta * 0.4 * sin(time * 0.3)
 		rubbley += Vector2.from_angle(drift_heading) * 90.0 * delta
@@ -131,6 +168,7 @@ func _physics_process(delta: float) -> void:
 	tilt = clampf((stick_len - dz) / maxf(0.95 - dz, 0.01), 0.0, 1.0) if stick_active else 0.0
 	_compute_aim()
 	_triggers()
+	_apply_forces(delta)
 
 	var nraw := Vector2(Input.get_joy_axis(dev, JOY_AXIS_RIGHT_X), Input.get_joy_axis(dev, JOY_AXIS_RIGHT_Y))
 	var nudge := nraw if nraw.length() > 0.2 else Vector2.ZERO
@@ -246,15 +284,67 @@ func _triggers() -> void:
 		match aim_kind:
 			Aim.SELF:
 				effects.append({"kind": "pulse", "pos": rubbley, "t0": time})
+				_radial(rubbley, params.pulse_impulse, params.effect_radius, false)
 				last_fired = "Repel Pulse"
 			Aim.BODY:
 				effects.append({"kind": "flash", "body": aim_target, "pos": aim_point, "t0": time})
+				var dir: Vector2 = (bodies[aim_target].pos - rubbley).normalized()
+				_kick(bodies[aim_target], dir * params.repel_impulse)
+				rub_vel -= dir * params.repel_impulse * params.rubbley_share
 				last_fired = "Targeted Repel on %s" % bodies[aim_target].name
 			Aim.POINT:
 				effects.append({"kind": "ripple", "pos": aim_point, "t0": time})
+				_radial(aim_point, params.ripple_impulse, params.effect_radius, true)
 				last_fired = "Gravity Ripple at %s" % _fmt(aim_point - rubbley)
 	elif repel_down and rt < RELEASE:
 		repel_down = false
+
+
+## Frees a scripted orbiter and adds a velocity change.
+func _kick(b: Dictionary, dv: Vector2) -> void:
+	b.orbit_r = 0.0
+	b.vel += dv
+
+
+## One-shot radial push from a point, linear falloff to zero at radius.
+func _radial(from: Vector2, impulse: float, radius: float, moves_rubbley: bool) -> void:
+	for b in bodies:
+		var to: Vector2 = b.pos - from
+		var f := 1.0 - to.length() / radius
+		if f > 0.0 and to.length() > 0.01:
+			_kick(b, to.normalized() * impulse * f)
+	if moves_rubbley:
+		var to := rubbley - from
+		var f := 1.0 - to.length() / radius
+		if f > 0.0 and to.length() > 0.01:
+			rub_vel += to.normalized() * impulse * f
+
+
+## Held and lingering pulls: targeted Attract, Attract on self, Gravity Wells.
+func _apply_forces(delta: float) -> void:
+	if attract_held and held_kind == Aim.BODY and held_target >= 0:
+		var b = bodies[held_target]
+		var dir: Vector2 = (rubbley - b.pos).normalized()
+		_kick(b, dir * params.attract_accel * delta)
+		rub_vel -= dir * params.attract_accel * params.rubbley_share * delta
+	if attract_held and held_kind == Aim.SELF:
+		_pull(rubbley, params.self_attract_accel, params.effect_radius, delta, false)
+	for e in effects:
+		if e.kind == "well":
+			_pull(e.pos, params.well_accel, params.well_radius, delta, true)
+
+
+func _pull(to_point: Vector2, accel: float, radius: float, delta: float, moves_rubbley: bool) -> void:
+	for b in bodies:
+		var to: Vector2 = to_point - b.pos
+		var f := 1.0 - to.length() / radius
+		if f > 0.0 and to.length() > 8.0:
+			_kick(b, to.normalized() * accel * f * delta)
+	if moves_rubbley:
+		var to := to_point - rubbley
+		var f := 1.0 - to.length() / radius
+		if f > 0.0 and to.length() > 8.0:
+			rub_vel += to.normalized() * accel * f * delta
 
 
 func _input(event: InputEvent) -> void:
@@ -322,6 +412,7 @@ func _process(_delta: float) -> void:
 	if attract_held:
 		held = ["self", "body " + (bodies[held_target].name if held_target >= 0 else "?"), ""][held_kind] if held_kind >= 0 else "(well placed)"
 	lines.append("attract held: %s   last fired: %s" % [held, last_fired])
+	lines.append("Rubbley speed %.0f px/s" % rub_vel.length())
 	lines.append("")
 	for i in PARAM_ORDER.size():
 		var k: String = PARAM_ORDER[i]
@@ -362,6 +453,7 @@ func _draw() -> void:
 		match e.kind:
 			"well":
 				var a := 1.0 - age / 3.0
+				draw_arc(e.pos, params.well_radius, 0.0, TAU, 64, Color(0.7, 0.4, 1.0, 0.2 * a), 1.0)
 				for k in 3:
 					draw_arc(e.pos, 12.0 + k * 12.0, time * 3.0 + k, time * 3.0 + k + 4.0, 24, Color(0.7, 0.4, 1.0, a), 2.0)
 			"pulse", "ripple":
