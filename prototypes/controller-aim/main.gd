@@ -12,6 +12,8 @@ const PARAM_ORDER := [
 	"reach_frac", "lockon_dist_frac", "snap_px", "release_grace_ms", "nudge_px",
 	"attract_accel", "self_attract_accel", "well_accel", "well_radius", "repel_impulse",
 	"pulse_impulse", "ripple_impulse", "effect_radius", "rubbley_share", "damping",
+	"zoom", "size_aware", "planet_surface_g", "gravity_range_mult", "capture_mult",
+	"capture_speed_mult", "capture_strength", "attract_mult", "slingshot_impulse", "rubbley_damping",
 ]
 const DEFAULTS := {
 	"deadzone": 0.2,          # radial, of stick length
@@ -35,7 +37,18 @@ const DEFAULTS := {
 	"ripple_impulse": 800.0,      # Gravity Ripple, falls off over effect_radius, moves Rubbley too
 	"effect_radius": 380.0,
 	"rubbley_share": 0.3,         # fraction of a pair force Rubbley feels
-	"damping": 0.5,               # velocity decay per second
+	"damping": 0.5,               # small-body velocity decay per second
+	# Planets: huge, heavy, stationary Celestial Bodies for orbit-and-slingshot traversal.
+	"zoom": 0.6,                  # camera zoom, < 1 shows more world
+	"size_aware": 1.0,            # 1 = cone measures to a body's edge, 0 = to its centre
+	"planet_surface_g": 700.0,    # planet pull on Rubbley at the surface, px/s²; falls off as (r/d)²
+	"gravity_range_mult": 6.0,    # pull cuts off at this many planet radii
+	"capture_mult": 2.6,          # Capture Radius, in planet radii
+	"capture_speed_mult": 1.3,    # assist only if Rubbley is slower than this × circular speed
+	"capture_strength": 1.5,      # how fast the assist steers toward a circular orbit, per second
+	"attract_mult": 3.0,          # Attract on a planet (or on self) multiplies its pull on Rubbley
+	"slingshot_impulse": 550.0,   # targeted Repel on a planet kicks Rubbley away, px/s
+	"rubbley_damping": 0.03,      # Rubbley keeps momentum
 }
 const STEPS := {
 	"deadzone": 0.05, "cone_deg": 5.0, "hysteresis_deg": 2.5, "dist_bias_deg": 2.5,
@@ -44,6 +57,9 @@ const STEPS := {
 	"attract_accel": 100.0, "self_attract_accel": 100.0, "well_accel": 100.0, "well_radius": 20.0,
 	"repel_impulse": 100.0, "pulse_impulse": 100.0, "ripple_impulse": 100.0, "effect_radius": 20.0,
 	"rubbley_share": 0.05, "damping": 0.1,
+	"zoom": 0.05, "size_aware": 1.0, "planet_surface_g": 50.0, "gravity_range_mult": 0.5, "capture_mult": 0.2,
+	"capture_speed_mult": 0.1, "capture_strength": 0.25, "attract_mult": 0.5, "slingshot_impulse": 50.0,
+	"rubbley_damping": 0.01,
 }
 const PRESS := 0.6
 const RELEASE := 0.4
@@ -59,7 +75,10 @@ var drift := false
 var drift_heading := 0.0
 var time := 0.0
 var layout_seed := 1
-var bodies: Array = []  # {pos, glow, r, anchor, orbit_r, speed, phase, name}
+var bodies: Array = []  # {pos, glow, r, anchor, orbit_r, speed, phase, name, vel, planet}
+var planets: Array = []  # the planet entries of bodies, same dictionaries
+var orbiting := "-"
+var trail := PackedVector2Array()
 
 var stick := Vector2.ZERO
 var stick_len := 0.0
@@ -102,40 +121,64 @@ func _regen() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = layout_seed
 	bodies.clear()
+	planets.clear()
+	trail.clear()
+	# A winding chain of planets, Rubbley starting in orbit around the first.
+	var heading := rng.randf() * TAU
+	var r0 := rng.randf_range(110.0, 170.0)
+	var ppos := rubbley + Vector2.from_angle(heading) * r0 * 2.0
+	for k in 4:
+		var pr := r0 if k == 0 else rng.randf_range(90.0, 190.0)
+		if k > 0:
+			heading += rng.randf_range(-0.9, 0.9)
+			ppos += Vector2.from_angle(heading) * rng.randf_range(1200.0, 1700.0)
+		var p := {"pos": ppos, "glow": true, "r": pr, "anchor": ppos, "orbit_r": 0.0, "speed": 0.0, "phase": 0.0,
+			"name": "P%d" % (k + 1), "vel": Vector2.ZERO, "planet": true, "mass": pr * pr / 100.0}
+		bodies.append(p)
+		planets.append(p)
 	var n := 0
 	for i in 22:
 		var glow := i < 8
 		var a := rng.randf() * TAU
 		var d := rng.randf_range(120.0, 900.0)
 		var anchor := rubbley + Vector2.from_angle(a) * d
+		for p in planets:
+			if anchor.distance_to(p.pos) < p.r + 60.0:
+				anchor = p.pos + (anchor - p.pos).normalized() * (p.r * 2.6 + 80.0)
 		var orbit := rng.randf() < 0.4
 		bodies.append({
 			"pos": anchor, "glow": glow, "r": rng.randf_range(14.0, 34.0) if glow else rng.randf_range(6.0, 16.0),
 			"anchor": anchor, "orbit_r": rng.randf_range(40.0, 150.0) if orbit else 0.0,
 			"speed": rng.randf_range(0.3, 1.0) * (1 if rng.randf() < 0.5 else -1), "phase": rng.randf() * TAU,
-			"name": "G%d" % n if glow else "", "vel": Vector2.ZERO,
+			"name": "G%d" % n if glow else "", "vel": Vector2.ZERO, "planet": false,
 		})
 		if glow:
 			n += 1
 	# A tight cluster of three glowing bodies, to test picking between neighbours.
-	var c := rubbley + Vector2.from_angle(rng.randf() * TAU) * 320.0
+	var c := rubbley + Vector2.from_angle(heading + PI) * 320.0
 	for k in 3:
 		var p := c + Vector2.from_angle(k * TAU / 3.0) * 45.0
-		bodies.append({"pos": p, "glow": true, "r": 18.0, "anchor": p, "orbit_r": 0.0, "speed": 0.0, "phase": 0.0, "name": "C%d" % k, "vel": Vector2.ZERO})
-	rub_vel = Vector2.ZERO
+		bodies.append({"pos": p, "glow": true, "r": 18.0, "anchor": p, "orbit_r": 0.0, "speed": 0.0, "phase": 0.0, "name": "C%d" % k, "vel": Vector2.ZERO, "planet": false})
+	# Start in a circular orbit around P1.
+	var p1 = planets[0]
+	var to: Vector2 = rubbley - p1.pos
+	var g: float = params.planet_surface_g * pow(p1.r / to.length(), 2.0)
+	rub_vel = to.normalized().orthogonal() * sqrt(g * to.length())
 	aim_target = -1
 	held_target = -1
 
 
 func range_px() -> float:
 	var s := get_viewport_rect().size
-	return params.range_frac * minf(s.x, s.y) * 0.5
+	return params.range_frac * minf(s.x, s.y) * 0.5 / maxf(params.zoom, 0.05)
 
 
 func _physics_process(delta: float) -> void:
 	time += delta
 	var damp := exp(-params.damping * delta)
 	for b in bodies:
+		if b.planet:
+			continue
 		if b.orbit_r > 0.0:
 			var ang: float = b.phase + time * b.speed
 			b.pos = b.anchor + Vector2.from_angle(ang) * b.orbit_r
@@ -143,6 +186,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			b.pos += b.vel * delta
 			b.vel *= damp
+		for p in planets:
+			_contact(b, p.pos, p.r + b.r, Vector2.ZERO)
 		# Crude contact with Rubbley so pulled bodies don't pass through.
 		var to: Vector2 = b.pos - rubbley
 		var min_d: float = b.r + 22.0
@@ -153,8 +198,22 @@ func _physics_process(delta: float) -> void:
 			var vn: float = (b.vel - rub_vel).dot(n)
 			if vn < 0.0:
 				b.vel -= n * vn * 1.3
+	_planet_gravity(delta)
+	rub_vel *= exp(-params.rubbley_damping * delta)
+	rub_vel = rub_vel.limit_length(2500.0)
 	rubbley += rub_vel * delta
-	rub_vel *= damp
+	for p in planets:
+		var to: Vector2 = rubbley - p.pos
+		var min_d: float = p.r + 22.0
+		if to.length() < min_d:
+			var n := to.normalized() if to.length() > 0.01 else Vector2.RIGHT
+			rubbley = p.pos + n * min_d
+			var vn := rub_vel.dot(n)
+			if vn < 0.0:
+				rub_vel -= n * vn * 1.2
+	trail.append(rubbley)
+	if trail.size() > 240:
+		trail.remove_at(0)
 	if drift:
 		drift_heading += delta * 0.4 * sin(time * 0.3)
 		rubbley += Vector2.from_angle(drift_heading) * 90.0 * delta
@@ -219,8 +278,8 @@ func _cone_pick(dir: Vector2) -> int:
 	var half: float = params.cone_deg * 0.5
 	var reach: float = range_px() * params.reach_frac
 	if aim_target >= 0:
-		var to: Vector2 = bodies[aim_target].pos - rubbley
-		if to.length() <= reach and rad_to_deg(absf(dir.angle_to(to))) <= half + params.hysteresis_deg:
+		var m := _cone_measure(dir, bodies[aim_target])
+		if m.y <= reach and m.x <= half + params.hysteresis_deg:
 			return aim_target
 	var best := -1
 	var best_score := INF
@@ -228,18 +287,28 @@ func _cone_pick(dir: Vector2) -> int:
 		var b = bodies[i]
 		if not b.glow:
 			continue
-		var to: Vector2 = b.pos - rubbley
-		var d := to.length()
-		if d > reach or d < 1.0:
-			continue
-		var ang := rad_to_deg(absf(dir.angle_to(to)))
-		if ang > half:
+		var m := _cone_measure(dir, b)
+		var ang := m.x
+		var d := m.y
+		if d > reach or ang > half:
 			continue
 		var score: float = ang + params.dist_bias_deg * d / reach
 		if score < best_score:
 			best_score = score
 			best = i
 	return best
+
+
+## x: degrees between the stick and the body, y: distance. With size_aware on,
+## both are measured to the body's edge, so a big planet is easy to pick up close.
+func _cone_measure(dir: Vector2, b: Dictionary) -> Vector2:
+	var to: Vector2 = b.pos - rubbley
+	var d := maxf(to.length(), 1.0)
+	var ang := rad_to_deg(absf(dir.angle_to(to)))
+	if params.size_aware > 0.5:
+		ang = maxf(0.0, ang - rad_to_deg(asin(minf(1.0, b.r / d))))
+		d = maxf(0.0, d - b.r)
+	return Vector2(ang, d)
 
 
 func _snap_pick(p: Vector2) -> int:
@@ -289,8 +358,12 @@ func _triggers() -> void:
 			Aim.BODY:
 				effects.append({"kind": "flash", "body": aim_target, "pos": aim_point, "t0": time})
 				var dir: Vector2 = (bodies[aim_target].pos - rubbley).normalized()
-				_kick(bodies[aim_target], dir * params.repel_impulse)
-				rub_vel -= dir * params.repel_impulse * params.rubbley_share
+				if bodies[aim_target].planet:
+					# The planet is too heavy to move: Rubbley takes the whole kick.
+					rub_vel -= dir * params.slingshot_impulse
+				else:
+					_kick(bodies[aim_target], dir * params.repel_impulse)
+					rub_vel -= dir * params.repel_impulse * params.rubbley_share
 				last_fired = "Targeted Repel on %s" % bodies[aim_target].name
 			Aim.POINT:
 				effects.append({"kind": "ripple", "pos": aim_point, "t0": time})
@@ -302,6 +375,8 @@ func _triggers() -> void:
 
 ## Frees a scripted orbiter and adds a velocity change.
 func _kick(b: Dictionary, dv: Vector2) -> void:
+	if b.planet:
+		return
 	b.orbit_r = 0.0
 	b.vel += dv
 
@@ -322,7 +397,7 @@ func _radial(from: Vector2, impulse: float, radius: float, moves_rubbley: bool) 
 
 ## Held and lingering pulls: targeted Attract, Attract on self, Gravity Wells.
 func _apply_forces(delta: float) -> void:
-	if attract_held and held_kind == Aim.BODY and held_target >= 0:
+	if attract_held and held_kind == Aim.BODY and held_target >= 0 and not bodies[held_target].planet:
 		var b = bodies[held_target]
 		var dir: Vector2 = (rubbley - b.pos).normalized()
 		_kick(b, dir * params.attract_accel * delta)
@@ -345,6 +420,43 @@ func _pull(to_point: Vector2, accel: float, radius: float, delta: float, moves_r
 		var f := 1.0 - to.length() / radius
 		if f > 0.0 and to.length() > 8.0:
 			rub_vel += to.normalized() * accel * f * delta
+
+
+## Pushes a small body out of a circle and removes its inward speed.
+func _contact(b: Dictionary, centre: Vector2, min_d: float, centre_vel: Vector2) -> void:
+	var to: Vector2 = b.pos - centre
+	if to.length() >= min_d:
+		return
+	var n := to.normalized() if to.length() > 0.01 else Vector2.RIGHT
+	b.orbit_r = 0.0
+	b.pos = centre + n * min_d
+	var vn: float = (b.vel - centre_vel).dot(n)
+	if vn < 0.0:
+		b.vel -= n * vn * 1.3
+
+
+## Planets pull Rubbley only (small bodies are left out to keep the scene readable).
+## Attract on a planet, or on self, multiplies the pull. Inside the Capture Radius,
+## a slow Rubbley is steered toward a circular orbit, as in ADR 0006's capture assist.
+func _planet_gravity(delta: float) -> void:
+	orbiting = "-"
+	for p in planets:
+		var to: Vector2 = p.pos - rubbley
+		var d := to.length()
+		if d > p.r * params.gravity_range_mult or d < 1.0:
+			continue
+		var g: float = params.planet_surface_g * pow(p.r / d, 2.0)
+		var boosted: bool = attract_held and (held_kind == Aim.SELF or (held_kind == Aim.BODY and held_target >= 0 and bodies[held_target] == p))
+		var mult: float = params.attract_mult if boosted else 1.0
+		rub_vel += to / d * g * mult * delta
+		if boosted or d > p.r * params.capture_mult:
+			continue
+		var tangent := (-to / d).orthogonal()
+		var sgn := 1.0 if rub_vel.dot(tangent) >= 0.0 else -1.0
+		var v_circ := sqrt(g * d)
+		if rub_vel.length() < v_circ * params.capture_speed_mult:
+			rub_vel = rub_vel.lerp(tangent * sgn * v_circ, 1.0 - exp(-params.capture_strength * delta))
+			orbiting = p.name
 
 
 func _input(event: InputEvent) -> void:
@@ -400,6 +512,7 @@ func _adjust(sign: int) -> void:
 
 func _process(_delta: float) -> void:
 	camera.position = rubbley + nudge_offset
+	camera.zoom = Vector2.ONE * maxf(params.zoom, 0.05)
 	gizmo.queue_redraw()
 	queue_redraw()
 	var lines := PackedStringArray()
@@ -412,7 +525,7 @@ func _process(_delta: float) -> void:
 	if attract_held:
 		held = ["self", "body " + (bodies[held_target].name if held_target >= 0 else "?"), ""][held_kind] if held_kind >= 0 else "(well placed)"
 	lines.append("attract held: %s   last fired: %s" % [held, last_fired])
-	lines.append("Rubbley speed %.0f px/s" % rub_vel.length())
+	lines.append("Rubbley speed %.0f px/s   capture assist: %s" % [rub_vel.length(), orbiting])
 	lines.append("")
 	for i in PARAM_ORDER.size():
 		var k: String = PARAM_ORDER[i]
@@ -438,9 +551,18 @@ func _draw() -> void:
 		draw_arc(raw_point, params.snap_px, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.4), 1.0)
 		draw_circle(raw_point, 3.0, Color(0.4, 0.8, 1.0, 0.6))
 
+	if trail.size() > 1:
+		draw_polyline(trail, Color(0.9, 0.9, 1.0, 0.25), 2.0)
+	for p in planets:
+		draw_arc(p.pos, p.r * params.capture_mult, 0.0, TAU, 96, Color(0.5, 0.7, 1.0, 0.25 if orbiting == p.name else 0.1), 2.0)
+		draw_arc(p.pos, p.r * params.gravity_range_mult, 0.0, TAU, 128, Color(0.5, 0.7, 1.0, 0.05), 1.0)
 	for i in bodies.size():
 		var b = bodies[i]
-		if b.glow:
+		if b.planet:
+			draw_circle(b.pos, b.r + 14.0, Color(1.0, 0.85, 0.3, 0.12))
+			draw_circle(b.pos, b.r, Color(0.35, 0.45, 0.75))
+			draw_string(ThemeDB.fallback_font, b.pos + Vector2(-30, 8), "%s  m%.0f" % [b.name, b.mass], HORIZONTAL_ALIGNMENT_LEFT, -1, 22)
+		elif b.glow:
 			draw_circle(b.pos, b.r + 6.0, Color(1.0, 0.85, 0.3, 0.15))
 			draw_circle(b.pos, b.r, Color(1.0, 0.8, 0.25))
 		else:
