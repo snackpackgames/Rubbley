@@ -11,6 +11,6 @@ Three aim models, switched with LB/RB (or Back, or keys 1/2/3):
 - **Directional lock-on**: same cone pick; otherwise the point sits at a fixed distance in the stick direction.
 - **Absolute offset + snap**: the point is Rubbley + stick x range, snapping to a glowing body within a radius.
 
-LT Attract (held), RT Repel, A/B Spin, right stick Nudge, D-pad to pick and tune parameters, X for a new layout, Y to make Rubbley drift, Start to reset, P to print the current params. Resize the window to portrait to check the range circle against the short side.
+LT Attract (held), RT Repel, A/B Spin, right stick Nudge, D-pad to pick and tune parameters, Y (Triangle) to cycle through selectable bodies, X for a new layout, R3 to make Rubbley drift, Start to reset, P to print the current params. Resize the window to portrait to check the range circle against the short side.
 
 Planets (P1-P4): huge, heavy, stationary glowing bodies for orbit-and-slingshot traversal. Rubbley starts in orbit around P1. Inside the Capture Radius (the brighter ring) a slow Rubbley is steered into a circular orbit. Targeted Repel on a planet slingshots Rubbley away. Targeted Attract on a planet, or Attract on self, multiplies the planet's pull. `size_aware` makes the cone measure to a body's edge, so a planet you're orbiting stays pickable.

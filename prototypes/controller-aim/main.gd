@@ -92,6 +92,7 @@ var stick_active := false
 var last_tilt_ms := -100000
 var aim_kind := Aim.SELF
 var aim_target := -1
+var candidates: Array = []  # selectable bodies this tick, best first
 var aim_point := Vector2.ZERO
 var aim_offset := Vector2.ZERO  # free point relative to Rubbley, kept through grace
 var raw_point := Vector2.ZERO  # absolute mode, before snap
@@ -253,12 +254,14 @@ func _compute_aim() -> void:
 			return
 		aim_kind = Aim.SELF
 		aim_target = -1
+		candidates = []
 		aim_point = rubbley
 		return
 	last_tilt_ms = now
 	var dir := stick / stick.length()
 	var rng := range_px()
 	var t := -1
+	candidates = []
 	match mode:
 		Mode.HYBRID:
 			t = _cone_pick(dir)
@@ -284,26 +287,27 @@ func _compute_aim() -> void:
 func _cone_pick(dir: Vector2, cone_deg: float = -1.0, reach_frac: float = -1.0) -> int:
 	var half: float = (params.cone_deg if cone_deg < 0.0 else cone_deg) * 0.5
 	var reach: float = range_px() * (params.reach_frac if reach_frac < 0.0 else reach_frac)
+	candidates = _cone_candidates(dir, half, reach)
 	if aim_target >= 0:
 		var m := _cone_measure(dir, bodies[aim_target])
 		if m.y <= reach and m.x <= half + params.hysteresis_deg:
 			return aim_target
-	var best := -1
-	var best_score := INF
+	return candidates[0] if candidates.size() > 0 else -1
+
+
+## Glowing bodies in the cone, best score first. Triangle cycles through these.
+func _cone_candidates(dir: Vector2, half: float, reach: float) -> Array:
+	var scored := []
 	for i in bodies.size():
 		var b = bodies[i]
 		if not b.glow:
 			continue
 		var m := _cone_measure(dir, b)
-		var ang := m.x
-		var d := m.y
-		if d > reach or ang > half:
+		if m.y > reach or m.x > half:
 			continue
-		var score: float = ang + params.dist_bias_deg * d / reach
-		if score < best_score:
-			best_score = score
-			best = i
-	return best
+		scored.append([m.x + params.dist_bias_deg * m.y / reach, i])
+	scored.sort_custom(func(a, b): return a[0] < b[0])
+	return scored.map(func(s): return s[1])
 
 
 ## x: degrees between the stick and the body, y: distance. With size_aware on,
@@ -319,19 +323,31 @@ func _cone_measure(dir: Vector2, b: Dictionary) -> Vector2:
 
 
 func _snap_pick(p: Vector2) -> int:
-	if aim_target >= 0 and bodies[aim_target].pos.distance_to(p) <= params.snap_px * 1.5 + bodies[aim_target].r:
-		return aim_target
-	var best := -1
-	var best_d := INF
+	var scored := []
 	for i in bodies.size():
 		var b = bodies[i]
 		if not b.glow:
 			continue
 		var d: float = b.pos.distance_to(p) - b.r
-		if d <= params.snap_px and d < best_d:
-			best_d = d
-			best = i
-	return best
+		if d <= params.snap_px:
+			scored.append([d, i])
+	scored.sort_custom(func(a, b): return a[0] < b[0])
+	candidates = scored.map(func(s): return s[1])
+	if aim_target >= 0 and bodies[aim_target].pos.distance_to(p) <= params.snap_px * 1.5 + bodies[aim_target].r:
+		return aim_target
+	return candidates[0] if candidates.size() > 0 else -1
+
+
+## Triangle: step to the next selectable body, in score order. The pick's
+## stickiness then holds it while it stays selectable.
+func _cycle_target() -> void:
+	if candidates.is_empty():
+		return
+	var i := candidates.find(aim_target)
+	aim_target = candidates[(i + 1) % candidates.size()]
+	aim_kind = Aim.BODY
+	aim_point = bodies[aim_target].pos
+	last_fired = "cycled to %s (%d selectable)" % [bodies[aim_target].name, candidates.size()]
 
 
 func _triggers() -> void:
@@ -488,6 +504,8 @@ func _input(event: InputEvent) -> void:
 				layout_seed += 1
 				_regen()
 			JOY_BUTTON_Y:
+				_cycle_target()
+			JOY_BUTTON_RIGHT_STICK:
 				drift = not drift
 			JOY_BUTTON_START:
 				params = DEFAULTS.duplicate()
@@ -504,6 +522,7 @@ func _input(event: InputEvent) -> void:
 				layout_seed += 1
 				_regen()
 			KEY_D: drift = not drift
+			KEY_T: _cycle_target()
 			KEY_P: print(JSON.stringify({"mode": MODE_NAMES[mode], "params": params}))
 
 
@@ -527,7 +546,7 @@ func _process(_delta: float) -> void:
 	lines.append("pad: %s" % (Input.get_joy_name(dev) if Input.get_connected_joypads().size() > 0 else "NONE CONNECTED"))
 	lines.append("stick %s  len %.2f  tilt %.2f  %s" % [_fmt(stick, 2), stick_len, tilt, "active" if stick_active else ("grace" if in_grace else "rest")])
 	var tname: String = bodies[aim_target].name if aim_target >= 0 else "-"
-	lines.append("aim: %s  target %s  offset %s" % [["SELF", "BODY", "POINT"][aim_kind], tname, _fmt(aim_point - rubbley)])
+	lines.append("aim: %s  target %s  offset %s  selectable %d" % [["SELF", "BODY", "POINT"][aim_kind], tname, _fmt(aim_point - rubbley), candidates.size()])
 	var held := "-"
 	if attract_held:
 		held = ["self", "body " + (bodies[held_target].name if held_target >= 0 else "?"), ""][held_kind] if held_kind >= 0 else "(well placed)"
@@ -538,7 +557,7 @@ func _process(_delta: float) -> void:
 		var k: String = PARAM_ORDER[i]
 		lines.append("%s %-18s %s" % [">" if i == param_index else " ", k, str(params[k])])
 	lines.append("")
-	lines.append("LT Attract  RT Repel  A/B Spin  R-stick Nudge  D-pad tune  X new layout  Y drift %s  Start reset  (P prints params)" % ("on" if drift else "off"))
+	lines.append("LT Attract  RT Repel  A/B Spin  R-stick Nudge  D-pad tune  Y/Triangle cycle  X new layout  R3 drift %s  Start reset  (P prints params)" % ("on" if drift else "off"))
 	hud.text = "\n".join(lines)
 
 
@@ -579,6 +598,8 @@ func _draw() -> void:
 			draw_circle(b.pos, b.r, Color(1.0, 0.8, 0.25))
 		else:
 			draw_circle(b.pos, b.r, Color(0.45, 0.45, 0.5))
+		if i != aim_target and candidates.has(i):
+			draw_arc(b.pos, b.r + 10.0, 0.0, TAU, 48, Color(0.3, 1.0, 1.0, 0.35), 1.5)
 		if i == aim_target:
 			draw_arc(b.pos, b.r + 10.0, 0.0, TAU, 48, Color(0.3, 1.0, 1.0), 3.0)
 
