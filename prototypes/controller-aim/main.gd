@@ -9,7 +9,8 @@ enum Aim { SELF, BODY, POINT }
 
 const PARAM_ORDER := [
 	"deadzone", "cone_deg", "hysteresis_deg", "dist_bias_deg", "range_frac",
-	"reach_frac", "lockon_dist_frac", "snap_px", "release_grace_ms", "nudge_px",
+	"reach_frac", "lockon_dist_frac", "snap_px", "fulltilt_tilt", "fulltilt_cone_deg",
+	"fulltilt_reach_frac", "release_grace_ms", "nudge_px",
 	"attract_accel", "self_attract_accel", "well_accel", "well_radius", "repel_impulse",
 	"pulse_impulse", "ripple_impulse", "effect_radius", "rubbley_share", "damping",
 	"zoom", "size_aware", "planet_surface_g", "gravity_range_mult", "capture_mult",
@@ -24,6 +25,9 @@ const DEFAULTS := {
 	"reach_frac": 1.3,        # cone pick max distance, multiple of range
 	"lockon_dist_frac": 0.5,  # lock-on: free point distance, fraction of range
 	"snap_px": 60.0,          # absolute: snap radius around the free point
+	"fulltilt_tilt": 0.95,    # absolute: tilt at which full-tilt reach kicks in
+	"fulltilt_cone_deg": 12.0, # absolute: full width of the narrow full-tilt cone
+	"fulltilt_reach_frac": 2.0, # absolute: full-tilt reach, multiple of range
 	"release_grace_ms": 120.0, # keep last aim this long after the stick returns to rest
 	"nudge_px": 220.0,        # right stick camera peek
 	# Crude feedback physics: px/s² for held pulls, px/s for one-shot impulses.
@@ -60,6 +64,7 @@ const STEPS := {
 	"zoom": 0.05, "size_aware": 1.0, "planet_surface_g": 50.0, "gravity_range_mult": 0.5, "capture_mult": 0.2,
 	"capture_speed_mult": 0.1, "capture_strength": 0.25, "attract_mult": 0.5, "slingshot_impulse": 50.0,
 	"rubbley_damping": 0.01,
+	"fulltilt_tilt": 0.01, "fulltilt_cone_deg": 2.0, "fulltilt_reach_frac": 0.1,
 }
 const PRESS := 0.6
 const RELEASE := 0.4
@@ -265,6 +270,8 @@ func _compute_aim() -> void:
 			aim_offset = dir * tilt * rng
 			raw_point = rubbley + aim_offset
 			t = _snap_pick(raw_point)
+			if t < 0 and tilt >= params.fulltilt_tilt:
+				t = _cone_pick(dir, params.fulltilt_cone_deg, params.fulltilt_reach_frac)
 	aim_target = t
 	if t >= 0:
 		aim_kind = Aim.BODY
@@ -274,9 +281,9 @@ func _compute_aim() -> void:
 		aim_point = rubbley + aim_offset
 
 
-func _cone_pick(dir: Vector2) -> int:
-	var half: float = params.cone_deg * 0.5
-	var reach: float = range_px() * params.reach_frac
+func _cone_pick(dir: Vector2, cone_deg: float = -1.0, reach_frac: float = -1.0) -> int:
+	var half: float = (params.cone_deg if cone_deg < 0.0 else cone_deg) * 0.5
+	var reach: float = range_px() * (params.reach_frac if reach_frac < 0.0 else reach_frac)
 	if aim_target >= 0:
 		var m := _cone_measure(dir, bodies[aim_target])
 		if m.y <= reach and m.x <= half + params.hysteresis_deg:
@@ -538,6 +545,11 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	var rng := range_px()
 	draw_arc(rubbley, rng, 0.0, TAU, 128, Color(1, 1, 1, 0.25), 2.0)
+	if mode == Mode.ABSOLUTE and stick_active and tilt >= params.fulltilt_tilt:
+		var fdir := stick / stick.length()
+		var fhalf := deg_to_rad(params.fulltilt_cone_deg * 0.5)
+		var freach: float = rng * params.fulltilt_reach_frac
+		draw_colored_polygon(PackedVector2Array([rubbley, rubbley + fdir.rotated(-fhalf) * freach, rubbley + fdir.rotated(fhalf) * freach]), Color(0.4, 0.8, 1.0, 0.08))
 	if mode != Mode.ABSOLUTE and stick_active:
 		var dir := stick / stick.length()
 		var half := deg_to_rad(params.cone_deg * 0.5)
