@@ -485,10 +485,12 @@ func _planet_gravity(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton and event.pressed:
 		match event.button_index:
-			JOY_BUTTON_BACK, JOY_BUTTON_RIGHT_SHOULDER:
+			JOY_BUTTON_BACK:
 				_set_mode((mode + 1) % 3)
 			JOY_BUTTON_LEFT_SHOULDER:
 				_set_mode((mode + 2) % 3)
+			JOY_BUTTON_RIGHT_SHOULDER:
+				_cycle_target()
 			JOY_BUTTON_DPAD_UP:
 				param_index = (param_index + PARAM_ORDER.size() - 1) % PARAM_ORDER.size()
 			JOY_BUTTON_DPAD_DOWN:
@@ -497,14 +499,12 @@ func _input(event: InputEvent) -> void:
 				_adjust(-1)
 			JOY_BUTTON_DPAD_RIGHT:
 				_adjust(1)
-			JOY_BUTTON_A, JOY_BUTTON_B:
+			JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_Y:
 				effects.append({"kind": "spin", "pos": rubbley, "t0": time})
 				last_fired = "Spin"
 			JOY_BUTTON_X:
 				layout_seed += 1
 				_regen()
-			JOY_BUTTON_Y:
-				_cycle_target()
 			JOY_BUTTON_RIGHT_STICK:
 				drift = not drift
 			JOY_BUTTON_START:
@@ -542,7 +542,7 @@ func _process(_delta: float) -> void:
 	gizmo.queue_redraw()
 	queue_redraw()
 	var lines := PackedStringArray()
-	lines.append("PROTOTYPE controller aim  |  mode: %s  (LB/RB or Back)" % MODE_NAMES[mode])
+	lines.append("PROTOTYPE controller aim  |  mode: %s  (Back next, LB previous)" % MODE_NAMES[mode])
 	lines.append("pad: %s" % (Input.get_joy_name(dev) if Input.get_connected_joypads().size() > 0 else "NONE CONNECTED"))
 	lines.append("stick %s  len %.2f  tilt %.2f  %s" % [_fmt(stick, 2), stick_len, tilt, "active" if stick_active else ("grace" if in_grace else "rest")])
 	var tname: String = bodies[aim_target].name if aim_target >= 0 else "-"
@@ -557,7 +557,7 @@ func _process(_delta: float) -> void:
 		var k: String = PARAM_ORDER[i]
 		lines.append("%s %-18s %s" % [">" if i == param_index else " ", k, str(params[k])])
 	lines.append("")
-	lines.append("LT Attract  RT Repel  A/B Spin  R-stick Nudge  D-pad tune  Y/Triangle cycle  X new layout  R3 drift %s  Start reset  (P prints params)" % ("on" if drift else "off"))
+	lines.append("LT Attract  RT Repel  A/B/Y Spin  RB cycle  R-stick Nudge  D-pad tune  X new layout  R3 drift %s  Start reset  (P prints params)" % ("on" if drift else "off"))
 	hud.text = "\n".join(lines)
 
 
