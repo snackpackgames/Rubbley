@@ -66,6 +66,13 @@ const STEPS := {
 	"rubbley_damping": 0.01,
 	"fulltilt_tilt": 0.01, "fulltilt_cone_deg": 2.0, "fulltilt_reach_frac": 0.1,
 }
+## Aim values that only some modes use; anything not listed applies to every mode.
+const MODE_PARAMS := {
+	"cone_deg": [Mode.HYBRID, Mode.LOCK_ON], "hysteresis_deg": [Mode.HYBRID, Mode.LOCK_ON, Mode.ABSOLUTE],
+	"dist_bias_deg": [Mode.HYBRID, Mode.LOCK_ON, Mode.ABSOLUTE], "reach_frac": [Mode.HYBRID, Mode.LOCK_ON],
+	"lockon_dist_frac": [Mode.LOCK_ON], "snap_px": [Mode.ABSOLUTE], "fulltilt_tilt": [Mode.ABSOLUTE],
+	"fulltilt_cone_deg": [Mode.ABSOLUTE], "fulltilt_reach_frac": [Mode.ABSOLUTE],
+}
 const PRESS := 0.6
 const RELEASE := 0.4
 
@@ -555,7 +562,8 @@ func _process(_delta: float) -> void:
 	lines.append("")
 	for i in PARAM_ORDER.size():
 		var k: String = PARAM_ORDER[i]
-		lines.append("%s %-18s %s" % [">" if i == param_index else " ", k, str(params[k])])
+		var unused := not (MODE_PARAMS.get(k, [Mode.HYBRID, Mode.LOCK_ON, Mode.ABSOLUTE]) as Array).has(mode)
+		lines.append("%s %-18s %s%s" % [">" if i == param_index else " ", k, str(params[k]), "   (unused in this mode)" if unused else ""])
 	lines.append("")
 	lines.append("LT Attract  RT Repel  A/B/Y Spin  RB cycle  R-stick Nudge  D-pad tune  X new layout  R3 drift %s  Start reset  (P prints params)" % ("on" if drift else "off"))
 	hud.text = "\n".join(lines)
@@ -578,6 +586,10 @@ func _draw() -> void:
 			pts.append(rubbley + dir.rotated(lerpf(-half, half, i / 16.0)) * reach)
 		_fill(pts, Color(0.4, 0.8, 1.0, 0.08))
 		draw_arc(rubbley, reach, dir.angle() - half, dir.angle() + half, 24, Color(0.4, 0.8, 1.0, 0.3), 1.0)
+		# Hysteresis: a picked body keeps its lock until it leaves these outer edges.
+		var hh := half + deg_to_rad(params.hysteresis_deg)
+		for e in [-hh, hh]:
+			draw_dashed_line(rubbley, rubbley + dir.rotated(e) * reach, Color(1.0, 0.8, 0.4, 0.45), 1.5, 12.0)
 	if mode == Mode.ABSOLUTE and stick_active:
 		draw_arc(raw_point, params.snap_px, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.4), 1.0)
 		draw_circle(raw_point, 3.0, Color(0.4, 0.8, 1.0, 0.6))
