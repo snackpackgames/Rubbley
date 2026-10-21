@@ -568,7 +568,7 @@ func _draw() -> void:
 		var fdir := stick / stick.length()
 		var fhalf := deg_to_rad(params.fulltilt_cone_deg * 0.5)
 		var freach: float = rng * params.fulltilt_reach_frac
-		draw_colored_polygon(PackedVector2Array([rubbley, rubbley + fdir.rotated(-fhalf) * freach, rubbley + fdir.rotated(fhalf) * freach]), Color(0.4, 0.8, 1.0, 0.08))
+		_fill(PackedVector2Array([rubbley, rubbley + fdir.rotated(-fhalf) * freach, rubbley + fdir.rotated(fhalf) * freach]), Color(0.4, 0.8, 1.0, 0.08))
 	if mode != Mode.ABSOLUTE and stick_active:
 		var dir := stick / stick.length()
 		var half := deg_to_rad(params.cone_deg * 0.5)
@@ -576,7 +576,7 @@ func _draw() -> void:
 		var pts := PackedVector2Array([rubbley])
 		for i in 17:
 			pts.append(rubbley + dir.rotated(lerpf(-half, half, i / 16.0)) * reach)
-		draw_colored_polygon(pts, Color(0.4, 0.8, 1.0, 0.08))
+		_fill(pts, Color(0.4, 0.8, 1.0, 0.08))
 		draw_arc(rubbley, reach, dir.angle() - half, dir.angle() + half, 24, Color(0.4, 0.8, 1.0, 0.3), 1.0)
 	if mode == Mode.ABSOLUTE and stick_active:
 		draw_arc(raw_point, params.snap_px, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.4), 1.0)
@@ -643,3 +643,9 @@ func _draw_gizmo() -> void:
 func _fmt(v: Vector2, digits := 0) -> String:
 	var f := "%." + str(digits) + "f"
 	return "(" + f % v.x + ", " + f % v.y + ")"
+
+
+## Skips wedges too thin to triangulate (e.g. a cone tuned to 0°) instead of logging errors.
+func _fill(pts: PackedVector2Array, c: Color) -> void:
+	if not Geometry2D.triangulate_polygon(pts).is_empty():
+		draw_colored_polygon(pts, c)
