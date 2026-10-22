@@ -22,7 +22,7 @@ The game talks to every store through the Platform Services autoload (ADR 0016).
 | `store_itch` | null | false (Free Tier only) | `none` |
 | `store_none`, or no tag (editor) | null | true (Full Game) | `none` |
 
-- There is one export preset for each store and platform pair (`steam-windows`, `epic-macos`, `itch-linux`, `ios`, `android`, `web-playtest`, …).
+- There is one export preset for each store and platform pair (`steam-windows`, `epic-macos`, `itch-linux`, `itch-web`, `ios`, `android`, `web-playtest`, …). `itch-web` is the shipping Free Tier web build, and `web-playtest` is the Full Game Playtest Build ([ADR 0020](0020-playtest-build-on-github-pages.md)).
 - Each store's backend and SDK adapter live in `game/store/<store>/`. A preset excludes the other stores' folders and addons, so an Android build never parses a script that names `Steam`.
 - The editor and the CI `--check-only` gate have every addon present, so every adapter stays statically typed (ADR 0014). The Play plugins ship typed GDScript wrappers (`BillingClient`, the Play Games client nodes) that hide their Android singleton, so no adapter needs `Engine.get_singleton()`.
 - Steam and Epic do no ownership check, because the store already gated the download.

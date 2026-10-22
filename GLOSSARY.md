@@ -92,6 +92,10 @@ _Avoid_: config, constants, settings (which are the player's options)
 The weakest device Rubbley promises to run well on, which defines the support floor for its platform. Weaker devices may install the game but are unsupported.
 _Avoid_: low-end device, min spec (unqualified), test phone
 
+**Playtest Build**:
+The Full Game build that every merge to `main` publishes for playtesters on web. It is never sold, and it is always the latest `main`.
+_Avoid_: dev build, nightly, demo
+
 ### Monetisation
 
 **Full Game**:
