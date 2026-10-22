@@ -30,6 +30,7 @@ failed=()
 
 # --- Godot -------------------------------------------------------------------
 
+# env.sh also sources scripts/lib.sh.
 # shellcheck source=scripts/env.sh
 source "$root/scripts/env.sh"
 if [ -z "${GODOT_BIN:-}" ]; then
@@ -65,31 +66,19 @@ $compile_failed && failed+=("compile")
 
 # --- Formatter ---------------------------------------------------------------
 
-formatter_version="$(tr -d '[:space:]' 2>/dev/null < "$root/.gdscript-formatter-version")"
-if [ -z "$formatter_version" ]; then
-	echo "Missing $root/.gdscript-formatter-version" >&2
-	exit 1
-fi
+formatter_version="$(rubbley_read_pin "$root/.gdscript-formatter-version")" || exit 1
 formatter_dir="$root/.tools/gdscript-formatter/$formatter_version"
 
-case "$(uname -m)" in
-	arm64 | aarch64) arch="aarch64" ;;
-	*) arch="x86_64" ;;
-esac
-case "$(uname -s)" in
-	MINGW* | MSYS* | CYGWIN*) formatter_name="gdscript-formatter-${formatter_version}-windows-${arch}.exe" ;;
-	Darwin) formatter_name="gdscript-formatter-${formatter_version}-macos-${arch}" ;;
-	*) formatter_name="gdscript-formatter-${formatter_version}-linux-${arch}" ;;
-esac
+# Release assets are named by rubbley_os and rubbley_arch, plus .exe on Windows.
+os="$(rubbley_os)"
+formatter_name="gdscript-formatter-${formatter_version}-${os}-$(rubbley_arch)"
+[ "$os" = "windows" ] && formatter_name+=".exe"
 formatter="$formatter_dir/$formatter_name"
 
 if [ ! -x "$formatter" ]; then
-	url="https://github.com/GDQuest/GDScript-formatter/releases/download/${formatter_version}/${formatter_name}.zip"
-	echo "Downloading the GDScript formatter ${formatter_version} from ${url}" >&2
-	mkdir -p "$formatter_dir" &&
-		curl -fL --progress-bar -o "$formatter_dir/$formatter_name.zip" "$url" &&
-		unzip -q -o "$formatter_dir/$formatter_name.zip" -d "$formatter_dir" &&
-		rm -f "$formatter_dir/$formatter_name.zip" &&
+	rubbley_fetch_zip \
+		"https://github.com/GDQuest/GDScript-formatter/releases/download/${formatter_version}/${formatter_name}.zip" \
+		"$formatter_dir" &&
 		chmod +x "$formatter"
 fi
 if ! "$formatter" --version 2>/dev/null | grep -qx "gdscript-formatter ${formatter_version}"; then
