@@ -12,7 +12,7 @@ The game is **migrating from Unity to Godot**. The repo today is a Unity 2019.4 
 
 The GDD is the source of truth for design intent. Read [`docs/gdd/rubbley-gdd.md`](docs/gdd/rubbley-gdd.md) before planning or building any gameplay feature. It is a snapshot of the Google Doc linked in its header; when the user says the GDD changed, re-export it with the command in that header and commit the refresh.
 
-The GDD has open sections (Narrative, Visuals, level structure brainstorming). Surface those gaps as questions for the user; design answers come from them.
+The GDD has open sections (Concept Art, level structure brainstorming), and its Narrative and Visuals sections are early sketches. Surface those gaps as questions for the user; design answers come from them.
 
 ## Planning workflow
 
