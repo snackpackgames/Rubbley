@@ -14,8 +14,8 @@ Both engines (Godot Physics 2D/3D and Jolt 3D) integrate with semi-implicit (sym
 
 ## Unity reference behaviour
 
-- `Assets/Scripts/Attractor.cs`: every `Attractor` calls `FindObjectsOfType<Attractor>()` in each `FixedUpdate` and applies `G * m1 * m2 / d^2` (G = 66.74) to every other body via `AddForce`. Each pair is computed twice (once from each side), and the per-tick `FindObjectsOfType` adds a scene scan per body. A `gravigaTarget` / `gravigaMultiplier` scales the pull on one chosen body; this is the hook for Attract and Repel.
-- `Assets/Scripts/Orbit.cs`: when a lighter `Attractor` enters a heavier body's trigger sphere, the script makes it kinematic, reparents it under a new pivot, and rotates the pivot a fixed angle per `FixedUpdate`. This is a scripted circular orbit, not physics.
+- `unity/Assets/Scripts/Attractor.cs`: every `Attractor` calls `FindObjectsOfType<Attractor>()` in each `FixedUpdate` and applies `G * m1 * m2 / d^2` (G = 66.74) to every other body via `AddForce`. Each pair is computed twice (once from each side), and the per-tick `FindObjectsOfType` adds a scene scan per body. A `gravigaTarget` / `gravigaMultiplier` scales the pull on one chosen body; this is the hook for Attract and Repel.
+- `unity/Assets/Scripts/Orbit.cs`: when a lighter `Attractor` enters a heavier body's trigger sphere, the script makes it kinematic, reparents it under a new pivot, and rotates the pivot a fixed angle per `FixedUpdate`. This is a scripted circular orbit, not physics.
 - GDD (`docs/gdd/rubbley-gdd.md`, Resources > Mass): "When Rubbley has more mass, the Graviga draws and repels the body from Rubbley as the center point. When the other body has more mass, Rubbley is drawn to and repelled from the other body as the center point." The rule is mass-relative, so the gravity model must know both masses.
 
 ## Option 1: script-computed pairwise forces

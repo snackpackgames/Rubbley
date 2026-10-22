@@ -10,7 +10,11 @@
 
 _rubbley_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _rubbley_version="$(tr -d '[:space:]' 2>/dev/null < "$_rubbley_root/.godot-version")"
-_rubbley_version="${_rubbley_version:-4.7.2}"
+if [ -z "$_rubbley_version" ]; then
+	echo "Missing $_rubbley_root/.godot-version" >&2
+	unset _rubbley_root _rubbley_version
+	return 1
+fi
 _rubbley_tools="$_rubbley_root/.tools/godot/$_rubbley_version"
 
 _rubbley_matches() {
@@ -18,7 +22,7 @@ _rubbley_matches() {
 }
 
 _rubbley_find_in_tools() {
-	find "$_rubbley_tools" -maxdepth 3 -type f \
+	find "$_rubbley_tools" -maxdepth 4 -type f \
 		\( -name "*_console.exe" -o -name "*.x86_64" -o -name "Godot" \) 2>/dev/null \
 		| sort | head -n 1
 }
@@ -39,9 +43,9 @@ _rubbley_install() {
 }
 
 _rubbley_candidate=""
-for _c in "${GODOT_BIN:-}" "$(command -v godot 2>/dev/null)" "$(_rubbley_find_in_tools)"; do
-	if _rubbley_matches "$_c"; then
-		_rubbley_candidate="$_c"
+for _rubbley_c in "${GODOT_BIN:-}" "$(command -v godot 2>/dev/null)" "$(_rubbley_find_in_tools)"; do
+	if _rubbley_matches "$_rubbley_c"; then
+		_rubbley_candidate="$_rubbley_c"
 		break
 	fi
 done
@@ -58,5 +62,5 @@ else
 	echo "No Godot ${_rubbley_version} found. Run: source scripts/env.sh --install" >&2
 fi
 
-unset _rubbley_root _rubbley_version _rubbley_tools _rubbley_candidate _c
+unset _rubbley_root _rubbley_version _rubbley_tools _rubbley_candidate _rubbley_c
 unset -f _rubbley_matches _rubbley_find_in_tools _rubbley_install

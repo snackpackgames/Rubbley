@@ -14,6 +14,7 @@ func _ready() -> void:
 
 ## Frees the current level, if any, and adds a new instance of [param level_scene] as a child.
 func load_level(level_scene: PackedScene) -> void:
+	assert(level_scene != null, "load_level needs a level scene")
 	if _level != null:
 		remove_child(_level)
 		_level.queue_free()
