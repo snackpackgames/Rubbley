@@ -18,7 +18,7 @@ Bindings for controller and keyboard are named actions in Godot's native `InputM
 ## Consequences
 
 - **Edges are latched between ticks.** A press and release inside one tick shows up as pressed on that tick and released on the next. An untargeted Attract still places its Gravity Well, and a held Attract lasts at least one tick. Several Repel or Spin presses within one tick fire once.
-- **Move Input computes the aim; gameplay resolves the target.** Touch and mouse cast a ray from the screen through the camera onto y = 0, so the CameraRig registers itself with Move Input. A controller stick at rest aims at Rubbley. A tilted stick runs the cone pick against a targetable-bodies query that gameplay registers ([ADR 0012](0012-aim-decides-the-move.md), still provisional). Gameplay then decides what is under the point, the same way for every scheme.
+- **Move Input computes the aim; gameplay resolves the target.** Touch and mouse cast a ray from the screen through the camera onto y = 0, so the CameraRig registers itself with Move Input. A controller stick at rest aims at Rubbley. A tilted stick places an absolute cursor and runs the snap, full-tilt reach and R1/RB cycling against a targetable-bodies query that gameplay registers ([ADR 0012](0012-aim-decides-the-move.md)). Gameplay then decides what is under the point, the same way for every scheme.
 - **Every scheme is live at once.** Button inputs are OR'd. The scheme that last moved the aim owns the aim, the button prompts and whether a reticle or cursor is shown. Mouse-from-touch and touch-from-mouse emulation are both off in project settings.
 - **Touch fingers are allocated as follows:**
   - The first finger down is a swipe candidate and fires Spin once it passes the swipe thresholds.
@@ -34,6 +34,7 @@ Bindings for controller and keyboard are named actions in Godot's native `InputM
   - The second-finger window
   - The pinch-vs-Nudge thresholds
   - The stick deadzones
+  - Controller aim: range, snap radius, full-tilt threshold, cone and reach, hysteresis, distance bias and release grace
   - The Spin lockout
 - **Recognisers are plain GDScript classes.** They take timestamped touch events and use no Node and no `Input` singleton, so their tests run headless in `test/unit/`. Each scheme gets one end-to-end smoke test through `Input.parse_input_event` in `test/input/`, run under xvfb ([ADR 0011](0011-gdunit4-split-suites-linux-ci.md)).
 - **No rebind UI yet.** Bindings are named `InputMap` actions, so a rebind screen can be added later. Touch gestures are fixed. Steam Input already lets Deck and Steam players remap.
