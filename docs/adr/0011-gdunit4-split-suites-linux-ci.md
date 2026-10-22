@@ -21,11 +21,11 @@ Tests use gdUnit4, vendored in `addons/gdUnit4/` and pinned to the release that 
 ## CI (GitHub Actions)
 
 - **Every PR**: on `ubuntu-latest`, `chickensoft-games/setup-godot` installs the `.godot-version` patch with export templates. CI runs the GDScript quality gates (set by the style-standards decision), then `scripts/test.sh` under `xvfb-run`, then a web export uploaded as a workflow artifact so a reviewer can play the PR. This is a required status check on `main`. PRs don't build native platform exports.
-- **Merge to `main`**: CI reruns the PR checks and publishes the web build to a stable playtest location.
+- **Merge to `main`**: CI reruns the PR checks and publishes the web build to GitHub Pages as the Playtest Build ([ADR 0020](0020-playtest-build-on-github-pages.md)).
 - **Release tag**: CI exports Linux, Windows and Android on `ubuntu-latest`, macOS and iOS on a `macos` runner, and web.
 - Tests run on Linux only. GDScript and physics logic don't differ meaningfully between desktop OSes, and phone performance is measured by the device benchmark, not CI.
 
-Where the playtest build is hosted, signing, and store uploads aren't decided here. They belong to the release and submission pipeline, which depends on the storefront decision.
+Signing and store uploads aren't decided here. They belong to the release and submission pipeline, which depends on the storefront decision.
 
 ## Considered Options
 
