@@ -14,17 +14,24 @@ Rubbley’s powers come from a mysterious crystal called Gravega that was bestow
 
 Debris and elements that Rubbley collects will be stored in a “merge grid” that lets players merge elements into power ups to improve gameplay. This is how Rubbley gains new powers and experience.
 
-Divided into levels selectable from a menu styled to match Rubbley’s journey, like 2 dots
+Divided into levels selectable from a menu styled to match Rubbley’s journey, like 2 Dots, or Candy Crush. There are distinct "Worlds" or "Areas" with their own styles and color palettes.
 
-Levels are “rail-shooter” style, similar in style to vampire survivors except instead of moving, the player is in charge of managing cooldowns and timing when to fire and aim abilities.
+Players traverse levels using the Gravega powers to move around, collect debris and power ups, avoid obstacles, and defeat enemies.
 
-NARRATIVE
+# **NARRATIVE**
 
-TO DO
+The game starts with Rubbley in a *Record Scratch* "Well, I bet you're wondering how I ended up in this situation" where he's being pulled beyond the event horizon of a black hole and about to disintegrate when a voice calls to him from inside, and he lets go to be sucked within, where he is introduced to the Gravega Crystal that gives him the gravity powers to escape.
+
+The events leading up to the black hole involves him being in the wrong place at the wrong time, a bystander hurt by the ruthless desperate search by the "EVIL ONE" to find the Gravega Crystal.
+
+
+After Rubbley escapes, EVIL ONE chases him through the galaxy, attempting to steal the Gravega Crystal for themselves.
 
 # **GAMEPLAY**
 
 Rubbley plays out in a 2.5D top-down view, where the player is able to traverse the world, avoid obstacles, and attack foes by manipulating gravity using the power of the Gravega Crystal. The game is designed for touch input first, but will also have a control scheme that works for both M+KB & Controller as well.
+
+Players compete for high scores within a level, gaining points for growing Rubbley's mass, collecting resources within the level, and defeating enemies.
 
 ## **Resources**
 
@@ -118,8 +125,28 @@ Levels could be crossed by orbiting very large, heavy celestial bodies that bare
 
 # **VISUALS**
 
-General description of art direction...
+Cartoony, whimsical, and celestial bodies are anthropomorphic. All characters are either cosmic beings or sentient celestial bodies.
 
 ## **Concept Art**
 
 TO DO
+
+## **Art References**
+
+### **The Amazing World of Gumball**
+
+* Simple, flat art style  
+* Expressive, animated characters within a realistic world
+
+### **Cory Carson**
+
+* Animated faces on 3D objects  
+* Simple, inviting color palette
+
+### **“Space Anime”**
+
+### 
+
+### **No Man’s Sky**
+
+### **Anthropomorphic Planets**
