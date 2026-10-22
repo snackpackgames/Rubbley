@@ -59,6 +59,7 @@ if [ -n "$_rubbley_candidate" ]; then
 	export GODOT_BIN="$_rubbley_candidate"
 	echo "GODOT_BIN=$GODOT_BIN" >&2
 else
+	unset GODOT_BIN
 	echo "No Godot ${_rubbley_version} found. Run: source scripts/env.sh --install" >&2
 fi
 

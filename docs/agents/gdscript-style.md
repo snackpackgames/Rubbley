@@ -1,6 +1,6 @@
 # GDScript style
 
-The standard is the official [GDScript style guide](https://docs.godotengine.org/en/4.7/tutorials/scripting/gdscript/gdscript_styleguide.html) for Godot 4.7 (ADR 0014). This page lists only Rubbley's additions to it. `scripts/check.sh` enforces what can be checked mechanically, and `scripts/check.sh --fix` applies the formatter.
+The standard is the official [GDScript style guide](https://docs.godotengine.org/en/4.7/tutorials/scripting/gdscript/gdscript_styleguide.html) for Godot 4.7 (ADR 0014). This page lists only Rubbley's additions to it. `scripts/check.sh` enforces what can be checked mechanically.
 
 ## Additions
 

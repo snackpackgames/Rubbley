@@ -6,8 +6,10 @@
 #   scripts/check.sh --fix  # apply the formatter instead of checking format
 #
 # Gates: Godot's --check-only with warnings as errors, then the GDQuest
-# formatter (pinned in .gdscript-formatter-version) and its lint. Every .gd
-# outside addons/ is checked. Exits non-zero if any gate fails.
+# formatter (pinned in .gdscript-formatter-version) and its lint, which runs
+# every rule: none contradicts the official style guide at 0.27.0. Every .gd
+# in the Godot project is checked except vendored addons/. Exits non-zero if
+# any gate fails.
 
 set -uo pipefail
 
@@ -24,10 +26,6 @@ case "${1:-}" in
 		;;
 esac
 
-# Lint rules that contradict the official GDScript style guide. None do at
-# 0.27.0; add a rule here with a comment saying which part of the guide it breaks.
-lint_disabled=()
-
 failed=()
 
 # --- Godot -------------------------------------------------------------------
@@ -42,7 +40,10 @@ echo "== Import" >&2
 "$GODOT_BIN" --headless --path "$root" --import >/dev/null || failed+=("import")
 
 # unity/ and prototypes/ hold other projects; addons/ is vendored code.
-mapfile -t scripts < <(
+scripts=()
+while IFS= read -r script; do
+	scripts+=("$script")
+done < <(
 	find . \( -path ./addons -o -path ./unity -o -path ./prototypes -o -path ./.godot \
 		-o -path ./.tools -o -path ./.git -o -path ./.claude \) -prune \
 		-o -type f -name "*.gd" -print | sed 's|^\./||' | sort
@@ -105,14 +106,7 @@ else
 fi
 
 echo "== Lint" >&2
-lint_args=()
-if [ "${#lint_disabled[@]}" -gt 0 ]; then
-	lint_args+=(--disable "$(
-		IFS=,
-		echo "${lint_disabled[*]}"
-	)")
-fi
-"$formatter" lint "${lint_args[@]}" "${scripts[@]}" || failed+=("lint")
+"$formatter" lint "${scripts[@]}" || failed+=("lint")
 
 # --- Result ------------------------------------------------------------------
 

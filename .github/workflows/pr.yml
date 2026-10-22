@@ -25,10 +25,6 @@ jobs:
         with:
           version: ${{ steps.godot.outputs.version }}
           use-dotnet: false
-          # Inside the gitignored .tools/, so the gates never see Godot's own files.
-          path: .tools/setup-godot/godot
-          downloads-path: .tools/setup-godot/downloads
-          bin-path: .tools/setup-godot/bin
 
       - name: Quality gates
         run: scripts/check.sh
