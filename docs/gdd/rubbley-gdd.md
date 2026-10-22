@@ -1,4 +1,4 @@
-<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-10-11.
+<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-10-21.
      Source of truth: https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/edit
      Re-export with: curl -L "https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/export?format=md" -->
 
@@ -8,9 +8,9 @@
 
 # **DESCRIPTION**
 
-Rubbley is a top-down action game with an overhead-angle follow camera with simple controls \- swipe to spin, hold to attract, rub to repel. The game plays similarly to a space shooter such as Asteroids but the player is always in the center of the screen and the level scrolls about them.
+Rubbley is a top-down action game with an overhead-angle follow camera with simple controls \- pinch in to attract, pinch out to repel, swipe to spin. The game plays similarly to a space shooter such as Asteroids but the player is always in the center of the screen and the level scrolls about them.
 
-Rubbley’s powers come from a mysterious crystal called Graviga that was bestowed upon him by a shadowy figure within a black hole. The power of the Crystal helps him escape, and the Crystal speaks to him, telling him to seek more Graviga.
+Rubbley’s powers come from a mysterious crystal called Gravega that was bestowed upon him by a shadowy figure within a black hole. The power of the Crystal helps him escape, and the Crystal speaks to him, telling him to seek more Gravega.
 
 Debris and elements that Rubbley collects will be stored in a “merge grid” that lets players merge elements into power ups to improve gameplay. This is how Rubbley gains new powers and experience.
 
@@ -24,17 +24,17 @@ TO DO
 
 # **GAMEPLAY**
 
-Rubbley plays out in a 2.5D top-down view, where the player is able to traverse the world, avoid obstacles, and attack foes by manipulating gravity using the power of the Graviga Crystal. The game is designed for touch input first, but will also have a control scheme that works for both M+KB & Controller as well.
+Rubbley plays out in a 2.5D top-down view, where the player is able to traverse the world, avoid obstacles, and attack foes by manipulating gravity using the power of the Gravega Crystal. The game is designed for touch input first, but will also have a control scheme that works for both M+KB & Controller as well.
 
 ## **Resources**
 
 In Rubbley, players manage two kinds of resources: mass, and stamina. 
 
-**Mass** determines Rubbley’s capability to take damage, from collisions or enemy projectiles or other hazards. Additionally, mass determines how Rubbley’s Graviga powers interact with other celestial bodies. When Rubbley has more mass, the Graviga draws and repels the body from Rubbley as the center point. When the other body has more mass, Rubbley is drawn to and repelled from the other body as the center point.
+**Mass** determines Rubbley’s capability to take damage, from collisions or enemy projectiles or other hazards. Additionally, mass determines how Rubbley’s Gravega powers interact with other celestial bodies. When Rubbley has more mass, the Gravega draws and repels the body from Rubbley as the center point. When the other body has more mass, Rubbley is drawn to and repelled from the other body as the center point.
 
 **Stamina** determines the amount of time Rubbley can maintain the actions of his moveset. While in use stamina drains until it is empty or the player stops using the action. Stamina regenerates at a set rate while not in use.
 
-**Materials** are collected by the player during gameplay \- they are collectibles in "trails" around the map, and also are dropped by various enemies. Rubbley can collect them by drawing them in with Graviga. Materials are used outside of stages in order to fuel the progression system in the game.
+**Materials** are collected by the player during gameplay \- they are collectibles in "trails" around the map, and also are dropped by various enemies. Rubbley can collect them by drawing them in with Gravega. Materials are used outside of stages in order to fuel the progression system in the game.
 
 ## **Moveset**
 
@@ -42,9 +42,9 @@ Rubbley has three actions available to players, attract, repel and spin. All thr
 
 ### **Attract**
 
-Attract causes Rubbley to place a gravity well in space, or use a special Graviga power to increase an entity's gravitational pull. All uses of Attract use the "pinch" gesture to activate.
+Attract causes Rubbley to place a gravity well in space, or use a special Gravega power to increase an entity's gravitational pull. All uses of Attract use the "pinch" gesture to activate.
 
-If Attract is used while not targeting any entity, Rubbley will place a gravity well at the center of the "pinch" gesture. The gravity well will last for a certain amount of time, based on Rubbley's stats. This use of attract will consume one-half of Rubbley's current stamina, so it is possible for Rubbley to place two gravity wells in quick succession, if needed.
+If Attract is used on anything other than Rubbley or a glowing celestial body, Rubbley will place a gravity well at the center of the "pinch" gesture. The gravity well will last for a certain amount of time, based on Rubbley's stats. This use of attract will consume one-half of Rubbley's current stamina, so it is possible for Rubbley to place two gravity wells in quick succession, if needed.
 
 While using Attract targeting himself, debris will not damage him but instead be absorbed and increase his size. Additionally using Attract will continuously drain stamina. Attract can also be used to influence the position of enemies around Rubbley, provided his gravitational pull is strong enough to affect them. This use of Attract requires pinching and holding on Rubbley to activate.
 
@@ -52,15 +52,17 @@ Additionally, Attract can also be used on other celestial bodies, increasing the
 
 ### **Repel**
 
-Repel causes Rubbley to push objects away from him, using his special Graviga power to reverse his gravitational force. While using Repel, Rubbley will accelerate away from the celestial body that is targeted, allowing him to influence his trajectory as he moves through space.
+Repel causes Rubbley to push objects away from him, using his special Gravega power to reverse his gravitational force. When Repel targets a celestial body, it gives a one-shot push that sends Rubbley away from it, allowing him to influence his trajectory as he moves through space.
 
-Repel can also be used to send out a pulse of gravitational force that stuns enemies, by using the flick out gesture on Rubbley himself.
+Repel can also be used to send out a pulse of gravitational force that stuns enemies, by using the pinch-out gesture on Rubbley himself.
 
-Both of these uses of Repel consume a set amount of stamina.
+Using the pinch-out gesture on empty space sends out a Gravity Ripple instead: a push outward from that point that moves Rubbley too, but doesn't stun.
+
+All three uses of Repel consume a set amount of stamina.
 
 ### **Spin**
 
-Spin will generate a short term deflector shield to deflect objects. Spin is activated by swiping in any direction on the screen. Spinning will generate a small force field near Rubbley in the direction of the spin. Spin at the perfect moment and direction and projectiles will be blasted back at the attacker. While spinning, Rubbley is impervious to collision damage. Using Spin drains a set amount of Stamina.
+Spin will generate a short term deflector shield to deflect objects. Spin is activated by swiping in any direction on the screen. Spinning will generate a shield all the way around Rubbley that deflects objects from every angle, so Spin is about timing rather than aiming. Spin at the perfect moment and projectiles will be blasted back at whoever fired them. While spinning, Rubbley is impervious to collision damage. Using Spin drains a set amount of Stamina.
 
 ## **Controls**
 
@@ -68,15 +70,19 @@ Rubbley has a flexible control scheme that works in a fun-to-play manner on any 
 
 ### **Controller**
 
-When playing with a controller, the trigger buttons are used to activate Attract and Repel, while a secondary cursor moved with the left analog stick is used to determine what Rubbley is "aiming" at. Additionally, the camera can be "nudged" using the right analog stick. Spin is activated by mashing the face buttons.
+When playing with a controller, the trigger buttons are used to activate Attract and Repel, while an aim cursor moved with the left analog stick determines what Rubbley is "aiming" at. Additionally, the camera can be "nudged" using the right analog stick. Spin is activated by pressing any face button. The aim cursor sits around Rubbley in the direction the left stick points and snaps to nearby glowing bodies. R1/RB cycles between nearby targets, and leaving the stick at rest aims at Rubbley himself.
 
 ### **Mouse \+ Keyboard**
 
-When playing with mouse and keyboard, left and right click are used to activate Attract and Repel, while the mouse position moves the secondary cursor to determine what Rubbley is "aiming" at. Alt \+ Drag can be used to control the camera. Spin is activated by mashing spacebar.
+When playing with mouse and keyboard, left and right click are used to activate Attract and Repel, while the mouse position moves the secondary cursor to determine what Rubbley is "aiming" at. The camera can be nudged with WASD. Spin is activated by pressing spacebar.
 
 ### **Touch**
 
-When playing with touch, a "pinch-in" and "pinch-out" gesture is used to activate Attract and Repel, while a secondary cursor is placed by tapping on the screen to determine what Rubbley is "aiming" at. Additionally, the camera can be "nudged" using multi-touch drag. Spin is activated by "rubbing" on Rubbley.
+When playing with touch, a "pinch-in" and "pinch-out" gesture is used to activate Attract and Repel, while the center of the pinch determines what Rubbley is "aiming" at. Additionally, the camera can be "nudged" using multi-touch drag. Spin is activated by swiping anywhere on the screen.
+
+### **Camera**
+
+Phones play in portrait and desktop in landscape. Rubbley stays centered with a soft follow that can be tuned down to a hard lock. The camera zooms out as Rubbley grows, and Camera Zones can widen the view. A camera nudge is a short peek that springs back when released.
 
 ## **Advancement**
 
@@ -100,11 +106,15 @@ Discussion on an open world style design vs discrete levels
 
 ### **"Metroidvania" Progression**
 
-Level progression could be governed by required mass to perform progression tasks, for instance, or by Graviga crystals unlocking more of the moveset. For instance, start with only Attract, gain Repel and Spin, or maybe add even more mechanics and moves to Attract, Repel, or Spin.
+Level progression could be governed by required mass to perform progression tasks, for instance, or by Gravega crystals unlocking more of the moveset. For instance, start with only Attract, gain Repel and Spin, or maybe add even more mechanics and moves to Attract, Repel, or Spin.
 
 ### **Procedural Progression**
 
 Level progression could require exploring the map to find the "entrance" to the next level, with the player able to freely traverse between levels in gameplay in order to explore old areas with new abilities and collect missed items.
+
+### **Orbital Traversal**
+
+Levels could be crossed by orbiting very large, heavy celestial bodies that barely move. Rubbley falls into a body's orbit (a slow approach is helped into a steady circle), uses Repel on it to slingshot out with momentum toward the next one, and uses Attract on a distant body to pull himself in. Timing the slingshot sets the direction and speed Rubbley leaves with, so chaining orbits becomes a traversal skill.
 
 # **VISUALS**
 
