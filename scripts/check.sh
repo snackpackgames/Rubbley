@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# Runs every GDScript quality gate (ADR 0014). Agents run it before every
+# commit, and CI runs it in the required PR check.
+#
+#   scripts/check.sh        # compile, format check and lint
+#   scripts/check.sh --fix  # apply the formatter instead of checking format
+#
+# Gates: Godot's --check-only with warnings as errors, then the GDQuest
+# formatter (pinned in .gdscript-formatter-version) and its lint. Every .gd
+# outside addons/ is checked. Exits non-zero if any gate fails.
+
+set -uo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$root" || exit 1
+
+fix=false
+case "${1:-}" in
+	"") ;;
+	--fix) fix=true ;;
+	*)
+		echo "Usage: scripts/check.sh [--fix]" >&2
+		exit 2
+		;;
+esac
+
+# Lint rules that contradict the official GDScript style guide. None do at
+# 0.27.0; add a rule here with a comment saying which part of the guide it breaks.
+lint_disabled=()
+
+failed=()
+
+# --- Godot -------------------------------------------------------------------
+
+# shellcheck source=scripts/env.sh
+source "$root/scripts/env.sh"
+if [ -z "${GODOT_BIN:-}" ]; then
+	exit 1
+fi
+
+echo "== Import" >&2
+"$GODOT_BIN" --headless --path "$root" --import >/dev/null || failed+=("import")
+
+# unity/ and prototypes/ hold other projects; addons/ is vendored code.
+mapfile -t scripts < <(
+	find . \( -path ./addons -o -path ./unity -o -path ./prototypes -o -path ./.godot \
+		-o -path ./.tools -o -path ./.git -o -path ./.claude \) -prune \
+		-o -type f -name "*.gd" -print | sed 's|^\./||' | sort
+)
+if [ "${#scripts[@]}" -eq 0 ]; then
+	echo "No .gd files found" >&2
+	exit 1
+fi
+
+echo "== Compile (${#scripts[@]} scripts)" >&2
+compile_failed=false
+for script in "${scripts[@]}"; do
+	if ! "$GODOT_BIN" --headless --path "$root" --check-only --script "res://$script" >/dev/null; then
+		echo "Compile failed: $script" >&2
+		compile_failed=true
+	fi
+done
+$compile_failed && failed+=("compile")
+
+# --- Formatter ---------------------------------------------------------------
+
+formatter_version="$(tr -d '[:space:]' 2>/dev/null < "$root/.gdscript-formatter-version")"
+if [ -z "$formatter_version" ]; then
+	echo "Missing $root/.gdscript-formatter-version" >&2
+	exit 1
+fi
+formatter_dir="$root/.tools/gdscript-formatter/$formatter_version"
+
+case "$(uname -m)" in
+	arm64 | aarch64) arch="aarch64" ;;
+	*) arch="x86_64" ;;
+esac
+case "$(uname -s)" in
+	MINGW* | MSYS* | CYGWIN*) formatter_name="gdscript-formatter-${formatter_version}-windows-${arch}.exe" ;;
+	Darwin) formatter_name="gdscript-formatter-${formatter_version}-macos-${arch}" ;;
+	*) formatter_name="gdscript-formatter-${formatter_version}-linux-${arch}" ;;
+esac
+formatter="$formatter_dir/$formatter_name"
+
+if [ ! -x "$formatter" ]; then
+	url="https://github.com/GDQuest/GDScript-formatter/releases/download/${formatter_version}/${formatter_name}.zip"
+	echo "Downloading the GDScript formatter ${formatter_version} from ${url}" >&2
+	mkdir -p "$formatter_dir" &&
+		curl -fL --progress-bar -o "$formatter_dir/$formatter_name.zip" "$url" &&
+		unzip -q -o "$formatter_dir/$formatter_name.zip" -d "$formatter_dir" &&
+		rm -f "$formatter_dir/$formatter_name.zip" &&
+		chmod +x "$formatter"
+fi
+if ! "$formatter" --version 2>/dev/null | grep -qx "gdscript-formatter ${formatter_version}"; then
+	echo "No GDScript formatter ${formatter_version} at $formatter" >&2
+	exit 1
+fi
+
+if $fix; then
+	echo "== Format (fix)" >&2
+	"$formatter" --reorder-code "${scripts[@]}" || failed+=("format")
+else
+	echo "== Format" >&2
+	"$formatter" --check --reorder-code "${scripts[@]}" || failed+=("format")
+fi
+
+echo "== Lint" >&2
+lint_args=()
+if [ "${#lint_disabled[@]}" -gt 0 ]; then
+	lint_args+=(--disable "$(
+		IFS=,
+		echo "${lint_disabled[*]}"
+	)")
+fi
+"$formatter" lint "${lint_args[@]}" "${scripts[@]}" || failed+=("lint")
+
+# --- Result ------------------------------------------------------------------
+
+if [ "${#failed[@]}" -gt 0 ]; then
+	echo "Check failed: ${failed[*]}" >&2
+	exit 1
+fi
+echo "All checks passed" >&2

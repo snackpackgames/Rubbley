@@ -6,11 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Rubbley is a 2.5D top-down physics action-puzzle game: the player stays centered while the level scrolls, and fights by manipulating gravity with three moves (Attract, Repel, Spin). Touch-first, with controller and mouse + keyboard schemes.
 
-The game is **migrating from Unity to Godot**. The Godot 4.7 project lives at the repo root (`project.godot`, game code under `game/`), pinned to the version in `.godot-version`. The Unity 2019.4 prototype (orbit/attractor physics in `unity/Assets/Scripts/`, a toon shader, debug scenes) sits in `unity/` as frozen reference until it's retired. Treat the Unity code as reference for behaviour to port, not as architecture to preserve. Godot project decisions are recorded as ADRs in `docs/adr/`; new ones get settled through `/wayfinder` maps.
+Rubbley is built in **Godot 4.7, GDScript only**. The project lives at the repo root (`project.godot`, game code under `game/`), pinned to the version in `.godot-version`; all new work goes there. The Unity 2019.4 prototype (orbit/attractor physics in `unity/Assets/Scripts/`, a toon shader, debug scenes) sits in `unity/` as frozen reference until it's retired. Treat the Unity code as reference for behaviour to port, not as architecture to preserve. Godot project decisions are recorded as ADRs in `docs/adr/`; new ones get settled through `/wayfinder` maps.
 
 ## Godot tooling
 
 `source scripts/env.sh` finds the pinned Godot and exports `GODOT_BIN` (`--install` downloads it into `.tools/`). Run `scripts/import.sh` after adding a scene, script or `class_name`, so the `.godot/` cache and `.uid` files are up to date. New `.tscn` files need a `uid=` in their header; the editor writes one on save, and a headless import does not.
+
+Run `scripts/check.sh` before every commit: it runs the compiler, formatter and lint gates that CI requires on every PR, and `--fix` applies the formatter. GDScript follows the official style guide plus the additions in [`docs/agents/gdscript-style.md`](docs/agents/gdscript-style.md); read it before writing GDScript.
 
 ## Game design
 

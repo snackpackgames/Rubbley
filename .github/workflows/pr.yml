@@ -1,0 +1,34 @@
+# The required PR check (ADR 0014): every GDScript quality gate must pass
+# before a PR merges.
+name: PR
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned Godot version
+        id: godot
+        run: echo "version=$(tr -d '[:space:]' < .godot-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ steps.godot.outputs.version }}
+          use-dotnet: false
+          # Inside the gitignored .tools/, so the gates never see Godot's own files.
+          path: .tools/setup-godot/godot
+          downloads-path: .tools/setup-godot/downloads
+          bin-path: .tools/setup-godot/bin
+
+      - name: Quality gates
+        run: scripts/check.sh
