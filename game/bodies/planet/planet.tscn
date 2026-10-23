@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://vrf4hp33ona4"]
+
+[ext_resource type="Script" path="res://game/bodies/play_plane_body.gd" id="1_body"]
+[ext_resource type="Resource" path="res://game/bodies/planet/planet_tuning.tres" id="2_tuning"]
+[ext_resource type="Material" path="res://game/bodies/planet/planet_material.tres" id="3_material"]
+[ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
+
+[sub_resource type="SphereShape3D" id="collider"]
+radius = 5.0
+
+[sub_resource type="SphereMesh" id="mesh"]
+radius = 5.0
+height = 10.0
+
+[node name="Planet" type="RigidBody3D"]
+mass = 250.0
+script = ExtResource("1_body")
+tuning = ExtResource("2_tuning")
+
+[node name="Collider" type="CollisionShape3D" parent="."]
+shape = SubResource("collider")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh")
+surface_material_override/0 = ExtResource("3_material")
+
+[node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
+script = ExtResource("4_gravity")
+role = 0
+body = NodePath("..")
