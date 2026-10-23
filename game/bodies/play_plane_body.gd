@@ -1,0 +1,25 @@
+class_name PlayPlaneBody
+extends RigidBody3D
+## A rigid body locked to the Play Plane (ADR 0003): it moves only in XZ and turns
+## only around Y. Its damping, speed cap and CCD come from its [BodyTuning].
+
+## The type-wide values for this body's type.
+@export var tuning: BodyTuning
+
+
+func _ready() -> void:
+	assert(tuning != null, "%s needs a BodyTuning" % name)
+	axis_lock_linear_y = true
+	axis_lock_angular_x = true
+	axis_lock_angular_z = true
+	# Gravity comes only from the GravitySystem, never the project's default down.
+	gravity_scale = 0.0
+	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
+	linear_damp = tuning.linear_damp_per_second
+	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
+	angular_damp = tuning.angular_damp_per_second
+	continuous_cd = tuning.continuous_cd
+
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	state.linear_velocity = state.linear_velocity.limit_length(tuning.speed_cap_m_per_s)

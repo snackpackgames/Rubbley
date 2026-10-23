@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://dfkhaj271dvyn"]
+
+[ext_resource type="Script" path="res://game/bodies/play_plane_body.gd" id="1_body"]
+[ext_resource type="Resource" path="res://game/bodies/debris/debris_tuning.tres" id="2_tuning"]
+[ext_resource type="Material" path="res://game/bodies/debris/debris_material.tres" id="3_material"]
+[ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
+
+[sub_resource type="BoxShape3D" id="collider"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="BoxMesh" id="mesh"]
+size = Vector3(0.6, 0.6, 0.6)
+
+[node name="Debris" type="RigidBody3D"]
+mass = 0.5
+script = ExtResource("1_body")
+tuning = ExtResource("2_tuning")
+
+[node name="Collider" type="CollisionShape3D" parent="."]
+shape = SubResource("collider")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh")
+surface_material_override/0 = ExtResource("3_material")
+
+[node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
+script = ExtResource("4_gravity")
+role = 1
+body = NodePath("..")

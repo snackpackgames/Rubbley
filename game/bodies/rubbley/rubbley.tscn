@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dumbeyhqv1xaf"]
+
+[ext_resource type="Script" path="res://game/bodies/play_plane_body.gd" id="1_body"]
+[ext_resource type="Resource" path="res://game/bodies/rubbley/rubbley_tuning.tres" id="2_tuning"]
+[ext_resource type="PackedScene" path="res://game/bodies/rubbley/asteroid.glb" id="3_asteroid"]
+[ext_resource type="Material" path="res://game/bodies/rubbley/rubbley_material.tres" id="4_material"]
+[ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="5_gravity"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
+radius = 1.0
+
+[node name="Rubbley" type="RigidBody3D"]
+mass = 10.0
+script = ExtResource("1_body")
+tuning = ExtResource("2_tuning")
+
+[node name="Collider" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_collider")
+
+[node name="Mesh" parent="." instance=ExtResource("3_asteroid")]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+
+[node name="Asteroid" parent="Mesh" index="0"]
+material_override = ExtResource("4_material")
+
+[node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
+script = ExtResource("5_gravity")
+body = NodePath("..")
+
+[editable path="Mesh"]

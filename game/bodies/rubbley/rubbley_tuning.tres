@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BodyTuning" format=3 uid="uid://bsvylf7e55us3"]
+
+[ext_resource type="Script" path="res://game/bodies/body_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+speed_cap_m_per_s = 20.0
+linear_damp_per_second = 0.03
+angular_damp_per_second = 0.5
+continuous_cd = true
