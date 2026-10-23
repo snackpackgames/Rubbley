@@ -10,6 +10,9 @@ enum Role {
 	CELESTIAL,
 	## Is pulled but pulls nothing: debris, materials, small enemies.
 	PASSIVE,
+	## A Celestial Body level design holds in place: it pulls through Area point gravity
+	## ([AnchoredPull]) and is never moved.
+	ANCHORED,
 }
 
 ## The group every [GravityBody] joins.
@@ -19,6 +22,8 @@ const GROUP := &"gravity_bodies"
 @export var role := Role.CELESTIAL
 ## The body gravity pulls and pushes. It is the component's own parent, wired in its scene.
 @export var body: RigidBody3D
+## An Anchored Body's Area point gravity, wired in its scene. Only [constant Role.ANCHORED] uses it.
+@export var anchored_pull: AnchoredPull
 
 ## The current Gravega multiplier on every pair this body is in. Attract raises it above 1.
 var gravega_multiplier := 1.0
@@ -26,3 +31,11 @@ var gravega_multiplier := 1.0
 
 func _enter_tree() -> void:
 	add_to_group(GROUP)
+
+
+func _ready() -> void:
+	if role == Role.ANCHORED:
+		assert(anchored_pull != null, "%s is Anchored but has no AnchoredPull" % body.name)
+		# Held in place for good: a static freeze still collides but never moves.
+		body.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
+		body.freeze = true

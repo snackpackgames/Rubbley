@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://game/gravity/gravity_system.gd" id="1_5oaue"]
 [ext_resource type="Resource" path="res://game/gravity/gravity_tuning.tres" id="2_w3g50"]
 [ext_resource type="PackedScene" path="res://game/bodies/rubbley/rubbley.tscn" id="3_tavcy"]
-[ext_resource type="PackedScene" path="res://game/bodies/planet/planet.tscn" id="6_qyvks"]
+[ext_resource type="PackedScene" path="res://game/bodies/planet/anchored_planet.tscn" id="6_qyvks"]
 [ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="8_di3dc"]
 
 [sub_resource type="Environment" id="Environment_x1j3g"]

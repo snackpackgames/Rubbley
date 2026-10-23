@@ -28,7 +28,7 @@ The shipped-values suite's feel scenarios (ADR 0017) each run over **5 start con
 - **Drift**: Rubbley in empty space covers at least 80% of the distance Drift alone should give (from Drift strength, his Mass and damping) over 5 s, measured after a 1 s settle.
 - **A Gravity Well can't trap Rubbley**: Rubbley may stall in a Well, but he leaves its radius within the Well's lifetime plus 1 s. A Well can hold him briefly as a tactic but can never soft-lock him.
 
-**Budget**: at most 10 simulated seconds per variant, and the whole shipped-values suite must finish within 60 s wall time on CI. The suite logs its time, and going over fails it.
+**Budget**: at most 10 simulated seconds per variant, except Capture, whose 5 orbital periods take as long as the shipped Orbit does (about 125 s around a shipped planet, since the speed cap rules out a 2 s period). The whole shipped-values suite must finish within 60 s wall time on CI; that is the hard gate, and headless stepping runs the Capture scenario's 5 variants in a few seconds. The suite logs its time, and going over fails it.
 
 ## Flaky tests and quarantine
 

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://khfk6m5njl6h1"]
+
+[ext_resource type="PackedScene" path="res://game/bodies/planet/planet.tscn" id="1_planet"]
+[ext_resource type="Script" path="res://game/gravity/anchored_pull.gd" id="2_pull"]
+
+[sub_resource type="SphereShape3D" id="reach"]
+radius = 60.0
+
+[node name="AnchoredPlanet" instance=ExtResource("1_planet")]
+
+[node name="GravityBody" parent="." node_paths=PackedStringArray("anchored_pull")]
+role = 2
+anchored_pull = NodePath("../AnchoredPull")
+
+[node name="AnchoredPull" type="Area3D" parent="." node_paths=PackedStringArray("reach")]
+script = ExtResource("2_pull")
+reach = NodePath("Reach")
+
+[node name="Reach" type="CollisionShape3D" parent="AnchoredPull"]
+shape = SubResource("reach")
