@@ -10,4 +10,4 @@ extends Resource
 @export_range(0.0, 500.0, 0.1, "or_greater") var max_range_m := 60.0
 ## Drift's steady push on Rubbley, in newtons (mass × m/s²). His Mass and damping
 ## set the speed it gives.
-@export_range(0.0, 100.0, 0.01, "or_greater") var drift_force_n := 6.0
+@export_range(0.0, 100.0, 0.01, "or_greater") var drift_force_n := 1.0

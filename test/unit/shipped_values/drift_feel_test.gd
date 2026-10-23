@@ -14,9 +14,9 @@ const SUITE_BUDGET_MS := 60_000
 const DRIFT_DIRECTION := Vector3.RIGHT
 ## One canonical start plus four seeded perturbations (ADR 0018).
 const VARIANT_COUNT := 5
-# Every variant must cover at least this share of the Drift-alone distance. 80% absorbs
-# Jolt's per-tick damping (close to, not exactly, exponential) and a slightly slow start,
-# while a Drift force cut by a quarter or more still fails.
+# Drift's share of each variant's distance must reach this share of the Drift-alone
+# distance. 80% absorbs Jolt's per-tick damping (close to, not exactly, exponential)
+# while a Drift force cut by a quarter or more fails.
 const MIN_DISTANCE_SHARE := 0.8
 
 var _suite_start_ms := 0
@@ -50,31 +50,33 @@ func test_drift_carries_rubbley_through_empty_space() -> void:
 		var settled_at := rubbley.global_position
 		await step_seconds(MEASURE_S)
 		var covered := (rubbley.global_position - settled_at).dot(DRIFT_DIRECTION)
-		var expected := Drift.new(GRAVITY_TUNING).expected_distance(
-			rubbley.mass,
-			rubbley.tuning.linear_damp_per_second,
-			start_speed,
-			SETTLE_S,
-			SETTLE_S + MEASURE_S,
+		var drift := Drift.new(GRAVITY_TUNING)
+		var damp := rubbley.tuning.linear_damp_per_second
+		var end_s := SETTLE_S + MEASURE_S
+		var drift_alone := drift.expected_distance(rubbley.mass, damp, 0.0, SETTLE_S, end_s)
+		# What his starting speed alone would carry him, so a fast start can't hide a weak Drift.
+		var coast := (
+			drift.expected_distance(rubbley.mass, damp, start_speed, SETTLE_S, end_s) - drift_alone
 		)
+		var from_drift := covered - coast
 
-		var failure := "variant %d (seed %d, start %s): covered %.2f m of %.2f m expected" % [
+		var failure := "variant %d (seed %d, start %s): Drift gave %.2f m of %.2f m expected" % [
 			variant,
 			SEED,
 			start,
-			covered,
-			expected,
+			from_drift,
+			drift_alone,
 		]
 		(
-			assert_float(covered)
+			assert_float(from_drift)
 			.override_failure_message(failure)
-			.is_greater_equal(expected * MIN_DISTANCE_SHARE)
+			.is_greater_equal(drift_alone * MIN_DISTANCE_SHARE)
 		)
 		world.free()
 
 
 # Rubbley enters nearly at rest (a tenth of his Drift terminal speed), along the Drift,
-# 10 m from the origin. A faster start would hide a weak Drift behind his own coasting.
+# 10 m from the origin.
 func _canonical_start() -> Start:
 	return Start.new(0.1, 0.0, 10.0)
 

@@ -13,70 +13,80 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.6, 0.6, 1)
 ambient_light_energy = 0.4
 
-[node name="SandboxLevel" type="Node3D" unique_id=1078299865]
+[node name="SandboxLevel" type="Node3D" unique_id=1926548440]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1680810557]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=514243655]
 environment = SubResource("Environment_x1j3g")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=848406073]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=930835104]
 transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
 
-[node name="OverheadCamera" type="Camera3D" parent="." unique_id=2119566153]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 100, 10)
+[node name="OverheadCamera" type="Camera3D" parent="." unique_id=658650308]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 60, 165, -40)
 current = true
 fov = 40.0
 
-[node name="GravitySystem" type="Node" parent="." unique_id=1788054163 node_paths=PackedStringArray("drift_body")]
+[node name="GravitySystem" type="Node" parent="." unique_id=111326286 node_paths=PackedStringArray("drift_body")]
 script = ExtResource("1_5oaue")
 tuning = ExtResource("2_w3g50")
 drift_body = NodePath("../Rubbley/GravityBody")
 
-[node name="Rubbley" type="RigidBody3D" parent="." unique_id=2104189382 instance=ExtResource("3_tavcy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 0)
+[node name="Rubbley" type="RigidBody3D" parent="." unique_id=1851117730 instance=ExtResource("3_tavcy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 0)
+linear_velocity = Vector3(5, 0, 0)
 
-[node name="Planet" type="RigidBody3D" parent="." unique_id=583106460 instance=ExtResource("6_qyvks")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 28)
+[node name="Planet1" type="RigidBody3D" parent="." unique_id=1647583383 instance=ExtResource("6_qyvks")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -24)
 
-[node name="Debris" type="Node3D" parent="." unique_id=1797207246]
+[node name="Planet2" type="RigidBody3D" parent="." unique_id=1049117332 instance=ExtResource("6_qyvks")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 0, -25)
 
-[node name="Debris1" type="RigidBody3D" parent="Debris" unique_id=1795912093 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -5.5)
+[node name="Planet3" type="RigidBody3D" parent="." unique_id=1299675446 instance=ExtResource("6_qyvks")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -52)
 
-[node name="Debris2" type="RigidBody3D" parent="Debris" unique_id=331128467 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0, -12)
+[node name="Debris" type="Node3D" parent="." unique_id=1748990478]
 
-[node name="Debris3" type="RigidBody3D" parent="Debris" unique_id=651988983 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, -3.5)
+[node name="Debris1" type="RigidBody3D" parent="Debris" unique_id=1305372686 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0, -41)
 
-[node name="Debris4" type="RigidBody3D" parent="Debris" unique_id=859665425 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -15.5)
+[node name="Debris2" type="RigidBody3D" parent="Debris" unique_id=2128518914 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0, -40.5)
 
-[node name="Debris5" type="RigidBody3D" parent="Debris" unique_id=611305890 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, -12.5)
+[node name="Debris3" type="RigidBody3D" parent="Debris" unique_id=1944318206 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128.5, 0, -70)
 
-[node name="Debris6" type="RigidBody3D" parent="Debris" unique_id=1583362147 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.5, 0, -1)
+[node name="Debris4" type="RigidBody3D" parent="Debris" unique_id=1947130311 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -39.5)
 
-[node name="Debris7" type="RigidBody3D" parent="Debris" unique_id=1158857229 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0, -12)
+[node name="Debris5" type="RigidBody3D" parent="Debris" unique_id=1162693368 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, -41.5)
 
-[node name="Debris8" type="RigidBody3D" parent="Debris" unique_id=2142227734 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0, -19)
+[node name="Debris6" type="RigidBody3D" parent="Debris" unique_id=1709429778 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0, -32)
 
-[node name="Debris9" type="RigidBody3D" parent="Debris" unique_id=471383996 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 21.5)
+[node name="Debris7" type="RigidBody3D" parent="Debris" unique_id=442120521 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -7.5)
 
-[node name="Debris10" type="RigidBody3D" parent="Debris" unique_id=1011443905 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, -14)
+[node name="Debris8" type="RigidBody3D" parent="Debris" unique_id=1967266207 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.5, 0, -38.5)
 
-[node name="Debris11" type="RigidBody3D" parent="Debris" unique_id=1112122967 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 15.5)
+[node name="Debris9" type="RigidBody3D" parent="Debris" unique_id=12033659 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 0, -39.5)
 
-[node name="Debris12" type="RigidBody3D" parent="Debris" unique_id=1561411920 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, -20)
+[node name="Debris10" type="RigidBody3D" parent="Debris" unique_id=2041689192 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -40)
 
-[node name="Debris13" type="RigidBody3D" parent="Debris" unique_id=2031810676 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 1.5)
+[node name="Debris11" type="RigidBody3D" parent="Debris" unique_id=1069883637 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92.5, 0, -32)
 
-[node name="Debris14" type="RigidBody3D" parent="Debris" unique_id=184261462 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, -11)
+[node name="Debris12" type="RigidBody3D" parent="Debris" unique_id=755661549 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 147.5, 0, -43)
+
+[node name="Debris13" type="RigidBody3D" parent="Debris" unique_id=812907943 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, -10)
+
+[node name="Debris14" type="RigidBody3D" parent="Debris" unique_id=1842921285 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 0, -8)
+
+[node name="Debris15" type="RigidBody3D" parent="Debris" unique_id=1762183118 instance=ExtResource("8_di3dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 151, 0, -55.5)
