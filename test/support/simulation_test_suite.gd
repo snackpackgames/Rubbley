@@ -11,5 +11,5 @@ const _TICK_EPSILON := 1e-6
 ## Each tick has a fixed delta however slowly the test runs.
 func step_seconds(seconds: float) -> void:
 	var ticks := ceili(seconds * Engine.physics_ticks_per_second - _TICK_EPSILON)
-	for i in ticks:
+	for _tick in ticks:
 		await get_tree().physics_frame

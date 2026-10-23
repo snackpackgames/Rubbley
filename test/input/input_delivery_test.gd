@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 ## Checks that the scene runner's simulated input reaches a node's _input.
 
 
+## A simulated touch arrives as an InputEventScreenTouch.
 func test_simulated_screen_touch_reaches_the_scene() -> void:
 	var recorder: InputRecorder = auto_free(InputRecorder.new())
 	var runner := scene_runner(recorder)
@@ -20,6 +21,7 @@ func test_simulated_screen_touch_reaches_the_scene() -> void:
 class InputRecorder:
 	extends Node
 
+	## Every event _input received, in order.
 	var events: Array[InputEvent] = []
 
 
