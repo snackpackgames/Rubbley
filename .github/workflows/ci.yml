@@ -1,0 +1,90 @@
+# CI for PRs and main. Its check job is the required PR check (ADRs 0011 and
+# 0014): every GDScript quality gate and both test suites must pass before a PR
+# merges. It then uploads the web-playtest export as an artifact, so a reviewer
+# can play the PR.
+#
+# On every merge to main the same check runs again, and its export is deployed
+# to GitHub Pages as the Playtest Build (ADR 0020). Each deploy replaces the
+# last, so only the latest main is live. Dispatching the workflow on main
+# redeploys it by hand.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# PR runs cancel each other; main runs queue, so a deploy is never cut off and
+# the newest pending merge is the one that goes live.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  # scripts/check.sh looks up each quarantined test's issue with gh.
+  issues: read
+
+jobs:
+  # The main ruleset requires this job by name; keep it "check".
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned Godot version
+        id: godot
+        run: echo "version=$(tr -d '[:space:]' < .godot-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ steps.godot.outputs.version }}
+          use-dotnet: false
+          include-templates: true
+
+      - name: Quality gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check.sh
+
+      # The input suite needs a display server; Godot drops InputEvents under --headless.
+      - name: Tests
+        run: xvfb-run --auto-servernum scripts/test.sh
+
+      - name: Export web-playtest
+        run: |
+          mkdir -p build/web-playtest
+          godot --headless --path . --export-release web-playtest build/web-playtest/index.html
+          test -f build/web-playtest/index.pck
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-playtest
+          path: build/web-playtest/
+          if-no-files-found: error
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-playtest
+          path: build/web-playtest/
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/web-playtest/
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
