@@ -9,9 +9,9 @@
 # On Windows the console build is preferred, so headless runs print to the terminal.
 
 _rubbley_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-_rubbley_version="$(tr -d '[:space:]' 2>/dev/null < "$_rubbley_root/.godot-version")"
-if [ -z "$_rubbley_version" ]; then
-	echo "Missing $_rubbley_root/.godot-version" >&2
+# shellcheck source=scripts/lib.sh
+source "$_rubbley_root/scripts/lib.sh"
+if ! _rubbley_version="$(rubbley_read_pin "$_rubbley_root/.godot-version")"; then
 	unset _rubbley_root _rubbley_version
 	return 1
 fi
@@ -29,17 +29,14 @@ _rubbley_find_in_tools() {
 
 _rubbley_install() {
 	local asset
-	case "$(uname -s)" in
-		MINGW* | MSYS* | CYGWIN*) asset="Godot_v${_rubbley_version}-stable_win64.exe.zip" ;;
-		Darwin) asset="Godot_v${_rubbley_version}-stable_macos.universal.zip" ;;
-		*) asset="Godot_v${_rubbley_version}-stable_linux.x86_64.zip" ;;
+	case "$(rubbley_os)" in
+		windows) asset="Godot_v${_rubbley_version}-stable_win64.exe.zip" ;;
+		macos) asset="Godot_v${_rubbley_version}-stable_macos.universal.zip" ;;
+		linux) asset="Godot_v${_rubbley_version}-stable_linux.x86_64.zip" ;;
 	esac
-	local url="https://github.com/godotengine/godot/releases/download/${_rubbley_version}-stable/${asset}"
-	echo "Downloading Godot ${_rubbley_version} from ${url}" >&2
-	mkdir -p "$_rubbley_tools" &&
-		curl -fL --progress-bar -o "$_rubbley_tools/$asset" "$url" &&
-		unzip -q -o "$_rubbley_tools/$asset" -d "$_rubbley_tools" &&
-		rm -f "$_rubbley_tools/$asset"
+	rubbley_fetch_zip \
+		"https://github.com/godotengine/godot/releases/download/${_rubbley_version}-stable/${asset}" \
+		"$_rubbley_tools"
 }
 
 _rubbley_candidate=""
@@ -59,6 +56,7 @@ if [ -n "$_rubbley_candidate" ]; then
 	export GODOT_BIN="$_rubbley_candidate"
 	echo "GODOT_BIN=$GODOT_BIN" >&2
 else
+	unset GODOT_BIN
 	echo "No Godot ${_rubbley_version} found. Run: source scripts/env.sh --install" >&2
 fi
 

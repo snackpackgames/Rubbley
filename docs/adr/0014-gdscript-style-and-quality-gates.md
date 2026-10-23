@@ -15,16 +15,17 @@ Rubbley is GDScript-only and mostly agent-built, so nothing like a type checker 
 
 - **Static typing is required.** `untyped_declaration`, `unsafe_property_access`, `unsafe_method_access`, `unsafe_cast` and `unsafe_call_argument` are set to Error in `project.godot`. `inferred_declaration` stays off, so `:=` is allowed.
 - **No warnings.** Every warning that defaults to Warn is raised to Error. An exception is allowed only with a one-line reason in the style page.
-- **Format.** The GDQuest GDScript-formatter, pinned to the exact version in `.gdscript-formatter-version`, runs with `--check`.
-- **Lint.** The same binary's lint subcommand checks naming and member order. Rules that contradict the official guide are switched off in its config.
-- **Scope.** Game code and `test/` are both checked. `addons/` (vendored gdUnit4 and later addons) is excluded from every gate.
+- **Format.** The GDQuest GDScript-formatter, pinned to the exact version in `.gdscript-formatter-version`, runs with `--check --reorder-code`, so it checks member order as well as layout.
+- **Lint.** The same binary's lint subcommand checks naming. The linter has no config file, so any rule that contradicts the official guide is switched off with `--disable` in `scripts/check.sh`. At 0.27.0 no rule does, and every rule runs.
+- **Line endings.** `.gitattributes` keeps text files LF in every checkout. The formatter writes LF, so a CRLF checkout on Windows would fail the format check.
+- **Scope.** Game code and `test/` are both checked. `addons/` (vendored gdUnit4 and later addons) is excluded from every gate, as are `unity/` and `prototypes/`, which are separate projects.
 
 ## One check script
 
 `scripts/check.sh` is the only way agents and CI run the gates, matching `scripts/test.sh` from ADR 0011. It:
 
 1. finds Godot and checks it against `.godot-version`, then runs `godot --headless --import`;
-2. runs `godot --headless --check-only --script` on every `.gd` outside `addons/`, using the editor binary, since warnings exist only in debug builds;
+2. runs `godot --headless --check-only --script` on every `.gd` in scope, using the editor binary, since warnings exist only in debug builds;
 3. downloads the pinned formatter release into a gitignored `.tools/` on first use, then runs the format check and lint;
 4. checks that every skipped test carries a `quarantined-by: @<github-user> #<open issue>` reason (ADR 0018);
 5. exits non-zero if any gate fails. `--fix` applies the formatter instead of checking.
