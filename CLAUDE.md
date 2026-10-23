@@ -12,7 +12,7 @@ Rubbley is built in **Godot 4.7, GDScript only**. The project lives at the repo 
 
 `source scripts/env.sh` finds the pinned Godot and exports `GODOT_BIN` (`--install` downloads it into `.tools/`). Run `scripts/import.sh` after adding a scene, script or `class_name`, so the `.godot/` cache and `.uid` files are up to date. New `.tscn` files need a `uid=` in their header; the editor writes one on save, and a headless import does not.
 
-Run `scripts/check.sh` before every commit: it runs the compiler, formatter and lint gates that CI requires on every PR, and `--fix` applies the formatter. GDScript follows the official style guide plus the additions in [`docs/agents/gdscript-style.md`](docs/agents/gdscript-style.md); read it before writing GDScript.
+Run `scripts/check.sh` before every commit: it runs the compiler, formatter and lint gates that CI requires on every PR, and `--fix` applies the formatter. Run tests only through `scripts/test.sh`: with no argument it runs both gdUnit4 suites, or pass `unit` (headless, for the red-green loop), `input` (opens a window) or a path under `test/`. Physics tests extend `SimulationTestSuite` and step with `await step_seconds(s)`. GDScript follows the official style guide plus the additions in [`docs/agents/gdscript-style.md`](docs/agents/gdscript-style.md); read it before writing GDScript.
 
 ## Game design
 
