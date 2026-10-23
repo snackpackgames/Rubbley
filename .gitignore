@@ -94,3 +94,8 @@ InitTestScene*.unity
 
 # Blender backups of source art in art/
 *.blend1
+
+# Export output
+/build/
+# gdUnit4 test reports (ADR 0011)
+/reports/

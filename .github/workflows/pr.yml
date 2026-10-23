@@ -1,5 +1,6 @@
-# The required PR check (ADR 0014): every GDScript quality gate must pass
-# before a PR merges.
+# The required PR check (ADRs 0011 and 0014): every GDScript quality gate and
+# both test suites must pass before a PR merges. It then uploads the
+# web-playtest export as an artifact, so a reviewer can play the PR.
 name: PR
 
 on:
@@ -10,10 +11,15 @@ concurrency:
   group: pr-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  # scripts/check.sh looks up each quarantined test's issue with gh.
+  issues: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -25,6 +31,25 @@ jobs:
         with:
           version: ${{ steps.godot.outputs.version }}
           use-dotnet: false
+          include-templates: true
 
       - name: Quality gates
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: scripts/check.sh
+
+      # The input suite needs a display server; Godot drops InputEvents under --headless.
+      - name: Tests
+        run: xvfb-run --auto-servernum scripts/test.sh
+
+      - name: Export web-playtest
+        run: |
+          mkdir -p build/web-playtest
+          godot --headless --path . --export-release web-playtest build/web-playtest/index.html
+          test -f build/web-playtest/index.pck
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-playtest
+          path: build/web-playtest/
+          if-no-files-found: error

@@ -8,8 +8,9 @@
 # Gates: Godot's --check-only with warnings as errors, then the GDQuest
 # formatter (pinned in .gdscript-formatter-version) and its lint, which runs
 # every rule: none contradicts the official style guide at 0.27.0. Every .gd
-# in the Godot project is checked except vendored addons/. Exits non-zero if
-# any gate fails.
+# in the Godot project is checked except vendored addons/. Last, every skipped
+# test must be quarantined against an open issue, looked up with gh. Exits
+# non-zero if any gate fails.
 
 set -uo pipefail
 
@@ -96,6 +97,59 @@ fi
 
 echo "== Lint" >&2
 "$formatter" lint "${scripts[@]}" || failed+=("lint")
+
+# --- Skipped tests -----------------------------------------------------------
+
+# A test skipped with gdUnit4's do_skip, on a test function or on before(),
+# must be quarantined (ADR 0018): its skip_reason reads
+# "quarantined-by: @<github-user> #<issue>", and the issue is open.
+tests=()
+for script in "${scripts[@]}"; do
+	case "$script" in test/*) tests+=("$script") ;; esac
+done
+
+echo "== Skipped tests" >&2
+skip_failed=false
+if [ "${#tests[@]}" -gt 0 ]; then
+	# Prints "<file>:<line><TAB><skip_reason>" for each function signature,
+	# which may span lines, whose do_skip argument isn't plain false.
+	skips="$(awk '
+		/^[[:space:]]*(static[[:space:]]+)?func[[:space:]]/ { sig = ""; start = FNR; in_sig = 1 }
+		in_sig {
+			sig = sig " " $0
+			if ($0 ~ /\)[[:space:]]*(->[^:]*)?:[[:space:]]*(#.*)?$/) {
+				in_sig = 0
+				if (sig ~ /[(,[:space:]]_?do_skip[[:space:]]*:?=/ \
+					&& sig !~ /_?do_skip[[:space:]]*:?=[[:space:]]*false[[:space:]]*[,)]/) {
+					reason = ""
+					if (match(sig, /_?skip_reason[[:space:]]*:?=[[:space:]]*"[^"]*"/)) {
+						reason = substr(sig, RSTART, RLENGTH)
+						sub(/^[^"]*"/, "", reason)
+						sub(/"$/, "", reason)
+					}
+					print FILENAME ":" start "\t" reason
+				}
+			}
+		}
+	' "${tests[@]}")"
+	while IFS=$'\t' read -r location reason; do
+		[ -n "$location" ] || continue
+		if [[ ! "$reason" =~ ^quarantined-by:\ @[A-Za-z0-9-]+\ \#([0-9]+)$ ]]; then
+			echo "$location: skip_reason must read 'quarantined-by: @<github-user> #<issue>', not '$reason'" >&2
+			skip_failed=true
+			continue
+		fi
+		issue="${BASH_REMATCH[1]}"
+		if ! state="$(gh issue view "$issue" --json state --jq .state)"; then
+			echo "$location: can't look up issue #$issue with gh" >&2
+			skip_failed=true
+		elif [ "$state" != "OPEN" ]; then
+			echo "$location: quarantine issue #$issue is closed" >&2
+			skip_failed=true
+		fi
+	done <<<"$skips"
+fi
+$skip_failed && failed+=("skipped tests")
 
 # --- Result ------------------------------------------------------------------
 
