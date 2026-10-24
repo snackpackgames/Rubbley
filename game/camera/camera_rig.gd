@@ -42,10 +42,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	visible_extent_m = _framing.step(target_radius_m, _active_zones(), delta)
-	var at := target.get_global_transform_interpolated().origin
+	var rubbley_at := target.get_global_transform_interpolated().origin
 	# Screen up is away from the camera's lean, along -Z.
-	var nudge_on_plane := Vector3(nudge.x, 0.0, -nudge.y)
-	global_position = _follow.step(at, nudge_on_plane, visible_extent_m, delta)
+	var nudge_on_play_plane := Vector3(nudge.x, 0.0, -nudge.y)
+	global_position = _follow.step(rubbley_at, nudge_on_play_plane, visible_extent_m, delta)
 	camera.keep_aspect = CameraFraming.keep_aspect_for(get_viewport().get_visible_rect().size)
 	camera.position = camera.basis.z * _framing.distance_m(visible_extent_m)
 	if starfield != null:

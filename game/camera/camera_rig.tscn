@@ -20,7 +20,6 @@ starfield = NodePath("Camera/Starfield")
 
 [node name="Camera" type="Camera3D" parent="."]
 current = true
-fov = 40.0
 far = 2000.0
 
 [node name="Starfield" type="MeshInstance3D" parent="Camera"]

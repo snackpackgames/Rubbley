@@ -4,6 +4,8 @@ extends MeshInstance3D
 ## hashed points that scroll at different rates against the [CameraRig]. It is a quad
 ## near the far end of the rig's camera, big enough to fill any screen shape, drawn
 ## in screen space by [code]starfield.gdshader[/code], so the whole level draws over it.
+## Its 1800 m distance sits inside the camera's 2000 m far plane and beyond the Play
+## Plane at the widest framing (1000 m); its 4400 m size covers screens up to about 3:1.
 
 
 func _ready() -> void:

@@ -1,12 +1,16 @@
 extends SimulationTestSuite
 ## The CameraRig in a world with the shipped Rubbley and Camera Tuning: it keeps him on
-## screen at speed, and widens the view inside a Camera Zone (ADR 0007).
+## screen at speed, and widens the view inside a Camera Zone (ADR 0007). Unlike ADR 0018's
+## other simulation tests it adds no GravitySystem: the camera is under test, and
+## Rubbley coasting at a set velocity is all it needs to follow.
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const RIG_SCENE := preload("res://game/camera/camera_rig.tscn")
 const ZONE_SCENE := preload("res://game/camera/camera_zone.tscn")
 ## How far past the max offset a frame may sit, in metres, for float error.
 const OFFSET_EPSILON_M := 1e-3
+## How long Rubbley runs at his speed cap.
+const RUN_S := 2.0
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -28,9 +32,12 @@ func before_test() -> void:
 ## max offset allows, on any frame.
 func test_rubbley_stays_within_the_max_offset_at_speed() -> void:
 	_rubbley.linear_velocity = Vector3(1, 0, -1).normalized() * _rubbley.tuning.speed_cap_m_per_s
+	var tick_s := 1.0 / Engine.physics_ticks_per_second
 	var worst_m := -INF
-	for _frame in 120:
-		await get_tree().process_frame
+	var elapsed_s := 0.0
+	while elapsed_s < RUN_S:
+		await step_seconds(tick_s)
+		elapsed_s += tick_s
 		var offset_m := _flat(_rig.global_position).distance_to(_flat(_rubbley.global_position))
 		worst_m = maxf(worst_m, offset_m - _rig.tuning.max_offset * _rig.visible_extent_m)
 	assert_float(worst_m).is_less_equal(OFFSET_EPSILON_M)
@@ -57,8 +64,8 @@ func test_a_camera_zone_widens_the_view_while_rubbley_is_inside() -> void:
 func test_the_camera_centres_its_focus() -> void:
 	await step_seconds(0.2)
 	var screen := _rig.camera.get_viewport().get_visible_rect().size
-	var at := _rig.camera.unproject_position(_rig.global_position)
-	assert_vector(at).is_equal_approx(screen * 0.5, Vector2.ONE)
+	var focus_px := _rig.camera.unproject_position(_rig.global_position)
+	assert_vector(focus_px).is_equal_approx(screen * 0.5, Vector2.ONE)
 
 
 func _flat(point: Vector3) -> Vector2:
