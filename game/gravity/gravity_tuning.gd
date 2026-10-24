@@ -6,8 +6,10 @@ extends Resource
 @export_range(0.0, 100.0, 0.01, "or_greater") var gravitational_constant := 8.0
 ## Softening length in metres. It keeps the pull finite when two bodies nearly touch.
 @export_range(0.0, 10.0, 0.01, "or_greater") var softening_m := 1.0
-## Bodies further apart than this, in metres, don't pull each other at all.
-@export_range(0.0, 500.0, 0.1, "or_greater") var max_range_m := 60.0
+## Bodies further apart than this, in metres, don't pull each other at all. Keep it
+## under half the gap between Anchored Bodies: they never move, so a neighbour's pull
+## reaching into their Orbits is never cancelled, and it stretches them until they hit.
+@export_range(0.0, 500.0, 0.1, "or_greater") var max_range_m := 35.0
 ## The speed Drift carries Rubbley at along the stage, in m/s, on top of his own
 ## motion. The controller-aim prototype's 90 px/s, with Rubbley 22 px across a 1 m radius.
 @export_range(0.0, 20.0, 0.01, "or_greater") var drift_speed_m_per_s := 4.09
