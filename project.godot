@@ -61,20 +61,14 @@ gdscript/warnings/property_used_as_function=2
 gdscript/warnings/constant_used_as_function=2
 gdscript/warnings/function_used_as_property=2
 
-[display]
-
-window/vsync/vsync_mode=1
-
 [input_devices]
 
-pointing/emulate_touch_from_mouse=false
 pointing/emulate_mouse_from_touch=false
 
 [physics]
 
-3d/default_gravity=0.0
 3d/physics_engine="Jolt Physics"
-common/physics_ticks_per_second=60
+3d/default_gravity=0.0
 common/physics_interpolation=true
 
 [rendering]
