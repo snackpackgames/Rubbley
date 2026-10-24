@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://bwm8cvtm2rdlv"]
 
+[ext_resource type="Script" path="res://game/levels/sandbox_level.gd" id="0_level"]
 [ext_resource type="Script" path="res://game/gravity/gravity_system.gd" id="1_5oaue"]
 [ext_resource type="Resource" path="res://game/gravity/gravity_tuning.tres" id="2_w3g50"]
 [ext_resource type="PackedScene" path="res://game/bodies/rubbley/rubbley.tscn" id="3_tavcy"]
@@ -13,7 +14,11 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.6, 0.6, 1)
 ambient_light_energy = 0.4
 
-[node name="SandboxLevel" type="Node3D" unique_id=1926548440]
+[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system", "rubbley", "camera")]
+script = ExtResource("0_level")
+gravity_system = NodePath("GravitySystem")
+rubbley = NodePath("Rubbley")
+camera = NodePath("OverheadCamera")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=514243655]
 environment = SubResource("Environment_x1j3g")
@@ -22,7 +27,7 @@ environment = SubResource("Environment_x1j3g")
 transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
 
 [node name="OverheadCamera" type="Camera3D" parent="." unique_id=658650308]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 60, 165, -40)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -40, 112, 0)
 current = true
 fov = 40.0
 
@@ -33,7 +38,7 @@ drift_body = NodePath("../Rubbley/GravityBody")
 
 [node name="Rubbley" type="RigidBody3D" parent="." unique_id=1851117730 instance=ExtResource("3_tavcy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 0)
-linear_velocity = Vector3(5, 0, 0)
+linear_velocity = Vector3(12, 0, 0)
 
 [node name="Planet1" type="RigidBody3D" parent="." unique_id=1647583383 instance=ExtResource("6_qyvks")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -24)

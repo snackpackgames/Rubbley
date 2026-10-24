@@ -16,7 +16,7 @@ const DRIFT_DIRECTION := Vector3.RIGHT
 const VARIANT_COUNT := 5
 # Drift's share of each variant's distance must reach this share of the Drift-alone
 # distance. 80% absorbs Jolt's per-tick damping (close to, not exactly, exponential)
-# while a Drift force cut by a quarter or more fails.
+# while a Drift speed cut by a quarter or more fails.
 const MIN_DISTANCE_SHARE := 0.8
 
 var _suite_start_ms := 0
@@ -53,11 +53,9 @@ func test_drift_carries_rubbley_through_empty_space() -> void:
 		var drift := Drift.new(GRAVITY_TUNING)
 		var damp := rubbley.tuning.linear_damp_per_second
 		var end_s := SETTLE_S + MEASURE_S
-		var drift_alone := drift.expected_distance(rubbley.mass, damp, 0.0, SETTLE_S, end_s)
+		var drift_alone := drift.expected_distance(damp, 0.0, SETTLE_S, end_s)
 		# What his starting speed alone would carry him, so a fast start can't hide a weak Drift.
-		var coast := (
-			drift.expected_distance(rubbley.mass, damp, start_speed, SETTLE_S, end_s) - drift_alone
-		)
+		var coast := (drift.expected_distance(damp, start_speed, SETTLE_S, end_s) - drift_alone)
 		var from_drift := covered - coast
 
 		var failure := "variant %d (seed %d, start %s): Drift gave %.2f m of %.2f m expected" % [
@@ -75,7 +73,7 @@ func test_drift_carries_rubbley_through_empty_space() -> void:
 		world.free()
 
 
-# Rubbley enters nearly at rest (a tenth of his Drift terminal speed), along the Drift,
+# Rubbley enters nearly at rest (his own speed a tenth of Drift speed), along the Drift,
 # 10 m from the origin.
 func _canonical_start() -> Start:
 	return Start.new(0.1, 0.0, 10.0)
@@ -93,12 +91,9 @@ func _perturbed_start(rng: RandomNumberGenerator) -> Start:
 
 func _add_drifting_rubbley(world: Node3D, start: Start) -> PlayPlaneBody:
 	var rubbley := RUBBLEY_SCENE.instantiate() as PlayPlaneBody
-	var terminal_speed := (
-		GRAVITY_TUNING.drift_force_n / rubbley.mass / rubbley.tuning.linear_damp_per_second
-	)
 	var heading := DRIFT_DIRECTION.rotated(Vector3.UP, deg_to_rad(start.angle_deg))
 	rubbley.position = -DRIFT_DIRECTION * start.distance_m
-	rubbley.linear_velocity = heading * terminal_speed * start.speed_share
+	rubbley.linear_velocity = heading * GRAVITY_TUNING.drift_speed_m_per_s * start.speed_share
 
 	var gravity_system := GravitySystem.new()
 	gravity_system.tuning = GRAVITY_TUNING
@@ -111,7 +106,7 @@ func _add_drifting_rubbley(world: Node3D, start: Start) -> PlayPlaneBody:
 
 ## One start condition for a variant.
 class Start:
-	## Rubbley's starting speed, as a share of his Drift terminal speed.
+	## Rubbley's own starting speed, as a share of Drift speed.
 	var speed_share: float
 	## How far his starting heading turns from the Drift direction, in degrees.
 	var angle_deg: float

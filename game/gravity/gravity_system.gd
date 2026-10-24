@@ -29,7 +29,7 @@ func _ready() -> void:
 	_drift = Drift.new(tuning)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var gravity_bodies: Array[GravityBody] = []
 	for node in get_tree().get_nodes_in_group(GravityBody.GROUP):
 		var gravity_body := node as GravityBody
@@ -83,7 +83,17 @@ func _physics_process(_delta: float) -> void:
 		capture_radii,
 		capturable,
 	)
-	var drift := _drift.forces(count, gravity_bodies.find(drift_body), drift_direction)
+	var drifting_index := gravity_bodies.find(drift_body)
+	var drifting_mass := masses[drifting_index] if drifting_index >= 0 else 0.0
+	var drifting_damp := linear_damps[drifting_index] if drifting_index >= 0 else 0.0
+	var drift := _drift.forces(
+		count,
+		drifting_index,
+		drift_direction,
+		drifting_mass,
+		drifting_damp,
+		delta,
+	)
 	for i in count:
 		var force := totals[i] + capture[i] + drift[i]
 		if force != Vector3.ZERO:
