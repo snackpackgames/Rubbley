@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CameraTuning" format=3 uid="uid://7mwwe06ivw6xp"]
+
+[ext_resource type="Script" path="res://game/camera/camera_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+follow_half_life_s = 0.15
+max_offset = 0.3
+nudge_radius = 0.25
+nudge_half_life_s = 0.12
+tilt_deg = 15.0
+fov_deg = 40.0
+rubbley_screen_fraction = 0.0125
+min_extent_m = 40.0
+max_extent_m = 300.0
+zoom_half_life_s = 0.5

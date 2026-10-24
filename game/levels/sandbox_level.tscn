@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://game/bodies/planet/anchored_planet.tscn" id="6_qyvks"]
 [ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="8_di3dc"]
 [ext_resource type="Script" path="res://game/bodies/debris/debris_field.gd" id="9_field"]
+[ext_resource type="PackedScene" path="res://game/camera/camera_rig.tscn" id="10_rig"]
 
 [sub_resource type="Environment" id="Environment_x1j3g"]
 background_mode = 1
@@ -15,22 +16,15 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.6, 0.6, 1)
 ambient_light_energy = 0.4
 
-[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system", "rubbley", "camera")]
+[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system")]
 script = ExtResource("0_level")
 gravity_system = NodePath("GravitySystem")
-rubbley = NodePath("Rubbley")
-camera = NodePath("OverheadCamera")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=514243655]
 environment = SubResource("Environment_x1j3g")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=930835104]
 transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
-
-[node name="OverheadCamera" type="Camera3D" parent="." unique_id=658650308]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -40, 112, 0)
-current = true
-fov = 40.0
 
 [node name="GravitySystem" type="Node" parent="." unique_id=111326286 node_paths=PackedStringArray("drift_body")]
 script = ExtResource("1_5oaue")
@@ -40,6 +34,9 @@ drift_body = NodePath("../Rubbley/GravityBody")
 [node name="Rubbley" type="RigidBody3D" parent="." unique_id=1851117730 instance=ExtResource("3_tavcy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 0)
 linear_velocity = Vector3(12, 0, 0)
+
+[node name="CameraRig" parent="." node_paths=PackedStringArray("target") instance=ExtResource("10_rig")]
+target = NodePath("../Rubbley")
 
 [node name="Planet1" type="RigidBody3D" parent="." unique_id=1647583383 instance=ExtResource("6_qyvks")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -24)
