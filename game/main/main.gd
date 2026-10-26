@@ -12,10 +12,12 @@ func _ready() -> void:
 	load_level(start_level)
 
 
-## Frees the current level, if any, and adds a new instance of [param level_scene] as a child.
+## Frees the current level, if any, and adds a new instance of [param level_scene] as a
+## child. Unloading a level interrupts Move Input (ADR 0013).
 func load_level(level_scene: PackedScene) -> void:
 	assert(level_scene != null, "load_level needs a level scene")
 	if _level != null:
+		MoveInputService.instance.interrupt()
 		remove_child(_level)
 		_level.queue_free()
 	_level = level_scene.instantiate()

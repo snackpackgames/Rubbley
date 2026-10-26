@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://b77mryctsoqmn"]
+
+[ext_resource type="Script" path="res://game/gravity/gravity_well.gd" id="1_well"]
+
+[sub_resource type="SphereShape3D" id="reach"]
+radius = 1.0
+
+[sub_resource type="StandardMaterial3D" id="core_material"]
+shading_mode = 0
+albedo_color = Color(0.55, 0.35, 1, 1)
+
+[sub_resource type="SphereMesh" id="core_mesh"]
+radius = 0.6
+height = 1.2
+
+[node name="GravityWell" type="Area3D" node_paths=PackedStringArray("reach")]
+script = ExtResource("1_well")
+reach = NodePath("Reach")
+
+[node name="Reach" type="CollisionShape3D" parent="."]
+shape = SubResource("reach")
+
+[node name="Core" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("core_mesh")
+surface_material_override/0 = SubResource("core_material")

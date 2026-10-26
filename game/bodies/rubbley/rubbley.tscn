@@ -5,6 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/bodies/rubbley/asteroid.glb" id="3_asteroid"]
 [ext_resource type="Material" path="res://game/bodies/rubbley/rubbley_material.tres" id="4_material"]
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="5_gravity"]
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_moves.gd" id="6_moves"]
+[ext_resource type="Resource" path="res://game/bodies/rubbley/rubbley_stats.tres" id="7_stats"]
+[ext_resource type="PackedScene" path="res://game/gravity/gravity_well.tscn" id="8_well"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 radius = 1.0
@@ -26,5 +29,12 @@ material_override = ExtResource("4_material")
 [node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
 script = ExtResource("5_gravity")
 body = NodePath("..")
+
+[node name="Moves" type="Node" parent="." node_paths=PackedStringArray("gravity_body", "collider")]
+script = ExtResource("6_moves")
+stats = ExtResource("7_stats")
+gravity_body = NodePath("../GravityBody")
+collider = NodePath("../Collider")
+gravity_well_scene = ExtResource("8_well")
 
 [editable path="Mesh"]

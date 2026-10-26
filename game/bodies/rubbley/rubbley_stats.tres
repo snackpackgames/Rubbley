@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RubbleyStats" format=3 uid="uid://2td7xhd8y3ls"]
+
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+attract_self_multiplier = 3.0
+attract_celestial_multiplier = 2.0
+gravity_well_strength_m_per_s2 = 0.6
+gravity_well_radius_m = 12.0
+gravity_well_lifetime_s = 4.0
