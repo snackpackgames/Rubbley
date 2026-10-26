@@ -12,8 +12,9 @@ func _ready() -> void:
 	axis_lock_linear_y = true
 	axis_lock_angular_x = true
 	axis_lock_angular_z = true
-	# Gravity comes only from the GravitySystem, never the project's default down.
-	gravity_scale = 0.0
+	# The project's default gravity is zero, so the only gravity a body feels through
+	# the physics engine is an Anchored Body's Area point gravity; the GravitySystem adds the rest.
+	gravity_scale = 1.0
 	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	linear_damp = tuning.linear_damp_per_second
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE

@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_tuning")
 speed_cap_m_per_s = 25.0
-linear_damp_per_second = 0.1
+linear_damp_per_second = 0.0
 angular_damp_per_second = 0.1
 continuous_cd = false

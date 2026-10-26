@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const CELESTIAL := GravityBody.Role.CELESTIAL
 const PASSIVE := GravityBody.Role.PASSIVE
+const ANCHORED := GravityBody.Role.ANCHORED
 
 var _tuning: GravityTuning
 
@@ -80,6 +81,20 @@ func test_gravega_multiplier_scales_only_that_bodys_pairs() -> void:
 	assert_vector(forces[2]).is_equal_approx(Vector3(1.5, 0, 0), Vector3.ONE * 1e-5)
 	# The other pair is unscaled: 2 × 1 × 1 / 2² = 0.5.
 	assert_vector(forces[3]).is_equal_approx(Vector3(0.5, 0, 0), Vector3.ONE * 1e-5)
+
+
+## An Anchored Body pulls through its own Area point gravity, so the solver neither
+## pulls with it nor pulls on it, and other pairs are unchanged.
+func test_anchored_bodies_are_left_out_of_the_solver() -> void:
+	var forces := _solve(
+		[Vector3.ZERO, Vector3(4, 0, 0), Vector3(0, 0, 2)],
+		[3.0, 8.0, 0.5],
+		[CELESTIAL, ANCHORED, PASSIVE],
+	)
+	assert_vector(forces[1]).is_equal(Vector3.ZERO)
+	# Only body 0 pulls body 2: 2 × 3 × 0.5 / 2² = 0.75.
+	assert_vector(forces[2]).is_equal_approx(Vector3(0, 0, -0.75), Vector3.ONE * 1e-5)
+	assert_vector(forces[0]).is_equal_approx(Vector3.ZERO, Vector3.ONE * 1e-5)
 
 
 func _solve(

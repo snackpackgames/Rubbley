@@ -8,3 +8,4 @@ speed_cap_m_per_s = 10.0
 linear_damp_per_second = 0.05
 angular_damp_per_second = 0.5
 continuous_cd = false
+capture_radius_m = 20.0

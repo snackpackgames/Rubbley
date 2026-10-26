@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://bwm8cvtm2rdlv"]
 
+[ext_resource type="Script" path="res://game/levels/sandbox_level.gd" id="0_level"]
 [ext_resource type="Script" path="res://game/gravity/gravity_system.gd" id="1_5oaue"]
 [ext_resource type="Resource" path="res://game/gravity/gravity_tuning.tres" id="2_w3g50"]
 [ext_resource type="PackedScene" path="res://game/bodies/rubbley/rubbley.tscn" id="3_tavcy"]
-[ext_resource type="PackedScene" path="res://game/bodies/planet/planet.tscn" id="6_qyvks"]
+[ext_resource type="PackedScene" path="res://game/bodies/planet/anchored_planet.tscn" id="6_qyvks"]
 [ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="8_di3dc"]
+[ext_resource type="Script" path="res://game/bodies/debris/debris_field.gd" id="9_field"]
 
 [sub_resource type="Environment" id="Environment_x1j3g"]
 background_mode = 1
@@ -13,7 +15,11 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.6, 0.6, 1)
 ambient_light_energy = 0.4
 
-[node name="SandboxLevel" type="Node3D" unique_id=1926548440]
+[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system", "rubbley", "camera")]
+script = ExtResource("0_level")
+gravity_system = NodePath("GravitySystem")
+rubbley = NodePath("Rubbley")
+camera = NodePath("OverheadCamera")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=514243655]
 environment = SubResource("Environment_x1j3g")
@@ -22,7 +28,7 @@ environment = SubResource("Environment_x1j3g")
 transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
 
 [node name="OverheadCamera" type="Camera3D" parent="." unique_id=658650308]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 60, 165, -40)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -40, 112, 0)
 current = true
 fov = 40.0
 
@@ -33,7 +39,7 @@ drift_body = NodePath("../Rubbley/GravityBody")
 
 [node name="Rubbley" type="RigidBody3D" parent="." unique_id=1851117730 instance=ExtResource("3_tavcy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 0)
-linear_velocity = Vector3(5, 0, 0)
+linear_velocity = Vector3(12, 0, 0)
 
 [node name="Planet1" type="RigidBody3D" parent="." unique_id=1647583383 instance=ExtResource("6_qyvks")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -24)
@@ -46,47 +52,61 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -52)
 
 [node name="Debris" type="Node3D" parent="." unique_id=1748990478]
 
-[node name="Debris1" type="RigidBody3D" parent="Debris" unique_id=1305372686 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0, -41)
+[node name="Planet1Ring" type="Node3D" parent="Debris" unique_id=1305372686 node_paths=PackedStringArray("primary")]
+script = ExtResource("9_field")
+debris_scene = ExtResource("8_di3dc")
+gravity_tuning = ExtResource("2_w3g50")
+scatter_seed = 1
+count = 12
+min_distance_m = 12.0
+max_distance_m = 17.0
+primary = NodePath("../../Planet1")
+min_speed_multiple = 0.97
+max_speed_multiple = 1.03
 
-[node name="Debris2" type="RigidBody3D" parent="Debris" unique_id=2128518914 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0, -40.5)
+[node name="Planet2Ellipses" type="Node3D" parent="Debris" unique_id=2128518914 node_paths=PackedStringArray("primary")]
+script = ExtResource("9_field")
+debris_scene = ExtResource("8_di3dc")
+gravity_tuning = ExtResource("2_w3g50")
+scatter_seed = 2
+count = 12
+min_distance_m = 12.0
+max_distance_m = 22.0
+primary = NodePath("../../Planet2")
+min_speed_multiple = 0.8
+max_speed_multiple = 1.25
 
-[node name="Debris3" type="RigidBody3D" parent="Debris" unique_id=1944318206 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128.5, 0, -70)
+[node name="Planet3WideOrbits" type="Node3D" parent="Debris" unique_id=1944318206 node_paths=PackedStringArray("primary")]
+script = ExtResource("9_field")
+debris_scene = ExtResource("8_di3dc")
+gravity_tuning = ExtResource("2_w3g50")
+scatter_seed = 3
+count = 10
+min_distance_m = 14.0
+max_distance_m = 30.0
+primary = NodePath("../../Planet3")
+min_speed_multiple = 0.9
+max_speed_multiple = 1.15
+anticlockwise_share = 0.0
 
-[node name="Debris4" type="RigidBody3D" parent="Debris" unique_id=1947130311 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -39.5)
+[node name="FloatingPatchA" type="Node3D" parent="Debris" unique_id=1947130311]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 45)
+script = ExtResource("9_field")
+debris_scene = ExtResource("8_di3dc")
+gravity_tuning = ExtResource("2_w3g50")
+scatter_seed = 4
+count = 8
+min_distance_m = 0.0
+max_distance_m = 9.0
+floating_speed_m_per_s = 1.0
 
-[node name="Debris5" type="RigidBody3D" parent="Debris" unique_id=1162693368 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, -41.5)
-
-[node name="Debris6" type="RigidBody3D" parent="Debris" unique_id=1709429778 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0, -32)
-
-[node name="Debris7" type="RigidBody3D" parent="Debris" unique_id=442120521 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -7.5)
-
-[node name="Debris8" type="RigidBody3D" parent="Debris" unique_id=1967266207 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.5, 0, -38.5)
-
-[node name="Debris9" type="RigidBody3D" parent="Debris" unique_id=12033659 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 0, -39.5)
-
-[node name="Debris10" type="RigidBody3D" parent="Debris" unique_id=2041689192 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -40)
-
-[node name="Debris11" type="RigidBody3D" parent="Debris" unique_id=1069883637 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92.5, 0, -32)
-
-[node name="Debris12" type="RigidBody3D" parent="Debris" unique_id=755661549 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 147.5, 0, -43)
-
-[node name="Debris13" type="RigidBody3D" parent="Debris" unique_id=812907943 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, -10)
-
-[node name="Debris14" type="RigidBody3D" parent="Debris" unique_id=1842921285 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 0, -8)
-
-[node name="Debris15" type="RigidBody3D" parent="Debris" unique_id=1762183118 instance=ExtResource("8_di3dc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 151, 0, -55.5)
+[node name="FloatingPatchB" type="Node3D" parent="Debris" unique_id=1162693368]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105, 0, 40)
+script = ExtResource("9_field")
+debris_scene = ExtResource("8_di3dc")
+gravity_tuning = ExtResource("2_w3g50")
+scatter_seed = 5
+count = 6
+min_distance_m = 0.0
+max_distance_m = 7.0
+floating_speed_m_per_s = 1.5

@@ -44,6 +44,16 @@ The distance around a Celestial Body inside which a slower, lighter body is help
 The gentle, steady push that carries Rubbley along a stage's path. Rubbley has no other movement of his own; he steers only with Gravega.
 _Avoid_: auto-scroll, thrust
 
+### Collecting
+
+**Debris**:
+Loose Passive Bodies floating or orbiting in a stage that Rubbley absorbs into his Mass.
+_Avoid_: resources, junk, pickups (as a general term)
+
+**Material**:
+A collectible Rubbley carries out of a stage to fuel progression. Materials lie in trails or are dropped by enemies.
+_Avoid_: resources, currency, loot
+
 ### Moves
 
 **Repel Pulse**:

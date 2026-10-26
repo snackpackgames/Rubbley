@@ -2,7 +2,9 @@ class_name GravitySystem
 extends Node
 ## A level's gravity (ADR 0016). Every physics tick it reads the
 ## [code]gravity_bodies[/code] group in tree order, adds up its force contributors
-## (the pairwise [GravitySolver], then [Drift]) and applies the sum to each body once.
+## (the pairwise [GravitySolver], then [CaptureAssist], then [Drift]) and applies the
+## sum to each body once. Anchored Bodies pull through their [AnchoredPull] instead,
+## which it sets every tick.
 
 ## Runs after gameplay's physics tick, so this tick's Gravega multipliers apply this tick.
 const PHYSICS_PRIORITY := 100
@@ -15,6 +17,7 @@ const PHYSICS_PRIORITY := 100
 @export var drift_direction := Vector3.RIGHT
 
 var _solver: GravitySolver
+var _capture_assist: CaptureAssist
 var _drift: Drift
 
 
@@ -22,10 +25,11 @@ func _ready() -> void:
 	assert(tuning != null, "GravitySystem needs a GravityTuning")
 	process_physics_priority = PHYSICS_PRIORITY
 	_solver = GravitySolver.new(tuning)
+	_capture_assist = CaptureAssist.new(tuning)
 	_drift = Drift.new(tuning)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var gravity_bodies: Array[GravityBody] = []
 	for node in get_tree().get_nodes_in_group(GravityBody.GROUP):
 		var gravity_body := node as GravityBody
@@ -37,20 +41,60 @@ func _physics_process(_delta: float) -> void:
 	var masses := PackedFloat64Array()
 	var roles := PackedInt32Array()
 	var multipliers := PackedFloat64Array()
+	var velocities := PackedVector3Array()
+	var linear_damps := PackedFloat64Array()
+	var capture_radii := PackedFloat64Array()
+	var capturable: Array[bool] = []
 	positions.resize(count)
 	masses.resize(count)
 	roles.resize(count)
 	multipliers.resize(count)
+	velocities.resize(count)
+	linear_damps.resize(count)
+	capture_radii.resize(count)
+	capturable.resize(count)
 	for i in count:
 		var gravity_body := gravity_bodies[i]
-		positions[i] = gravity_body.body.global_position
-		masses[i] = gravity_body.body.mass
+		var body := gravity_body.body
+		positions[i] = body.global_position
+		masses[i] = body.mass
 		roles[i] = gravity_body.role
 		multipliers[i] = gravity_body.gravega_multiplier
+		velocities[i] = body.linear_velocity
+		linear_damps[i] = body.linear_damp
+		var play_plane_body := body as PlayPlaneBody
+		if play_plane_body != null:
+			capture_radii[i] = play_plane_body.tuning.capture_radius_m
+			capturable[i] = play_plane_body.tuning.capturable
+		if gravity_body.role == GravityBody.Role.ANCHORED and gravity_body.anchored_pull != null:
+			gravity_body.anchored_pull.pull(
+				tuning.gravitational_constant * masses[i] * multipliers[i],
+				tuning.max_range_m,
+			)
 
 	var totals := _solver.forces(positions, masses, roles, multipliers)
-	var drift := _drift.forces(count, gravity_bodies.find(drift_body), drift_direction)
+	var capture := _capture_assist.forces(
+		positions,
+		velocities,
+		masses,
+		roles,
+		multipliers,
+		linear_damps,
+		capture_radii,
+		capturable,
+	)
+	var drifting_index := gravity_bodies.find(drift_body)
+	var drifting_mass := masses[drifting_index] if drifting_index >= 0 else 0.0
+	var drifting_damp := linear_damps[drifting_index] if drifting_index >= 0 else 0.0
+	var drift := _drift.forces(
+		count,
+		drifting_index,
+		drift_direction,
+		drifting_mass,
+		drifting_damp,
+		delta,
+	)
 	for i in count:
-		var force := totals[i] + drift[i]
+		var force := totals[i] + capture[i] + drift[i]
 		if force != Vector3.ZERO:
 			gravity_bodies[i].body.apply_central_force(force)

@@ -3,7 +3,8 @@ extends RefCounted
 ## The pairwise gravity seam (ADR 0005): bodies in, forces out.
 ## Celestial Bodies pull each other with equal and opposite forces, and pull
 ## Passive Bodies one way (ADR 0006). The pull is softened inverse-square and
-## stops at the max range in [GravityTuning].
+## stops at the max range in [GravityTuning]. Anchored Bodies pull through their own
+## Area point gravity instead, so the solver leaves them out.
 
 var _tuning: GravityTuning
 
@@ -33,7 +34,7 @@ func forces(
 		for j in count:
 			var mutual := roles[j] == GravityBody.Role.CELESTIAL
 			# A Celestial pair is computed once, from its lower index.
-			if j == i or (mutual and j < i):
+			if j == i or (mutual and j < i) or roles[j] == GravityBody.Role.ANCHORED:
 				continue
 			var offset := positions[j] - positions[i]
 			var distance_squared := offset.length_squared()
