@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://fn2pfu39y90v7"]
+
+[ext_resource type="Script" path="res://game/camera/camera_zone.gd" id="1_zone"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_region"]
+size = Vector3(40, 10, 40)
+
+[node name="CameraZone" type="Area3D"]
+monitorable = false
+script = ExtResource("1_zone")
+
+[node name="Region" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_region")

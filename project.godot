@@ -61,6 +61,10 @@ gdscript/warnings/property_used_as_function=2
 gdscript/warnings/constant_used_as_function=2
 gdscript/warnings/function_used_as_property=2
 
+[display]
+
+window/handheld/orientation=1
+
 [input_devices]
 
 pointing/emulate_mouse_from_touch=false

@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://rurnyj12bk4hw"]
+
+[ext_resource type="Script" path="res://game/camera/camera_rig.gd" id="1_rig"]
+[ext_resource type="Resource" path="res://game/camera/camera_tuning.tres" id="2_tuning"]
+[ext_resource type="Script" path="res://game/camera/starfield.gd" id="3_starfield"]
+[ext_resource type="Shader" path="res://game/camera/starfield.gdshader" id="4_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+render_priority = -128
+shader = ExtResource("4_shader")
+
+[sub_resource type="QuadMesh" id="QuadMesh_sky"]
+size = Vector2(4400, 4400)
+
+[node name="CameraRig" type="Node3D" node_paths=PackedStringArray("camera", "starfield")]
+script = ExtResource("1_rig")
+tuning = ExtResource("2_tuning")
+camera = NodePath("Camera")
+starfield = NodePath("Camera/Starfield")
+
+[node name="Camera" type="Camera3D" parent="."]
+current = true
+far = 2000.0
+
+[node name="Starfield" type="MeshInstance3D" parent="Camera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1800)
+cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_sky")
+material_override = SubResource("ShaderMaterial_sky")
+script = ExtResource("3_starfield")
