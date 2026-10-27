@@ -111,6 +111,14 @@ func test_circular_speed_follows_the_gravega_multipliers() -> void:
 	assert_vector(_assist(bodies)[1]).is_equal_approx(Vector3.ZERO, Vector3.ONE * 1e-5)
 
 
+## A pair multiplier strengthens that pair's pull the same way: 4 × 3.125 m/s² at 8 m
+## gives 10 m/s.
+func test_circular_speed_follows_a_pair_multiplier() -> void:
+	var bodies := _pair(Vector3(0, 0, -10))
+	bodies.pair_multipliers[Vector2i(0, 1)] = 4.0
+	assert_vector(_assist(bodies)[1]).is_equal_approx(Vector3.ZERO, Vector3.ONE * 1e-5)
+
+
 ## An Anchored Body's Area point gravity isn't softened, so neither is its circular speed.
 func test_an_anchored_primary_is_not_softened() -> void:
 	_tuning.softening_m = 4.0
@@ -155,6 +163,7 @@ func _assist(bodies: Bodies) -> PackedVector3Array:
 		bodies.linear_damps,
 		bodies.capture_radii,
 		bodies.capturable,
+		bodies.pair_multipliers,
 	)
 
 
@@ -168,6 +177,7 @@ class Bodies:
 	var linear_damps := PackedFloat64Array()
 	var capture_radii := PackedFloat64Array()
 	var capturable: Array[bool] = []
+	var pair_multipliers: Dictionary[Vector2i, float] = { }
 
 
 	## Adds one body with a Gravega multiplier of 1 and no damping.

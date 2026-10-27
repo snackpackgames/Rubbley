@@ -5,7 +5,8 @@ extends Resource
 
 ## The fastest the body may move across the Play Plane, in metres per second.
 @export_range(0.1, 100.0, 0.1, "or_greater") var speed_cap_m_per_s := 20.0
-## Light linear damping, as the fraction of speed lost per second. It replaces the project default.
+## Light linear damping, as the fraction of speed lost per second. A Gravity Well's drag
+## adds to it while the body is inside one; the project default is zero.
 @export_range(0.0, 5.0, 0.01) var linear_damp_per_second := 0.1
 ## Angular damping on the body's spin around Y, per second. It replaces the project default.
 @export_range(0.0, 5.0, 0.01) var angular_damp_per_second := 0.5

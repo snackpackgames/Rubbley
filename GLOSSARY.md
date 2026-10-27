@@ -22,7 +22,7 @@ _Avoid_: test particle, non-attractor
 A Celestial Body that level design holds in place. It pulls but is never moved.
 
 **Gravity Well**:
-A temporary point of pull that Rubbley places in empty space with an untargeted Attract. It pulls but is never pulled.
+A temporary point of pull that Rubbley places in empty space with an untargeted Attract. It pulls but is never pulled, drags on what moves inside it, and fades out at the end.
 _Avoid_: well (unqualified), black hole
 
 **Gravity Ripple**:

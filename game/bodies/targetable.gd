@@ -7,7 +7,7 @@ extends Node
 ## The group every [Targetable] joins.
 const GROUP := &"targetable_bodies"
 
-## The body's gravity, whose Gravega multiplier a Targeted Attract raises. Wired in its scene.
+## The body's gravity, whose pair with Rubbley a Targeted Attract multiplies. Wired in its scene.
 @export var gravity_body: GravityBody
 ## The body's sphere collider, whose radius is the edge the aim measures to.
 @export var collider: CollisionShape3D

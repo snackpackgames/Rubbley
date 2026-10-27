@@ -1,6 +1,7 @@
 extends SimulationTestSuite
 ## Gravity Well feel scenario (ADRs 0017, 0018) on the shipped Rubbley, his Stats and
-## the shipped Gravity Tuning: a Gravity Well can't trap Rubbley against Drift for good.
+## the shipped Gravity Tuning: a Gravity Well can't trap Rubbley against Drift for good,
+## and lets him go on with Drift rather than slinging him back.
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const GRAVITY_TUNING := preload("res://game/gravity/gravity_tuning.tres")
@@ -14,8 +15,8 @@ const SUITE_BUDGET_MS := 60_000
 const DRIFT_DIRECTION := Vector3.RIGHT
 ## One canonical start plus four seeded perturbations (ADR 0018).
 const VARIANT_COUNT := 5
-# Rubbley must leave the Well's radius within its lifetime plus this. ADR 0018 lets a
-# Well stall him as a tactic, but 1 s past its end is as long as a stall may last.
+# Rubbley must leave the Well's radius within its duration and fade plus this. ADR 0018
+# lets a Well stall him as a tactic, but 1 s past its end is as long as a stall may last.
 const ESCAPE_GRACE_S := 1.0
 
 var _suite_start_ms := 0
@@ -34,7 +35,7 @@ func after() -> void:
 
 
 ## Over 5 starts, a Gravity Well placed just behind a drifting Rubbley, where it holds
-## him hardest, lets him out of its radius within its lifetime plus 1 s.
+## him hardest, lets him out of its radius ahead of it within its lifetime plus 1 s.
 func test_a_gravity_well_cannot_trap_rubbley() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
@@ -48,6 +49,7 @@ func test_a_gravity_well_cannot_trap_rubbley() -> void:
 		var frame := MoveInputFrame.new()
 		moves.injected_frame = frame
 		var stats := moves.stats
+		var lifetime_s := stats.gravity_well_duration_s + stats.gravity_well_fade_s
 		await step_seconds(SETTLE_S)
 
 		# Resumed at the start of a tick, so this press is read in the next one.
@@ -59,25 +61,33 @@ func test_a_gravity_well_cannot_trap_rubbley() -> void:
 		var placed := moves.get_child_count()
 		var escaped_after_s := INF
 		var elapsed_s := 0.0
-		while elapsed_s < stats.gravity_well_lifetime_s + ESCAPE_GRACE_S:
+		while elapsed_s < lifetime_s + ESCAPE_GRACE_S:
 			await step_seconds(tick_s)
 			elapsed_s += tick_s
 			if rubbley.global_position.distance_to(well_at) > stats.gravity_well_radius_m:
 				escaped_after_s = elapsed_s
 				break
 
+		var ahead_m := (rubbley.global_position - well_at).dot(DRIFT_DIRECTION)
 		var failure := "variant %d (seed %d, start %s): still in the Well after %.2f s" % [
 			variant,
 			SEED,
 			start,
 			elapsed_s,
 		]
+		var slung := "variant %d (seed %d, start %s): left %.2f m behind the Well" % [
+			variant,
+			SEED,
+			start,
+			-ahead_m,
+		]
 		assert_int(placed).is_equal(1)
 		(
 			assert_float(escaped_after_s)
 			.override_failure_message(failure)
-			.is_less_equal(stats.gravity_well_lifetime_s + ESCAPE_GRACE_S)
+			.is_less_equal(lifetime_s + ESCAPE_GRACE_S)
 		)
+		assert_float(ahead_m).override_failure_message(slung).is_greater(0.0)
 		world.free()
 
 

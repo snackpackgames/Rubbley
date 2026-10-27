@@ -3,12 +3,13 @@ extends Node
 ## Turns each tick's Move Input frame into Rubbley's moves (ADR 0012). When Attract
 ## starts, whatever is under the aim decides its use, and that target stays locked
 ## until release: Attract on self raises Rubbley's Gravega multiplier, a Targeted
-## Attract raises the glowing body's, and Attract into empty space places a Gravity Well.
+## Attract raises the multiplier on his pair with the glowing body, and Attract into empty
+## space places a Gravity Well.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
 ## Rubbley's Gravega values.
 @export var stats: RubbleyStats
-## Rubbley's gravity, whose Gravega multiplier Attract on self raises.
+## Rubbley's gravity, whose Gravega multipliers Attract raises.
 @export var gravity_body: GravityBody
 ## Rubbley's sphere collider, whose radius decides when the aim is on him.
 @export var collider: CollisionShape3D
@@ -61,7 +62,9 @@ func _start_attract(aim: Vector3) -> void:
 			gravity_body.gravega_multiplier = stats.attract_self_multiplier
 		AimTarget.Kind.CELESTIAL_BODY:
 			_attract_target = targetables[target.body_index]
-			_attract_target.gravity_body.gravega_multiplier = stats.attract_celestial_multiplier
+			gravity_body.pair_multipliers[_attract_target.gravity_body] = (
+				stats.attract_celestial_multiplier
+			)
 		AimTarget.Kind.EMPTY_SPACE:
 			_place_gravity_well(aim)
 
@@ -71,15 +74,22 @@ func _end_attract() -> void:
 		gravity_body.gravega_multiplier = 1.0
 		_attracting_self = false
 	if is_instance_valid(_attract_target):
-		_attract_target.gravity_body.gravega_multiplier = 1.0
+		gravity_body.pair_multipliers.erase(_attract_target.gravity_body)
+	elif _attract_target != null:
+		# The target was freed mid-Attract, so its pair can only be found as a freed key.
+		for other: Variant in gravity_body.pair_multipliers.keys():
+			if not is_instance_valid(other):
+				gravity_body.pair_multipliers.erase(other)
 	_attract_target = null
 
 
 func _place_gravity_well(aim: Vector3) -> void:
 	var well := gravity_well_scene.instantiate() as GravityWell
 	well.strength_m_per_s2 = stats.gravity_well_strength_m_per_s2
+	well.drag_per_second = stats.gravity_well_drag_per_second
 	well.radius_m = stats.gravity_well_radius_m
-	well.lifetime_s = stats.gravity_well_lifetime_s
+	well.duration_s = stats.gravity_well_duration_s
+	well.fade_s = stats.gravity_well_fade_s
 	well.position = Vector3(aim.x, 0.0, aim.z)
 	# This component is a plain Node, so a Well under it sits in world space and stays
 	# where it was placed while Rubbley moves on.

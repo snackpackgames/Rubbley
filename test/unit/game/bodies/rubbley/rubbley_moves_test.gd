@@ -10,6 +10,10 @@ const HOLD_S := 1.0
 # Attract must at least add this share to what gravity alone does. Every shipped
 # multiplier is well above it, while a move that does nothing fails.
 const MIN_GAIN := 1.3
+# A Targeted Attract leaves the target's other pulls alone, so debris it pulls speeds up
+# by no more than this share, from Rubbley falling into range of it. Raising the target's
+# own multiplier instead doubles it.
+const UNCHANGED_SHARE := 0.15
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -71,12 +75,24 @@ func test_targeted_attract_pulls_rubbley_toward_the_body() -> void:
 	assert_float(attracted).is_greater(alone * MIN_GAIN)
 
 
+## A Targeted Attract strengthens only the Rubbley↔target pair: debris by the planet
+## falls toward it no faster.
+func test_targeted_attract_leaves_the_targets_other_pulls_alone() -> void:
+	var alone := await _debris_speed_toward_planet(false)
+	var attracted := await _debris_speed_toward_planet(true)
+	assert_float(attracted).is_between(
+		alone * (1.0 - UNCHANGED_SHARE),
+		alone * (1.0 + UNCHANGED_SHARE),
+	)
+
+
 ## The body under the aim when Attract starts stays the target while the aim moves off it,
 ## and is let go on release.
 func test_the_target_stays_locked_until_release() -> void:
 	_build_world()
 	var planet := _add(PLANET_SCENE, Vector3(0, 0, -20))
 	var planet_gravity := planet.get_node("GravityBody") as GravityBody
+	var rubbley_gravity := _rubbley.get_node("GravityBody") as GravityBody
 	var tick_s := 1.0 / Engine.physics_ticks_per_second
 	await _start_of_tick()
 	_frame.aim = planet.global_position
@@ -85,14 +101,14 @@ func test_the_target_stays_locked_until_release() -> void:
 	_frame.attract = MoveInputFrame.Attract.HELD
 	_frame.aim = Vector3(30, 0, 30)
 	await step_seconds(0.5)
-	var held_multiplier := planet_gravity.gravega_multiplier
+	var held_multiplier: float = rubbley_gravity.pair_multipliers.get(planet_gravity, 1.0)
 	var wells_while_held := _gravity_wells().size()
 	_frame.attract = MoveInputFrame.Attract.RELEASED
 	await step_seconds(tick_s)
 
 	assert_float(held_multiplier).is_greater(1.0)
 	assert_int(wells_while_held).is_equal(0)
-	assert_float(planet_gravity.gravega_multiplier).is_equal(1.0)
+	assert_dict(rubbley_gravity.pair_multipliers).is_empty()
 
 
 ## Attract into empty space places a Gravity Well at the aim, which pulls Rubbley toward it.
@@ -106,11 +122,11 @@ func test_attract_into_empty_space_places_a_gravity_well_that_pulls_rubbley() ->
 	assert_float(_rubbley.linear_velocity.x).is_greater(0.0)
 
 
-## A Gravity Well lasts its lifetime, then goes.
-func test_a_gravity_well_lasts_its_lifetime() -> void:
+## A Gravity Well lasts its duration and its fade, then goes.
+func test_a_gravity_well_lasts_its_duration_and_fade() -> void:
 	_build_world()
 	await _hold_attract(Vector3(5, 0, 0), 1.0 / Engine.physics_ticks_per_second * 2.0)
-	var lifetime_s := _moves.stats.gravity_well_lifetime_s
+	var lifetime_s := _moves.stats.gravity_well_duration_s + _moves.stats.gravity_well_fade_s
 	await step_seconds(lifetime_s * 0.9)
 	var wells_before := _gravity_wells().size()
 	await step_seconds(lifetime_s * 0.2)
@@ -129,6 +145,23 @@ func _rubbley_speed_toward_planet(attract: bool) -> float:
 		await step_seconds(HOLD_S)
 	var toward := _rubbley.global_position.direction_to(planet.global_position)
 	var speed := _rubbley.linear_velocity.dot(toward)
+	_world.free()
+	return speed
+
+
+# How fast debris falls toward a free planet 20 m from Rubbley after the hold time, with
+# or without a Targeted Attract on the planet. The debris sits beyond the planet's Capture
+# Radius, so the capture assist leaves it alone, and out of Rubbley's range.
+func _debris_speed_toward_planet(attract: bool) -> float:
+	_build_world()
+	var planet := _add(PLANET_SCENE, Vector3(0, 0, -20))
+	var debris := _add(DEBRIS_SCENE, Vector3(0, 0, -44))
+	if attract:
+		await _hold_attract(planet.global_position, HOLD_S)
+	else:
+		await step_seconds(HOLD_S)
+	var toward := debris.global_position.direction_to(planet.global_position)
+	var speed := debris.linear_velocity.dot(toward)
 	_world.free()
 	return speed
 
