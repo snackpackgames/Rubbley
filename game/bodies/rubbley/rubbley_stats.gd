@@ -18,8 +18,8 @@ extends Resource
 ## speed instead of slinging him back (ADR 0018's feel scenario).
 @export_range(0.0, 20.0, 0.1, "or_greater") var gravity_well_drag_per_second := 5.0
 ## How far a Gravity Well reaches, in metres.
-@export_range(0.1, 100.0, 0.1, "or_greater") var gravity_well_radius_m := 12.0
+@export_range(0.1, 100.0, 0.1, "or_greater") var gravity_well_radius_m := 24.0
 ## How long a Gravity Well pulls at full strength, in seconds.
 @export_range(0.1, 30.0, 0.1, "or_greater") var gravity_well_duration_s := 3.0
 ## How long a Gravity Well's pull then takes to fade to nothing, in seconds.
-@export_range(0.0, 30.0, 0.1, "or_greater") var gravity_well_fade_s := 4.0
+@export_range(0.0, 30.0, 0.1, "or_greater") var gravity_well_fade_s := 10.0
