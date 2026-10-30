@@ -12,7 +12,8 @@ Gravity is Newtonian (equal and opposite forces), but only a few **Celestial Bod
 ## Consequences
 
 - Inverse-square falloff is softened and cut off at a maximum range. Unity's `G` and masses are not carried over; all values are retuned and kept in tuning data.
-- Gravity Wells and Anchored Bodies use Area point gravity. Wells pull Rubbley too. Only bodies that both pull and move go through the GDScript seam.
+- Anchored Bodies use Area point gravity. Only bodies that both pull and move go through the GDScript seam.
+- Gravity Wells push the bodies inside them from GDScript, hardest at the centre and falling off linearly to nothing at the edge, as in the controller-aim prototype. Area point gravity can only pull evenly or by inverse square, and an even pull strong enough to notice held Rubbley in place. Wells pull Rubbley too, and nothing slows what they pull, so they can fling him.
 - Capture assist and Drift are separate force contributors next to the pairwise loop, not inside it.
 - Targeted Repel, Repel Pulse, Gravity Ripple and Spin are impulses and collision shapes outside the gravity seam. A Gravity Ripple is a one-shot radial impulse from a point in space, divided by mass and falling off with distance. It pushes Rubbley too if he's in range, is weaker than a Repel Pulse and doesn't stun.
 - Each body type has a speed cap and light damping. Rubbley and projectiles use continuous collision detection.

@@ -6,8 +6,7 @@
 script = ExtResource("1_stats")
 attract_self_multiplier = 3.0
 attract_celestial_multiplier = 2.0
-gravity_well_strength_m_per_s2 = 20.0
-gravity_well_drag_per_second = 5.0
+gravity_well_strength_m_per_s2 = 50.0
 gravity_well_radius_m = 24.0
 gravity_well_duration_s = 3.0
-gravity_well_fade_s = 10.0
+gravity_well_fade_s = 0.0

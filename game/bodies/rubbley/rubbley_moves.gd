@@ -86,7 +86,6 @@ func _end_attract() -> void:
 func _place_gravity_well(aim: Vector3) -> void:
 	var well := gravity_well_scene.instantiate() as GravityWell
 	well.strength_m_per_s2 = stats.gravity_well_strength_m_per_s2
-	well.drag_per_second = stats.gravity_well_drag_per_second
 	well.radius_m = stats.gravity_well_radius_m
 	well.duration_s = stats.gravity_well_duration_s
 	well.fade_s = stats.gravity_well_fade_s

@@ -26,7 +26,7 @@ The shipped-values suite's feel scenarios (ADR 0017) each run over **5 start con
 - **Capture**: a body released at 0.8 × Capture Radius, at 0.9–1.1× circular speed, is in Orbit within 3 orbital periods and stays in Orbit for 2 more.
 - **Repel Pulse breaks Orbit**: from an established Orbit, a Repel Pulse leaves the body out of Orbit within 0.5 s and beyond 1.5 × Capture Radius within 2 s. It doesn't re-enter Orbit for the rest of the run.
 - **Drift**: Rubbley in empty space covers at least 80% of the distance Drift alone should give (from Drift speed and his damping) over 5 s, measured after a 1 s settle.
-- **A Gravity Well can't trap Rubbley**: Rubbley may stall in a Well, but he leaves its radius within the Well's lifetime plus 1 s. A Well can hold him briefly as a tactic but can never soft-lock him.
+- **No Gravity Well scenario.** A Well that flings Rubbley, as the controller-aim prototype's did, ends with whatever speed it gave him. In about 1 Well in 5 that speed nearly cancels Drift and leaves him almost stopped for 10 s or more. That fling was chosen over a guarantee that he always gets out, so there is nothing to band.
 
 **Budget**: at most 10 simulated seconds per variant, except Capture, whose 5 orbital periods take as long as the shipped Orbit does (about 45 s around a shipped planet, since the speed cap rules out a 2 s period). The whole shipped-values suite must finish within 60 s wall time on CI; that is the hard gate, and headless stepping runs the Capture scenario's 5 variants in a few seconds. The suite logs its time, and going over fails it.
 

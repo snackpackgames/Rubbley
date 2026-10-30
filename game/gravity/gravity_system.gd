@@ -61,9 +61,7 @@ func _physics_process(delta: float) -> void:
 		roles[i] = gravity_body.role
 		multipliers[i] = gravity_body.gravega_multiplier
 		velocities[i] = body.linear_velocity
-		# The damping the engine applied last tick, a Gravity Well's drag included, so Drift
-		# and the capture assist pay back all of it.
-		linear_damps[i] = PhysicsServer3D.body_get_direct_state(body.get_rid()).total_linear_damp
+		linear_damps[i] = body.linear_damp
 		var play_plane_body := body as PlayPlaneBody
 		if play_plane_body != null:
 			capture_radii[i] = play_plane_body.tuning.capture_radius_m
