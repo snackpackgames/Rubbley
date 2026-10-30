@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InputTuning" format=3 uid="uid://dwx65aqrj3e3c"]
+
+[ext_resource type="Script" path="res://game/input/input_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+stick_deadzone = 0.2
+aim_range = 0.9
+aim_snap_radius = 0.167
+full_tilt = 0.95
+reach_cone_deg = 12.0
+reach_range_multiple = 2.0
+reach_hysteresis_deg = 10.0
+reach_distance_bias_deg = 5.0
+aim_release_grace_s = 0.12

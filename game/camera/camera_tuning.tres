@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CameraTuning" format=3 uid="uid://7mwwe06ivw6xp"]
+[gd_resource type="Resource" script_class="CameraTuning" format=3 uid="uid://bpnxoktieb6vl"]
 
 [ext_resource type="Script" path="res://game/camera/camera_tuning.gd" id="1_tuning"]
 

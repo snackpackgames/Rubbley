@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bctc56hhb10tt"]
+
+[ext_resource type="Shader" path="res://game/bodies/targetable_glow.gdshader" id="1_shader"]
+
+[resource]
+render_priority = 1
+shader = ExtResource("1_shader")

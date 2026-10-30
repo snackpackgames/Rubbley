@@ -30,7 +30,7 @@ Rubbley's numbers come in two kinds. **Stats** belong to a character and advance
 - Unit tests build their own resources (`GravityTuning.new()`), set only the fields they assert on, and never load a shipped `.tres`. Retuning the game doesn't break them.
 - A shipped-values suite in `test/unit/` (ADR 0011) stops a bad retune from breaking the game.
   - **Invariants** checked on every shipped Stats, Tuning and Stat Modifier `.tres`: min < max, positive speed caps, a Mass→size curve that only ever rises, every body Tuning's Capture Radius inside max range, a Stamina pool that covers at least one use of each move, input release points below press points, and every stat enum value handled by the fold.
-  - **Feel scenarios** run short simulations on the shipped Tuning. A body released inside the Capture Radius at typical speed ends up in Orbit. Repel Pulse breaks that Orbit. Drift carries Rubbley a minimum distance per second. A Gravity Well can't trap Rubbley against Drift for good. Step counts and tolerances follow the reproducible-physics decision.
+  - **Feel scenarios** run short simulations on the shipped Tuning. A body released inside the Capture Radius at typical speed ends up in Orbit. Repel Pulse breaks that Orbit. Drift carries Rubbley a minimum distance per second. Step counts and tolerances follow the reproducible-physics decision.
 - There's no in-game tuning UI, in shipped builds or in playtest builds. Developers tune live with the remote inspector while running from the editor. If a debug panel is ever added, it edits a `duplicate()` of the resource, never the shared one.
 
 ## Considered Options

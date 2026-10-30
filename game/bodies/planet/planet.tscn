@@ -4,6 +4,8 @@
 [ext_resource type="Resource" path="res://game/bodies/planet/planet_tuning.tres" id="2_tuning"]
 [ext_resource type="Material" path="res://game/bodies/planet/planet_material.tres" id="3_material"]
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
+[ext_resource type="Script" path="res://game/bodies/targetable.gd" id="5_targetable"]
+[ext_resource type="Material" path="res://game/bodies/targetable_glow.tres" id="6_glow"]
 
 [sub_resource type="SphereShape3D" id="collider"]
 radius = 8.0
@@ -28,3 +30,10 @@ surface_material_override/0 = ExtResource("3_material")
 script = ExtResource("4_gravity")
 role = 0
 body = NodePath("..")
+
+[node name="Targetable" type="Node" parent="." node_paths=PackedStringArray("gravity_body", "collider", "glow_mesh")]
+script = ExtResource("5_targetable")
+gravity_body = NodePath("../GravityBody")
+collider = NodePath("../Collider")
+glow_mesh = NodePath("../Mesh")
+glow_material = ExtResource("6_glow")

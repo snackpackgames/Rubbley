@@ -72,7 +72,8 @@ func _physics_process(delta: float) -> void:
 				tuning.max_range_m,
 			)
 
-	var totals := _solver.forces(positions, masses, roles, multipliers)
+	var pair_multipliers := _pair_multipliers(gravity_bodies)
+	var totals := _solver.forces(positions, masses, roles, multipliers, pair_multipliers)
 	var capture := _capture_assist.forces(
 		positions,
 		velocities,
@@ -82,6 +83,7 @@ func _physics_process(delta: float) -> void:
 		linear_damps,
 		capture_radii,
 		capturable,
+		pair_multipliers,
 	)
 	var drifting_index := gravity_bodies.find(drift_body)
 	var drifting_mass := masses[drifting_index] if drifting_index >= 0 else 0.0
@@ -98,3 +100,20 @@ func _physics_process(delta: float) -> void:
 		var force := totals[i] + capture[i] + drift[i]
 		if force != Vector3.ZERO:
 			gravity_bodies[i].body.apply_central_force(force)
+
+
+# Every body's pair multipliers, keyed by the pair's indices in [param gravity_bodies],
+# lower first. A pair both bodies multiply takes the product.
+func _pair_multipliers(gravity_bodies: Array[GravityBody]) -> Dictionary[Vector2i, float]:
+	var pairs: Dictionary[Vector2i, float] = { }
+	for i in gravity_bodies.size():
+		# A Variant, as a body freed this tick is still a key until its pair is let go.
+		for other: Variant in gravity_bodies[i].pair_multipliers:
+			if not is_instance_valid(other):
+				continue
+			var j := gravity_bodies.find(other)
+			if j < 0 or j == i:
+				continue
+			var pair := Vector2i(mini(i, j), maxi(i, j))
+			pairs[pair] = pairs.get(pair, 1.0) * gravity_bodies[i].pair_multipliers[other]
+	return pairs
