@@ -4,7 +4,7 @@ extends Node
 ## starts, whatever is under the aim decides its use, and that target stays locked
 ## until release: Attract on self raises Rubbley's Gravega multiplier, a Targeted
 ## Attract raises the multiplier on his pair with the glowing body, and Attract into empty
-## space places a Gravity Well.
+## space places a Gravity Well, replacing any Well still active.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
 ## Rubbley's Gravega values.
@@ -22,6 +22,8 @@ var injected_frame: MoveInputFrame
 var _attracting_self := false
 # The glowing body a Targeted Attract has locked, until release.
 var _attract_target: Targetable
+# The one Gravity Well that may be active, until it ends or a new one replaces it.
+var _gravity_well: GravityWell
 
 
 func _ready() -> void:
@@ -84,6 +86,9 @@ func _end_attract() -> void:
 
 
 func _place_gravity_well(aim: Vector3) -> void:
+	# Freed now, not queued, so the old Well pulls nothing more this tick.
+	if is_instance_valid(_gravity_well):
+		_gravity_well.free()
 	var well := gravity_well_scene.instantiate() as GravityWell
 	well.strength_m_per_s2 = stats.gravity_well_strength_m_per_s2
 	well.radius_m = stats.gravity_well_radius_m
@@ -93,3 +98,4 @@ func _place_gravity_well(aim: Vector3) -> void:
 	# This component is a plain Node, so a Well under it sits in world space and stays
 	# where it was placed while Rubbley moves on.
 	add_child(well)
+	_gravity_well = well

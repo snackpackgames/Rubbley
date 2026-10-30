@@ -122,6 +122,20 @@ func test_attract_into_empty_space_places_a_gravity_well_that_pulls_rubbley() ->
 	assert_float(_rubbley.linear_velocity.x).is_greater(0.0)
 
 
+## Only one Gravity Well is active at a time: placing a new one despawns the old one at once.
+func test_a_new_gravity_well_replaces_the_old_one() -> void:
+	_build_world()
+	var tick_s := 1.0 / Engine.physics_ticks_per_second
+	await _hold_attract(Vector3(5, 0, 0), tick_s * 2.0)
+	var first := _gravity_wells()[0]
+	await _hold_attract(Vector3(-5, 0, 0), tick_s * 2.0)
+	var wells := _gravity_wells()
+
+	assert_bool(is_instance_valid(first)).is_false()
+	assert_int(wells.size()).is_equal(1)
+	assert_vector(wells[0].global_position).is_equal_approx(Vector3(-5, 0, 0), Vector3.ONE * 1e-3)
+
+
 ## A Gravity Well lasts its duration and its fade, then goes.
 func test_a_gravity_well_lasts_its_duration_and_fade() -> void:
 	_build_world()
