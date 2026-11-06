@@ -97,11 +97,45 @@ func test_anchored_bodies_are_left_out_of_the_solver() -> void:
 	assert_vector(forces[0]).is_equal_approx(Vector3.ZERO, Vector3.ONE * 1e-5)
 
 
+## A pair multiplier scales that one pair and leaves both bodies' other pairs alone.
+func test_a_pair_multiplier_scales_only_that_pair() -> void:
+	var pair_multipliers: Dictionary[Vector2i, float] = { Vector2i(0, 1): 3.0 }
+	var forces := _solve(
+		[Vector3.ZERO, Vector3(2, 0, 0), Vector3(-2, 0, 0)],
+		[1.0, 1.0, 1.0],
+		[CELESTIAL, CELESTIAL, CELESTIAL],
+		[],
+		pair_multipliers,
+	)
+	# Pair 0–1: 2 × 1 × 1 / 2² × 3 = 1.5. Pair 1–2 at 4 m: 2 / 4² = 0.125.
+	assert_vector(forces[1]).is_equal_approx(Vector3(-1.625, 0, 0), Vector3.ONE * 1e-5)
+	# Pair 0–2 is unscaled: 0.5, and pair 1–2 pulls body 2 the same way.
+	assert_vector(forces[2]).is_equal_approx(Vector3(0.625, 0, 0), Vector3.ONE * 1e-5)
+
+
+## An Anchored Body's Area point gravity pulls at its plain strength, so a pair multiplier
+## on a pair with one adds only the share above 1, on the other body, unsoftened.
+func test_a_pair_multiplier_on_an_anchored_body_adds_the_extra_pull() -> void:
+	_tuning.softening_m = 1.0
+	var pair_multipliers: Dictionary[Vector2i, float] = { Vector2i(0, 1): 3.0 }
+	var forces := _solve(
+		[Vector3.ZERO, Vector3(4, 0, 0)],
+		[3.0, 8.0],
+		[CELESTIAL, ANCHORED],
+		[],
+		pair_multipliers,
+	)
+	# (3 − 1) × 2 × 8 × 3 / 4² = 6, toward the Anchored Body, which never moves.
+	assert_vector(forces[0]).is_equal_approx(Vector3(6, 0, 0), Vector3.ONE * 1e-5)
+	assert_vector(forces[1]).is_equal(Vector3.ZERO)
+
+
 func _solve(
 	positions: Array[Vector3],
 	masses: Array[float],
 	roles: Array[GravityBody.Role],
 	multipliers: Array[float] = [],
+	pair_multipliers: Dictionary[Vector2i, float] = { },
 ) -> PackedVector3Array:
 	if multipliers.is_empty():
 		multipliers.resize(positions.size())
@@ -114,4 +148,5 @@ func _solve(
 		PackedFloat64Array(masses),
 		packed_roles,
 		PackedFloat64Array(multipliers),
+		pair_multipliers,
 	)

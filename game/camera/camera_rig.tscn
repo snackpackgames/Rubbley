@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://rurnyj12bk4hw"]
+[gd_scene format=3 uid="uid://ce46mcd11rmgu"]
 
 [ext_resource type="Script" path="res://game/camera/camera_rig.gd" id="1_rig"]
 [ext_resource type="Resource" path="res://game/camera/camera_tuning.tres" id="2_tuning"]

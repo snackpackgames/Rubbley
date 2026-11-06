@@ -18,6 +18,7 @@ func _init(tuning: GravityTuning) -> void:
 ## whether a primary may capture it. A capturable body circles its nearest heavier
 ## Celestial or Anchored Body whose Capture Radius it is inside, if it's slower than
 ## [member GravityTuning.capture_speed_multiple] times circular speed there.
+## [param pair_multipliers] scales single pairs' pulls as in [method GravitySolver.forces].
 func forces(
 	positions: PackedVector3Array,
 	velocities: PackedVector3Array,
@@ -27,6 +28,7 @@ func forces(
 	linear_damps: PackedFloat64Array,
 	capture_radii: PackedFloat64Array,
 	capturable: Array[bool],
+	pair_multipliers: Dictionary[Vector2i, float] = { },
 ) -> PackedVector3Array:
 	var count := positions.size()
 	var result := PackedVector3Array()
@@ -39,7 +41,11 @@ func forces(
 			continue
 		var offset := _on_plane(positions[i] - positions[primary])
 		var distance := offset.length()
-		var pull := _pull(primary, i, distance, masses, roles, multipliers)
+		var pair_multiplier: float = pair_multipliers.get(
+			Vector2i(mini(i, primary), maxi(i, primary)),
+			1.0,
+		)
+		var pull := _pull(primary, i, distance, masses, roles, multipliers) * pair_multiplier
 		var circular_speed := sqrt(pull * distance)
 		var relative := _on_plane(velocities[i] - velocities[primary])
 		if relative.length() > circular_speed * _tuning.capture_speed_multiple:

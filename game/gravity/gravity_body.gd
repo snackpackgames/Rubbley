@@ -27,6 +27,9 @@ const GROUP := &"gravity_bodies"
 
 ## The current Gravega multiplier on every pair this body is in. Attract raises it above 1.
 var gravega_multiplier := 1.0
+## Gravega multipliers on single pairs, keyed by the other body, on top of both bodies'
+## own. A Targeted Attract sets one on Rubbley's for the pair with its target.
+var pair_multipliers: Dictionary[GravityBody, float] = { }
 
 
 func _enter_tree() -> void:

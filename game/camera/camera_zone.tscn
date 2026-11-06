@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://fn2pfu39y90v7"]
+[gd_scene format=3 uid="uid://bsntts61f245g"]
 
 [ext_resource type="Script" path="res://game/camera/camera_zone.gd" id="1_zone"]
 
