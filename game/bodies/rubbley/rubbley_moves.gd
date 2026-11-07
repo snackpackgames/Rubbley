@@ -54,7 +54,7 @@ func _physics_process(_delta: float) -> void:
 
 func _start_attract(aim: Vector3) -> void:
 	var targetables := Targetable.all_in(get_tree())
-	var target := _resolve(aim, targetables)
+	var target := _target_under(aim, targetables)
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
 			_attracting_self = true
@@ -70,7 +70,7 @@ func _start_attract(aim: Vector3) -> void:
 
 func _repel(aim: Vector3) -> void:
 	var targetables := Targetable.all_in(get_tree())
-	var target := _resolve(aim, targetables)
+	var target := _target_under(aim, targetables)
 	var rubbley := gravity_body.body
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
@@ -82,7 +82,7 @@ func _repel(aim: Vector3) -> void:
 			)
 			_stun_around(rubbley.global_position)
 		AimTarget.Kind.CELESTIAL_BODY:
-			var body := targetables[target.body_index].gravity_body.body
+			var body := targetables[target.body_index].body()
 			var impulse := RepelImpulse.targeted_impulse(
 				rubbley.global_position,
 				body.global_position,
@@ -97,7 +97,7 @@ func _repel(aim: Vector3) -> void:
 
 
 # What is under [param aim], with [param targetables] as the glowing bodies to pick from.
-func _resolve(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
+func _target_under(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
 	var positions := PackedVector3Array()
 	var radii := PackedFloat64Array()
 	for targetable in targetables:

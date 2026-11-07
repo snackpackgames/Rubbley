@@ -39,6 +39,11 @@ func _ready() -> void:
 		glow_mesh.material_overlay = glow_material
 
 
+## Returns the body itself, which a Targeted Repel pushes.
+func body() -> RigidBody3D:
+	return gravity_body.body
+
+
 ## Returns the body's global position.
 func body_position() -> Vector3:
 	return gravity_body.body.global_position

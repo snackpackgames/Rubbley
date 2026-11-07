@@ -17,19 +17,22 @@ const VARIANT_COUNT := 5
 ## How often the Orbit predicate is fed. At about 6 s a period, debris moves about 6°.
 const SAMPLE_S := 0.1
 # Debris starts at 0.6 × the Capture Radius, 12 m round the shipped planet, so one period
-# is about 6 s and the scenario stays inside ADR 0018's 10 s a variant.
+# is about 6 s.
 const RADIUS_SHARE := 0.6
-# Two periods to establish Orbit: one for the 360°, one of slack for a perturbed start.
-const ESTABLISH_PERIODS := 2.0
+# ADR 0018 allows 10 simulated seconds a variant; what the clear time leaves goes to
+# establishing Orbit: about 1.4 periods, one for the 360° and slack for a perturbed start.
+const ESTABLISH_S := 10.0 - 2.0
 # Where Rubbley waits while the debris settles: far beyond the max range, so he pulls
 # nothing, and nothing pulls him.
 const PARKED_AT := Vector3(500, 0, 0)
 # How far behind the debris along its path Rubbley fires the Pulse. Well inside the Pulse's
 # reach, and clear of the debris and the planet.
 const FIRE_BEHIND_M := 3.0
-# ADR 0018's bands: out of Orbit within 0.5 s, beyond 1.5 × the Capture Radius within 2 s,
-# and not back in Orbit for the rest of the run.
+# ADR 0018's bands. Out of Orbit within 0.5 s: a Pulse that leaves debris in Orbit any
+# longer only nudged it, and the player sees nothing happen.
 const BREAK_S := 0.5
+# Beyond 1.5 × the Capture Radius within 2 s, and not back in Orbit meanwhile: past 1.25 ×
+# Orbit ends, and the extra quarter shows the debris was flung clear, not swung wide.
 const CLEAR_S := 2.0
 const CLEAR_RADIUS_MULTIPLE := 1.5
 
@@ -69,7 +72,7 @@ func test_a_repel_pulse_breaks_orbit() -> void:
 		var capture_radius_m := planet.tuning.capture_radius_m
 		var orbit := Orbit.new(GRAVITY_TUNING, capture_radius_m)
 
-		var established := await _orbit_established(orbit, debris, _period_s(planet, start))
+		var established := await _orbit_established(orbit, debris)
 		(
 			assert_bool(established)
 			.override_failure_message("%s: the debris never settled into Orbit" % label)
@@ -128,16 +131,10 @@ func _pull_strength(planet: PlayPlaneBody) -> float:
 	return GRAVITY_TUNING.gravitational_constant * planet.mass
 
 
-# The period of a circular Orbit at the start's distance.
-func _period_s(planet: PlayPlaneBody, start: Start) -> float:
-	var distance_m := planet.tuning.capture_radius_m * start.radius_share
-	return TAU * distance_m / sqrt(_pull_strength(planet) / distance_m)
-
-
-# Steps until the debris is in Orbit, for up to the establishing periods.
-func _orbit_established(orbit: Orbit, debris: Node3D, period_s: float) -> bool:
+# Steps until the debris is in Orbit, for up to the establishing time.
+func _orbit_established(orbit: Orbit, debris: Node3D) -> bool:
 	var elapsed_s := 0.0
-	while elapsed_s < period_s * ESTABLISH_PERIODS:
+	while elapsed_s < ESTABLISH_S:
 		await step_seconds(SAMPLE_S)
 		elapsed_s += SAMPLE_S
 		orbit.track(debris.global_position)
