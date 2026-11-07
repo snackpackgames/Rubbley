@@ -201,6 +201,17 @@ func test_gravity_ripple_is_weaker_than_a_repel_pulse() -> void:
 	assert_float(_rubbley.linear_velocity.length()).is_less(pulse_speed)
 
 
+## A Repel Pulse pushes a free 250 kg planet, five times the reference mass, at
+## √(1/5) ≈ 0.45 of the speed it gives debris at the same distance: heavy bodies resist.
+func test_repel_pulse_pushes_a_heavy_planet_less_than_debris() -> void:
+	_build_world()
+	var debris := _add(DEBRIS_SCENE, Vector3(-12, 0, 0))
+	var planet := _add(PLANET_SCENE, Vector3(12, 0, 0))
+	await _fire_repel(_rubbley.global_position)
+	var share := planet.linear_velocity.x / -debris.linear_velocity.x
+	assert_float(share).is_between(0.4, 0.5)
+
+
 ## A Targeted Repel on a free planet pushes the two apart with one impulse: the planet,
 ## 25 times heavier, moves at about a twenty-fifth of Rubbley's uncapped speed, J ÷ M.
 func test_targeted_repel_pushes_rubbley_and_the_body_apart_by_mass() -> void:

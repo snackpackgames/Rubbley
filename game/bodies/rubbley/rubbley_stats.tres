@@ -15,4 +15,6 @@ repel_pulse_radius_m = 17.3
 repel_pulse_stun_s = 1.5
 gravity_ripple_speed_m_per_s = 27.3
 gravity_ripple_radius_m = 17.3
+radial_repel_reference_mass_kg = 50.0
+radial_repel_mass_falloff = 0.5
 targeted_repel_impulse_n_s = 250.0

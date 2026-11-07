@@ -19,18 +19,29 @@ extends Resource
 @export_range(0.1, 30.0, 0.1, "or_greater") var gravity_well_duration_s := 3.0
 ## How long a Gravity Well's pull then takes to fade to nothing, in seconds.
 @export_range(0.0, 30.0, 0.1, "or_greater") var gravity_well_fade_s := 0.0
-## The speed change a Repel Pulse gives a body at Rubbley's centre, in m/s, whatever its
-## mass, falling off to nothing at its radius. The controller-aim prototype's 800 px/s.
+## The speed change a Repel Pulse gives a body at Rubbley's centre, in m/s, falling off
+## to nothing at its radius; bodies past the reference mass take less. The controller-aim
+## prototype's 800 px/s.
 @export_range(0.0, 100.0, 0.1, "or_greater") var repel_pulse_speed_m_per_s := 36.4
 ## How far a Repel Pulse reaches from Rubbley, in metres. The prototype's 380 px.
 @export_range(0.1, 100.0, 0.1, "or_greater") var repel_pulse_radius_m := 17.3
 ## How long a Repel Pulse stuns what it reaches, in seconds.
 @export_range(0.0, 10.0, 0.01, "or_greater") var repel_pulse_stun_s := 1.5
-## The speed change a Gravity Ripple gives a body at its centre, in m/s, whatever its mass,
-## Rubbley's included, falling off to nothing at its radius. Weaker than a Repel Pulse.
+## The speed change a Gravity Ripple gives a body at its centre, in m/s, Rubbley's
+## included, falling off to nothing at its radius; bodies past the reference mass take
+## less. Weaker than a Repel Pulse.
 @export_range(0.0, 100.0, 0.1, "or_greater") var gravity_ripple_speed_m_per_s := 27.3
 ## How far a Gravity Ripple reaches, in metres.
 @export_range(0.1, 100.0, 0.1, "or_greater") var gravity_ripple_radius_m := 17.3
+## The heaviest a body can be and still take a Repel Pulse's or Gravity Ripple's whole
+## speed change, in kg. Heavier bodies take less, by [member radial_repel_mass_falloff].
+## Five times Rubbley's 10 kg, so debris, Rubbley and small planets all take the whole push.
+@export_range(0.1, 1000.0, 0.1, "or_greater") var radial_repel_reference_mass_kg := 50.0
+## How fast a heavier body's share of a radial push shrinks: (reference ÷ mass) to this.
+## 0 pushes every body alike, as in the prototype; 1 gives bodies past the reference mass
+## the same impulse. At 0.5 a 400 kg planet takes about a third, picked from recorded
+## variants as moving heavy planets noticeably but slowly.
+@export_range(0.0, 2.0, 0.01, "or_greater") var radial_repel_mass_falloff := 0.5
 ## The impulse a Targeted Repel pushes Rubbley and its target apart with, in N·s; each moves
 ## by it divided by its own mass. The prototype's 550 px/s slingshot on Rubbley's 10 kg.
 @export_range(0.0, 2000.0, 1.0, "or_greater") var targeted_repel_impulse_n_s := 250.0

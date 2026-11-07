@@ -1,8 +1,9 @@
 class_name RepelImpulse
 extends RefCounted
 ## Repel's impulse maths (ADRs 0006, 0012). A Repel Pulse and a Gravity Ripple are radial
-## pushes: every body in range gets the same speed change whatever its mass, as in the
-## controller-aim prototype, falling off linearly to nothing at the edge. A Targeted
+## pushes: every body in range up to a reference mass gets the same speed change, as in
+## the controller-aim prototype, falling off linearly to nothing at the edge, and heavier
+## bodies take a shrinking share of it ([method mass_share]). A Targeted
 ## Repel is one impulse along the Rubbley↔target line, equal and opposite on the two
 ## bodies, so each moves by the impulse divided by its own mass.
 
@@ -38,3 +39,12 @@ static func targeted_impulse(
 	if offset.is_zero_approx():
 		return Vector3.ZERO
 	return offset.normalized() * impulse_n_s
+
+
+## Returns the share of a radial push a body of [param mass_kg] takes: all of it up to
+## [param reference_mass_kg], then (reference ÷ mass) to [param falloff]. A falloff of 0
+## pushes every body alike; 1 gives bodies past the reference the same impulse.
+static func mass_share(mass_kg: float, reference_mass_kg: float, falloff: float) -> float:
+	if mass_kg <= reference_mass_kg:
+		return 1.0
+	return pow(reference_mass_kg / mass_kg, falloff)

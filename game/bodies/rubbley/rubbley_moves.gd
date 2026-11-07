@@ -109,7 +109,7 @@ func _target_under(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
 
 
 # Gives every gravity body in range of [param centre], except [param spared], a radial
-# speed change, the same whatever its mass. Frozen bodies don't move.
+# speed change, shrunk for bodies past the reference mass. Frozen bodies don't move.
 func _push_away(
 	centre: Vector3,
 	speed_m_per_s: float,
@@ -127,7 +127,12 @@ func _push_away(
 			speed_m_per_s,
 		)
 		if change != Vector3.ZERO:
-			body.apply_central_impulse(change * body.mass)
+			var share := RepelImpulse.mass_share(
+				body.mass,
+				stats.radial_repel_reference_mass_kg,
+				stats.radial_repel_mass_falloff,
+			)
+			body.apply_central_impulse(change * share * body.mass)
 
 
 # Stuns every Stunnable body other than Rubbley within a Repel Pulse's radius of

@@ -64,3 +64,18 @@ func test_targeted_impulse_pushes_the_target_away_from_rubbley() -> void:
 func test_targeted_impulse_needs_a_line() -> void:
 	var impulse := RepelImpulse.targeted_impulse(Vector3(1, 0, 1), Vector3(1, 3, 1), 100.0)
 	assert_vector(impulse).is_equal(Vector3.ZERO)
+
+
+## Bodies up to the reference mass take the whole radial push; past it they take
+## (reference ÷ mass) to the falloff: a falloff of 1 halves it at twice the mass, and
+## 0.5 at four times.
+func test_mass_share_shrinks_past_the_reference_mass() -> void:
+	assert_float(RepelImpulse.mass_share(5.0, 10.0, 1.0)).is_equal(1.0)
+	assert_float(RepelImpulse.mass_share(10.0, 10.0, 1.0)).is_equal(1.0)
+	assert_float(RepelImpulse.mass_share(20.0, 10.0, 1.0)).is_equal_approx(0.5, 1e-6)
+	assert_float(RepelImpulse.mass_share(40.0, 10.0, 0.5)).is_equal_approx(0.5, 1e-6)
+
+
+## A falloff of 0 gives every body the same push whatever its mass.
+func test_mass_share_of_no_falloff_is_whole() -> void:
+	assert_float(RepelImpulse.mass_share(250.0, 10.0, 0.0)).is_equal(1.0)
