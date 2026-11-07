@@ -4,7 +4,9 @@ extends Node
 ## starts, whatever is under the aim decides its use, and that target stays locked
 ## until release: Attract on self raises Rubbley's Gravega multiplier, a Targeted
 ## Attract raises the multiplier on his pair with the glowing body, and Attract into empty
-## space places a Gravity Well, replacing any Well still active.
+## space places a Gravity Well, replacing any Well still active. Repel fires once, and the
+## aim decides its use too: a Repel Pulse on Rubbley, a Targeted Repel on a glowing body,
+## or a Gravity Ripple in empty space ([RepelImpulse] has the maths).
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
 ## Rubbley's Gravega values.
@@ -46,18 +48,13 @@ func _physics_process(_delta: float) -> void:
 		_:
 			# Released, or idle after a release missed while the tree was paused.
 			_end_attract()
+	if frame.repel_fired:
+		_repel(frame.aim)
 
 
 func _start_attract(aim: Vector3) -> void:
 	var targetables := Targetable.all_in(get_tree())
-	var positions := PackedVector3Array()
-	var radii := PackedFloat64Array()
-	for targetable in targetables:
-		positions.append(targetable.body_position())
-		radii.append(targetable.radius_m())
-	var sphere := collider.shape as SphereShape3D
-	var rubbley_at := gravity_body.body.global_position
-	var target := AimTarget.resolve(aim, rubbley_at, sphere.radius, positions, radii)
+	var target := _resolve(aim, targetables)
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
 			_attracting_self = true
@@ -69,6 +66,80 @@ func _start_attract(aim: Vector3) -> void:
 			)
 		AimTarget.Kind.EMPTY_SPACE:
 			_place_gravity_well(aim)
+
+
+func _repel(aim: Vector3) -> void:
+	var targetables := Targetable.all_in(get_tree())
+	var target := _resolve(aim, targetables)
+	var rubbley := gravity_body.body
+	match target.kind:
+		AimTarget.Kind.RUBBLEY:
+			_push_away(
+				rubbley.global_position,
+				stats.repel_pulse_speed_m_per_s,
+				stats.repel_pulse_radius_m,
+				rubbley,
+			)
+			_stun_around(rubbley.global_position)
+		AimTarget.Kind.CELESTIAL_BODY:
+			var body := targetables[target.body_index].gravity_body.body
+			var impulse := RepelImpulse.targeted_impulse(
+				rubbley.global_position,
+				body.global_position,
+				stats.targeted_repel_impulse_n_s,
+			)
+			# An Anchored Body is frozen and takes none of it: Rubbley takes the whole push.
+			if not body.freeze:
+				body.apply_central_impulse(impulse)
+			rubbley.apply_central_impulse(-impulse)
+		AimTarget.Kind.EMPTY_SPACE:
+			_push_away(aim, stats.gravity_ripple_speed_m_per_s, stats.gravity_ripple_radius_m, null)
+
+
+# What is under [param aim], with [param targetables] as the glowing bodies to pick from.
+func _resolve(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
+	var positions := PackedVector3Array()
+	var radii := PackedFloat64Array()
+	for targetable in targetables:
+		positions.append(targetable.body_position())
+		radii.append(targetable.radius_m())
+	var sphere := collider.shape as SphereShape3D
+	var rubbley_at := gravity_body.body.global_position
+	return AimTarget.resolve(aim, rubbley_at, sphere.radius, positions, radii)
+
+
+# Gives every gravity body in range of [param centre], except [param spared], a radial
+# speed change, the same whatever its mass. Frozen bodies don't move.
+func _push_away(
+	centre: Vector3,
+	speed_m_per_s: float,
+	radius_m: float,
+	spared: RigidBody3D,
+) -> void:
+	for node in get_tree().get_nodes_in_group(GravityBody.GROUP):
+		var body := (node as GravityBody).body
+		if body == null or body == spared or body.freeze:
+			continue
+		var change := RepelImpulse.radial_velocity_change(
+			centre,
+			body.global_position,
+			radius_m,
+			speed_m_per_s,
+		)
+		if change != Vector3.ZERO:
+			body.apply_central_impulse(change * body.mass)
+
+
+# Stuns every Stunnable body other than Rubbley within a Repel Pulse's radius of
+# [param centre], measured on the Play Plane.
+func _stun_around(centre: Vector3) -> void:
+	var flat_centre := Vector2(centre.x, centre.z)
+	for stunnable in Stunnable.all_in(get_tree()):
+		if stunnable.body == gravity_body.body:
+			continue
+		var at := stunnable.body.global_position
+		if flat_centre.distance_to(Vector2(at.x, at.z)) < stats.repel_pulse_radius_m:
+			stunnable.stun(stats.repel_pulse_stun_s)
 
 
 func _end_attract() -> void:
