@@ -24,7 +24,7 @@ Nothing in Rubbley needs one run of the physics to replay exactly, so we don't t
 The shipped-values suite's feel scenarios (ADR 0017) each run over **5 start conditions**: one canonical start plus four perturbed by a fixed-seed RNG (±5% speed, ±5° angle, ±5% distance). Every variant must pass, so "typical" covers a neighbourhood, not one lucky start. Every band is relative to the shipped Tuning it tests, so a retune moves the band with it, and each band has a one-line comment saying why it's that wide.
 
 - **Capture**: a body released at 0.8 × Capture Radius, at 0.9–1.1× circular speed, is in Orbit within 3 orbital periods and stays in Orbit for 2 more.
-- **Repel Pulse breaks Orbit**: from an established Orbit, a Repel Pulse leaves the body out of Orbit within 0.5 s and beyond 1.5 × Capture Radius within 2 s. It doesn't re-enter Orbit for the rest of the run.
+- **Repel Pulse breaks Orbit**: from an established Orbit (debris round an Anchored planet, since the Pulse doesn't move Rubbley), a Repel Pulse fired beside it leaves the body out of Orbit within 0.5 s and beyond 1.5 × Capture Radius within 2 s. It doesn't re-enter Orbit for the rest of the run.
 - **Drift**: Rubbley in empty space covers at least 80% of the distance Drift alone should give (from Drift speed and his damping) over 5 s, measured after a 1 s settle.
 - **No Gravity Well scenario.** A Well that flings Rubbley, as the controller-aim prototype's did, ends with whatever speed it gave him. In about 1 Well in 5 that speed nearly cancels Drift and leaves him almost stopped for 10 s or more. That fling was chosen over a guarantee that he always gets out, so there is nothing to band.
 

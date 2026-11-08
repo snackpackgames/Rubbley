@@ -1,10 +1,11 @@
 extends SimulationTestSuite
-## Rubbley's Attract (ADRs 0006, 0012), driven by injected Move Input frames on the
+## Rubbley's Attract and Repel (ADRs 0006, 0012), driven by injected Move Input frames on the
 ## shipped Rubbley, planet and debris scenes. Each outcome is compared with the same
 ## world left alone, so the bands follow any retune of the shipped Stats.
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const PLANET_SCENE := preload("res://game/bodies/planet/planet.tscn")
+const ANCHORED_PLANET_SCENE := preload("res://game/bodies/planet/anchored_planet.tscn")
 const DEBRIS_SCENE := preload("res://game/bodies/debris/debris.tscn")
 const HOLD_S := 1.0
 # Attract must at least add this share to what gravity alone does. Every shipped
@@ -14,6 +15,11 @@ const MIN_GAIN := 1.3
 # by no more than this share, from Rubbley falling into range of it. Raising the target's
 # own multiplier instead doubles it.
 const UNCHANGED_SHARE := 0.15
+# A Repel push must give a body at least this speed. Gravity alone gives debris a few
+# metres from Rubbley well under 1 m/s in a tick or two; every shipped push is far above it.
+const MIN_PUSH_M_PER_S := 5.0
+# A body Repel leaves alone moves no faster than this, from gravity in the same ticks.
+const STILL_M_PER_S := 0.5
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -148,6 +154,86 @@ func test_a_gravity_well_lasts_its_duration_and_fade() -> void:
 	assert_int(_gravity_wells().size()).is_equal(0)
 
 
+## Repel on Rubbley fires a Repel Pulse: nearby debris is flung away from him, and he
+## stays where he is.
+func test_repel_pulse_pushes_bodies_away_but_not_rubbley() -> void:
+	_build_world()
+	var debris := _add(DEBRIS_SCENE, Vector3(4, 0, 0))
+	await _fire_repel(_rubbley.global_position)
+	assert_float(debris.linear_velocity.x).is_greater(MIN_PUSH_M_PER_S)
+	assert_float(_rubbley.linear_velocity.length()).is_less(STILL_M_PER_S)
+
+
+## A Repel Pulse stuns a stunnable body in its reach, and not one beyond it.
+func test_repel_pulse_stuns_what_it_reaches() -> void:
+	_build_world()
+	var reach_m := _moves.stats.repel_pulse_radius_m
+	var near := _add_stunnable(_add(DEBRIS_SCENE, Vector3(reach_m * 0.5, 0, 0)))
+	var far := _add_stunnable(_add(DEBRIS_SCENE, Vector3(0, 0, reach_m * 1.5)))
+	await _fire_repel(_rubbley.global_position)
+	assert_bool(near.is_stunned()).is_true()
+	assert_bool(far.is_stunned()).is_false()
+
+
+## Repel into empty space sends out a Gravity Ripple: debris and Rubbley are both pushed
+## away from the aim, and nothing is stunned.
+func test_gravity_ripple_pushes_rubbley_too_and_stuns_nothing() -> void:
+	_build_world()
+	var debris := _add_stunnable(_add(DEBRIS_SCENE, Vector3(-4, 0, 0)))
+	var aim := Vector3(-2, 0, 0)
+	await _fire_repel(aim)
+	var debris_body := debris.body as RigidBody3D
+	assert_float(debris_body.linear_velocity.x).is_less(-MIN_PUSH_M_PER_S)
+	assert_float(_rubbley.linear_velocity.x).is_greater(MIN_PUSH_M_PER_S)
+	assert_bool(debris.is_stunned()).is_false()
+
+
+## A Gravity Ripple pushes Rubbley less than a Repel Pulse pushes debris at the same
+## distance. At 12 m both pushes stay under the speed caps, which would hide the difference.
+func test_gravity_ripple_is_weaker_than_a_repel_pulse() -> void:
+	_build_world()
+	var debris := _add(DEBRIS_SCENE, Vector3(12, 0, 0))
+	await _fire_repel(_rubbley.global_position)
+	var pulse_speed := debris.linear_velocity.length()
+	_world.free()
+	_build_world()
+	await _fire_repel(Vector3(-12, 0, 0))
+	assert_float(_rubbley.linear_velocity.length()).is_less(pulse_speed)
+
+
+## A Repel Pulse pushes a free 250 kg planet, five times the reference mass, at
+## √(1/5) ≈ 0.45 of the speed it gives debris at the same distance: heavy bodies resist.
+func test_repel_pulse_pushes_a_heavy_planet_less_than_debris() -> void:
+	_build_world()
+	var debris := _add(DEBRIS_SCENE, Vector3(-12, 0, 0))
+	var planet := _add(PLANET_SCENE, Vector3(12, 0, 0))
+	await _fire_repel(_rubbley.global_position)
+	var share := planet.linear_velocity.x / -debris.linear_velocity.x
+	assert_float(share).is_between(0.4, 0.5)
+
+
+## A Targeted Repel on a free planet pushes the two apart with one impulse: the planet,
+## 25 times heavier, moves at about a twenty-fifth of Rubbley's uncapped speed, J ÷ M.
+func test_targeted_repel_pushes_rubbley_and_the_body_apart_by_mass() -> void:
+	_build_world()
+	var planet := _add(PLANET_SCENE, Vector3(0, 0, -20))
+	await _fire_repel(planet.global_position)
+	var away := Vector3.FORWARD
+	var planet_speed := planet.linear_velocity.dot(away)
+	var expected := _moves.stats.targeted_repel_impulse_n_s / planet.mass
+	assert_float(planet_speed).is_between(expected * 0.9, expected * 1.1)
+	assert_float(_rubbley.linear_velocity.dot(-away)).is_greater(MIN_PUSH_M_PER_S)
+
+
+## A Targeted Repel on an Anchored planet slingshots Rubbley off it, and the planet stays put.
+func test_targeted_repel_off_an_anchored_planet_moves_only_rubbley() -> void:
+	_build_world()
+	var planet := _add(ANCHORED_PLANET_SCENE, Vector3(0, 0, -20))
+	await _fire_repel(planet.global_position)
+	assert_vector(planet.global_position).is_equal(Vector3(0, 0, -20))
+	assert_float(_rubbley.linear_velocity.dot(Vector3.BACK)).is_greater(MIN_PUSH_M_PER_S)
+
+
 # Rubbley's speed toward a free planet 20 m away after the hold time, with or without
 # a Targeted Attract on it.
 func _rubbley_speed_toward_planet(attract: bool) -> float:
@@ -237,6 +323,25 @@ func _hold_attract(aim: Vector3, seconds: float) -> void:
 	_frame.attract = MoveInputFrame.Attract.RELEASED
 	await step_seconds(tick_s)
 	_frame.attract = MoveInputFrame.Attract.IDLE
+
+
+# Makes [param body] stunnable, as an enemy would be.
+func _add_stunnable(body: PlayPlaneBody) -> Stunnable:
+	var stunnable := Stunnable.new()
+	stunnable.body = body
+	body.add_child(stunnable)
+	return stunnable
+
+
+# Fires Repel at [param aim] for one tick, then lets the push take effect for another.
+func _fire_repel(aim: Vector3) -> void:
+	var tick_s := 1.0 / Engine.physics_ticks_per_second
+	await _start_of_tick()
+	_frame.aim = aim
+	_frame.repel_fired = true
+	await step_seconds(tick_s)
+	_frame.repel_fired = false
+	await step_seconds(tick_s)
 
 
 # Resumes at the start of a physics tick, before any node's _physics_process, so a frame
