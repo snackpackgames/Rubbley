@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SpinTuning" format=3 uid="uid://eu78rxa7rh128"]
+
+[ext_resource type="Script" path="res://game/bodies/rubbley/spin_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+shield_reach_m = 1.5
+duration_s = 0.4
+lockout_s = 0.6
+perfect_window_s = 0.1
+restitution = 1.0

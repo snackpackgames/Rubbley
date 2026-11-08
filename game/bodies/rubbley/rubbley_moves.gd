@@ -6,7 +6,8 @@ extends Node
 ## Attract raises the multiplier on his pair with the glowing body, and Attract into empty
 ## space places a Gravity Well, replacing any Well still active. Repel fires once, and the
 ## aim decides its use too: a Repel Pulse on Rubbley, a Targeted Repel on a glowing body,
-## or a Gravity Ripple in empty space ([RepelImpulse] has the maths).
+## or a Gravity Ripple in empty space ([RepelImpulse] has the maths). Spin fires whatever
+## else is going on, and [RubbleySpin] decides whether its lockout lets it.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
 ## Rubbley's Gravega values.
@@ -17,6 +18,8 @@ extends Node
 @export var collider: CollisionShape3D
 ## What an untargeted Attract places.
 @export var gravity_well_scene: PackedScene
+## Rubbley's Spin, which a Spin press fires.
+@export var spin: RubbleySpin
 
 ## A frame to read instead of Move Input's, for simulation tests (ADR 0018). Null in play.
 var injected_frame: MoveInputFrame
@@ -33,6 +36,7 @@ func _ready() -> void:
 	assert(gravity_body != null, "%s needs a GravityBody" % name)
 	assert(collider != null and collider.shape is SphereShape3D, "%s needs a sphere" % name)
 	assert(gravity_well_scene != null, "%s needs a Gravity Well scene" % name)
+	assert(spin != null, "%s needs a RubbleySpin" % name)
 
 
 func _physics_process(_delta: float) -> void:
@@ -50,6 +54,8 @@ func _physics_process(_delta: float) -> void:
 			_end_attract()
 	if frame.repel_fired:
 		_repel(frame.aim)
+	if frame.spin_fired:
+		spin.fire()
 
 
 func _start_attract(aim: Vector3) -> void:
