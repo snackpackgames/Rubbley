@@ -4,6 +4,7 @@ extends SimulationTestSuite
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const DEBRIS_SCENE := preload("res://game/bodies/debris/debris.tscn")
+const PLANET_SCENE := preload("res://game/bodies/planet/planet.tscn")
 # How fast debris is thrown at Rubbley, in m/s. Under the debris speed cap.
 const THROW_M_PER_S := 15.0
 # Where thrown debris starts, in metres from Rubbley: reached by the shield in well under
@@ -16,6 +17,12 @@ const MIN_BOUNCE_M_PER_S := 5.0
 # in under half a second gives him well under 0.1 m/s. A 15 m/s hit from it gives him
 # about 1 m/s.
 const STILL_M_PER_S := 0.3
+# Where a planet sits from Rubbley, in metres: its 8 m surface is 4 m off, so at 15 m/s
+# his shield reaches it in about a tenth of a second.
+const PLANET_AT_M := 12.0
+# A planet moves no faster than this from Rubbley's gravity alone in under half a second,
+# about 0.25 m/s; a shield that threw it instead would give it about 1 m/s.
+const PLANET_STILL_M_PER_S := 0.5
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -35,8 +42,7 @@ func test_the_shield_deflects_debris() -> void:
 	var debris := _throw_debris(Vector3.RIGHT)
 	await _fire_spin()
 	await step_seconds(_spin.tuning.duration_s * 0.8)
-	var away := _rubbley.global_position.direction_to(debris.global_position)
-	assert_float(debris.linear_velocity.dot(away)).is_greater(MIN_BOUNCE_M_PER_S)
+	assert_float(_speed_away(debris)).is_greater(MIN_BOUNCE_M_PER_S)
 
 
 ## The shield works all the way round: debris thrown from any of eight directions bounces
@@ -48,8 +54,7 @@ func test_the_shield_deflects_from_every_angle() -> void:
 		var debris := _throw_debris(from)
 		await _fire_spin()
 		await step_seconds(_spin.tuning.duration_s * 0.8)
-		var away := _rubbley.global_position.direction_to(debris.global_position)
-		assert_float(debris.linear_velocity.dot(away)) \
+		assert_float(_speed_away(debris)) \
 				.override_failure_message("Not deflected from %s" % from) \
 				.is_greater(MIN_BOUNCE_M_PER_S)
 		assert_float(_rubbley.linear_velocity.length()) \
@@ -64,8 +69,7 @@ func test_without_a_spin_debris_hits_rubbley() -> void:
 	_build_world()
 	var debris := _throw_debris(Vector3.RIGHT)
 	await step_seconds(_spin.tuning.duration_s)
-	var away := _rubbley.global_position.direction_to(debris.global_position)
-	assert_float(debris.linear_velocity.dot(away)).is_less(MIN_BOUNCE_M_PER_S)
+	assert_float(_speed_away(debris)).is_less(MIN_BOUNCE_M_PER_S)
 	assert_float(_rubbley.linear_velocity.length()).is_greater(STILL_M_PER_S)
 
 
@@ -112,20 +116,36 @@ func test_spin_works_during_attract() -> void:
 	var debris := _throw_debris(Vector3.BACK)
 	await _fire_spin()
 	await step_seconds(_spin.tuning.duration_s * 0.8)
-	var away := _rubbley.global_position.direction_to(debris.global_position)
-	assert_float(debris.linear_velocity.dot(away)).is_greater(MIN_BOUNCE_M_PER_S)
+	assert_float(_speed_away(debris)).is_greater(MIN_BOUNCE_M_PER_S)
 	assert_float(gravity_body.gravega_multiplier).is_greater(1.0)
 
 
-## A Spin is perfectly timed only at its start, for the perfect window.
-func test_the_perfect_window_opens_at_the_start_of_a_spin() -> void:
+## Spin fires on the same tick as a Gravity Ripple, and the shield still deflects.
+func test_spin_works_during_repel() -> void:
 	_build_world()
+	var debris := _throw_debris(Vector3.RIGHT)
+	await _start_of_tick()
+	# Far enough from the debris that the Ripple barely reaches it.
+	_frame.aim = Vector3(0, 0, -15)
+	_frame.repel_fired = true
+	_frame.spin_fired = true
+	await step_seconds(1.0 / Engine.physics_ticks_per_second)
+	_frame.repel_fired = false
+	_frame.spin_fired = false
+	await step_seconds(_spin.tuning.duration_s * 0.8)
+	assert_float(_speed_away(debris)).is_greater(MIN_BOUNCE_M_PER_S)
+
+
+## Flying into a free planet, 25 times his mass, while spinning, Rubbley bounces off it
+## and the planet isn't thrown: the lighter side takes the bounce.
+func test_rubbley_bounces_off_a_heavier_body() -> void:
+	_build_world()
+	var planet := _add(PLANET_SCENE, Vector3(PLANET_AT_M, 0, 0))
+	_rubbley.linear_velocity = Vector3(THROW_M_PER_S, 0, 0)
 	await _fire_spin()
-	var perfect_at_start := _spin.is_perfect()
-	await step_seconds(_spin.tuning.perfect_window_s)
-	assert_bool(perfect_at_start).is_true()
-	assert_bool(_spin.is_perfect()).is_false()
-	assert_bool(_spin.is_spinning()).is_true()
+	await step_seconds(_spin.tuning.duration_s * 0.8)
+	assert_float(_rubbley.linear_velocity.x).is_less(-MIN_BOUNCE_M_PER_S)
+	assert_float(planet.linear_velocity.length()).is_less(PLANET_STILL_M_PER_S)
 
 
 # A bare world with gravity, no Drift, and Rubbley at the origin reading injected frames.
@@ -146,6 +166,12 @@ func _add(scene: PackedScene, at: Vector3) -> PlayPlaneBody:
 	body.position = at
 	_world.add_child(body)
 	return body
+
+
+# How fast [param body] is moving away from Rubbley, relative to the world.
+func _speed_away(body: RigidBody3D) -> float:
+	var away := _rubbley.global_position.direction_to(body.global_position)
+	return body.linear_velocity.dot(away)
 
 
 # Adds debris [constant THROW_FROM_M] from Rubbley in [param from], flying straight at him.

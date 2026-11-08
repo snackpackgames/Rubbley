@@ -35,6 +35,7 @@ Bindings for controller and keyboard are named actions in Godot's native `InputM
   - The pinch-vs-Nudge thresholds
   - The stick deadzones
   - Controller aim: range, snap radius, full-tilt threshold, cone and reach, hysteresis, distance bias and release grace
-  - The Spin lockout
+
+  The Spin lockout was first listed here too. It moved to Spin Tuning ([ADR 0017](0017-stats-and-tuning-as-typed-resources.md)) when Spin was built: it's a game rule, not a threshold for recognising input. Every press reaches gameplay as Spin fired, and gameplay refuses one during the lockout. That puts the refusal where Stamina is spent, and lets simulation tests drive it with injected frames.
 - **Recognisers are plain GDScript classes.** They take timestamped touch events and use no Node and no `Input` singleton, so their tests run headless in `test/unit/`. Each scheme gets one end-to-end smoke test through `Input.parse_input_event` in `test/input/`, run under xvfb ([ADR 0011](0011-gdunit4-split-suites-linux-ci.md)).
 - **No rebind UI yet.** Bindings are named `InputMap` actions, so a rebind screen can be added later. Touch gestures are fixed. Steam Input already lets Deck and Steam players remap.
