@@ -45,15 +45,6 @@ func spend(cost: float) -> bool:
 	return true
 
 
-## Takes half of what is left and returns true, or returns false when the pool is empty.
-func spend_half() -> bool:
-	if _current <= 0.0:
-		return false
-	_current *= 0.5
-	_used = true
-	return true
-
-
 ## Drains [param per_second] for a tick of [param delta_s] seconds, stopping at empty.
 ## Returns false, draining nothing, when the pool was already empty.
 func drain(per_second: float, delta_s: float) -> bool:

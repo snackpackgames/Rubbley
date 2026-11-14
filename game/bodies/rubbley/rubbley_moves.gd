@@ -9,8 +9,8 @@ extends Node
 ## or a Gravity Ripple in empty space ([RepelImpulse] has the maths). Spin fires whatever
 ## else is going on, and [RubbleySpin] decides whether its lockout lets it.
 ## Every move draws on Rubbley's Stamina (ADR 0017): Attract drains it while held, less on
-## a Celestial Body, and ends when it runs out; a Gravity Well costs half what is left;
-## Repel and Spin cost a fixed amount. A move Rubbley can't afford doesn't fire.
+## a Celestial Body, and ends when it runs out; a Gravity Well, Repel and Spin each cost a
+## fixed amount. A move Rubbley can't afford doesn't fire.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
 ## Rubbley's effective Stats and live Stamina.
@@ -76,7 +76,7 @@ func _start_attract(aim: Vector3) -> void:
 				stats.attract_celestial_multiplier
 			)
 		AimTarget.Kind.EMPTY_SPACE:
-			if live_stats.stamina.spend_half():
+			if live_stats.stamina.spend(stats.gravity_well_cost):
 				_place_gravity_well(aim)
 
 

@@ -36,21 +36,6 @@ func test_a_cost_it_cant_afford_takes_nothing() -> void:
 	assert_float(_stamina.current()).is_equal(20.0)
 
 
-## Spending half takes half of what is left, so two in a row leave a quarter.
-func test_spending_half_twice_leaves_a_quarter() -> void:
-	_stamina.spend(20.0)
-	_stamina.spend_half()
-	var paid := _stamina.spend_half()
-	assert_bool(paid).is_true()
-	assert_float(_stamina.current()).is_equal_approx(20.0, 1e-6)
-
-
-## An empty pool can't spend half.
-func test_an_empty_pool_cant_spend_half() -> void:
-	_stamina.spend(100.0)
-	assert_bool(_stamina.spend_half()).is_false()
-
-
 ## Draining takes the rate times the tick, and stops at empty, after which nothing drains.
 func test_draining_stops_at_empty() -> void:
 	var drained := _stamina.drain(40.0, 0.5)

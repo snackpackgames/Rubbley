@@ -1,7 +1,7 @@
 extends SimulationTestSuite
 ## What Rubbley's moves cost (ADR 0017), driven by injected Move Input frames on the shipped
 ## Rubbley, planet and debris scenes: Attract drains Stamina while held, less on a Celestial
-## Body, Repel and Spin cost a fixed amount, a Gravity Well costs half what is left, and a
+## Body, a Gravity Well, Repel and Spin each cost a fixed amount, and a
 ## move Rubbley can't afford doesn't fire. Rates and costs come from the shipped Stats,
 ## so the bands follow a retune.
 
@@ -88,25 +88,22 @@ func test_attract_with_no_stamina_doesnt_fire() -> void:
 	assert_float(gravity_body.gravega_multiplier).is_equal(1.0)
 
 
-## A Gravity Well costs half the current Stamina, and a second one right after costs half
-## of what the first left.
-func test_a_gravity_well_costs_half_the_current_stamina() -> void:
+## A Gravity Well costs its fixed amount.
+func test_a_gravity_well_costs_its_amount() -> void:
 	_build_world()
-	var tick_s := 1.0 / Engine.physics_ticks_per_second
 	var start := _stamina()
-	await _hold_attract(Vector3(5, 0, 0), tick_s * 2.0)
-	var after_one := _stamina()
-	await _hold_attract(Vector3(-5, 0, 0), tick_s * 2.0)
-	assert_float(after_one).is_between(start * 0.5, start * 0.5 + COST_TOLERANCE)
-	assert_float(_stamina()).is_between(after_one * 0.5, after_one * 0.5 + COST_TOLERANCE)
+	await _hold_attract(Vector3(5, 0, 0), 2.0 / Engine.physics_ticks_per_second)
+	_assert_cost(start - _stamina(), _stats().gravity_well_cost)
 
 
-## A Gravity Well with no Stamina left isn't placed.
-func test_a_gravity_well_with_no_stamina_isnt_placed() -> void:
+## A Gravity Well Rubbley can't afford isn't placed, and the pool keeps what it had.
+func test_a_gravity_well_it_cant_afford_isnt_placed() -> void:
 	_build_world()
-	_live_stats.stamina.spend(_stamina())
+	_live_stats.stamina.spend(_stamina() - (_stats().gravity_well_cost - SHORT_BY))
+	var start := _stamina()
 	await _hold_attract(Vector3(5, 0, 0), 2.0 / Engine.physics_ticks_per_second)
 	assert_int(_gravity_well_count()).is_equal(0)
+	assert_float(_stamina()).is_greater_equal(start)
 
 
 ## A Repel Pulse costs its fixed amount.

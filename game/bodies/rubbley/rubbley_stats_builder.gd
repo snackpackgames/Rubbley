@@ -45,6 +45,8 @@ static func _apply(stats: RubbleyStats, modifier: StatModifier) -> void:
 				stats.attract_celestial_drain_per_second,
 				modifier,
 			)
+		RubbleyStats.Stat.GRAVITY_WELL_COST:
+			stats.gravity_well_cost = _changed(stats.gravity_well_cost, modifier)
 		RubbleyStats.Stat.REPEL_COST:
 			stats.repel_cost = _changed(stats.repel_cost, modifier)
 		RubbleyStats.Stat.REPEL_PULSE_COST:

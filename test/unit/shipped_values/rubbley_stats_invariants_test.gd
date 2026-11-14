@@ -8,8 +8,10 @@ const STATS := preload("res://game/bodies/rubbley/rubbley_stats.tres")
 const MIN_ATTRACT_S := 1.0
 
 
-## A full pool covers one Repel Pulse, one Targeted Repel or Gravity Ripple, and one Spin.
+## A full pool covers one Gravity Well, one Repel Pulse, one Targeted Repel or Gravity
+## Ripple, and one Spin.
 func test_a_full_pool_covers_each_fixed_cost() -> void:
+	assert_float(STATS.stamina_max).is_greater_equal(STATS.gravity_well_cost)
 	assert_float(STATS.stamina_max).is_greater_equal(STATS.repel_pulse_cost)
 	assert_float(STATS.stamina_max).is_greater_equal(STATS.repel_cost)
 	assert_float(STATS.stamina_max).is_greater_equal(STATS.spin_cost)

@@ -9,6 +9,7 @@ stamina_regen_per_second = 25.0
 stamina_regen_delay_s = 0.0
 attract_self_drain_per_second = 20.0
 attract_celestial_drain_per_second = 10.0
+gravity_well_cost = 35.0
 repel_cost = 15.0
 repel_pulse_cost = 25.0
 spin_cost = 10.0

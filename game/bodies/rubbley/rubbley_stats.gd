@@ -12,6 +12,7 @@ enum Stat {
 	STAMINA_REGEN_DELAY_S,
 	ATTRACT_SELF_DRAIN_PER_SECOND,
 	ATTRACT_CELESTIAL_DRAIN_PER_SECOND,
+	GRAVITY_WELL_COST,
 	REPEL_COST,
 	REPEL_PULSE_COST,
 	SPIN_COST,
@@ -42,8 +43,10 @@ enum Stat {
 ## The Stamina a Targeted Attract on a glowing Celestial Body drains per second while
 ## held. Lower than on self (GDD).
 @export_range(0.0, 1000.0, 0.1, "or_greater") var attract_celestial_drain_per_second := 10.0
-## The Stamina a Targeted Repel or a Gravity Ripple costs. A Gravity Well costs half the
-## current Stamina instead, a rule in [RubbleyMoves] rather than a Stat.
+## The Stamina a Gravity Well costs. Under half the max, so two can be placed in quick
+## succession from a full pool, but not a third.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var gravity_well_cost := 35.0
+## The Stamina a Targeted Repel or a Gravity Ripple costs.
 @export_range(0.0, 1000.0, 0.1, "or_greater") var repel_cost := 15.0
 ## The Stamina a Repel Pulse costs.
 @export_range(0.0, 1000.0, 0.1, "or_greater") var repel_pulse_cost := 25.0
