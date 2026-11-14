@@ -57,6 +57,22 @@ func test_a_modifier_changes_only_its_stat_and_not_the_base() -> void:
 	assert_object(effective).is_not_same(base)
 
 
+## A modifier never takes a Stat below zero: a max, a rate or a cost can't go negative.
+func test_a_stat_never_goes_below_zero() -> void:
+	var base := RubbleyStats.new()
+	base.stamina_max = 100.0
+	base.spin_cost = 10.0
+	var effective := RubbleyStatsBuilder.build(
+		base,
+		[
+			_modifier(RubbleyStats.Stat.STAMINA_MAX, StatModifier.Operation.ADD, -150.0),
+			_modifier(RubbleyStats.Stat.SPIN_COST, StatModifier.Operation.MULTIPLY, -1.0),
+		],
+	)
+	assert_float(effective.stamina_max).is_equal(0.0)
+	assert_float(effective.spin_cost).is_equal(0.0)
+
+
 ## Every Stat in the enum is handled: an add on it changes exactly one exported field.
 func test_every_stat_is_handled() -> void:
 	var base := RubbleyStats.new()

@@ -17,43 +17,29 @@ var effective: RubbleyStats
 ## Rubbley's live Stamina.
 var stamina: Stamina
 
-var _modifiers: Array[StatModifier] = []
-# Seconds each modifier in _modifiers has left; INF for one that lasts for good.
-var _remaining_s := PackedFloat64Array()
+var _active := ActiveStatModifiers.new()
 
 
 func _ready() -> void:
 	assert(base_stats != null, "%s needs RubbleyStats" % name)
 	for modifier in starting_modifiers:
-		_track(modifier)
-	effective = RubbleyStatsBuilder.build(base_stats, _modifiers)
+		_active.add(modifier)
+	effective = RubbleyStatsBuilder.build(base_stats, _active.modifiers())
 	stamina = Stamina.new(effective)
 
 
 func _physics_process(delta: float) -> void:
-	var expired := false
-	for i in range(_modifiers.size() - 1, -1, -1):
-		_remaining_s[i] -= delta
-		if _remaining_s[i] <= 0.0:
-			_modifiers.remove_at(i)
-			_remaining_s.remove_at(i)
-			expired = true
-	if expired:
+	if _active.advance(delta):
 		_rebuild()
 	stamina.advance(delta)
 
 
 ## Makes [param modifier] active, for its duration or for good, and refolds the Stats.
 func add_modifier(modifier: StatModifier) -> void:
-	_track(modifier)
+	_active.add(modifier)
 	_rebuild()
 
 
-func _track(modifier: StatModifier) -> void:
-	_modifiers.append(modifier)
-	_remaining_s.append(modifier.duration_s if modifier.duration_s > 0.0 else INF)
-
-
 func _rebuild() -> void:
-	effective = RubbleyStatsBuilder.build(base_stats, _modifiers)
+	effective = RubbleyStatsBuilder.build(base_stats, _active.modifiers())
 	stamina.set_stats(effective)

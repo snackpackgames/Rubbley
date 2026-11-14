@@ -1,8 +1,9 @@
 class_name RubbleyStatsBuilder
 extends RefCounted
 ## Builds the Stats Rubbley actually plays with (ADR 0017): his base Stats with every
-## active [StatModifier] folded over a copy, all adds first, then all multiplies. Rerun
-## whenever a modifier is added or expires; the base is never written.
+## active [StatModifier] folded over a copy, all adds first, then all multiplies, and no
+## Stat taken below zero. Rerun whenever a modifier is added or expires; the base is never
+## written.
 
 
 ## Returns a new [RubbleyStats]: [param base] with [param modifiers] applied, adds before
@@ -94,8 +95,9 @@ static func _apply(stats: RubbleyStats, modifier: StatModifier) -> void:
 			assert(false, "RubbleyStatsBuilder doesn't handle Stat %d" % modifier.stat)
 
 
-# Returns [param value] with [param modifier] added to it or multiplied into it.
+# Returns [param value] with [param modifier] added to it or multiplied into it, never
+# below zero: no Stat is a negative max, rate or cost.
 static func _changed(value: float, modifier: StatModifier) -> float:
 	if modifier.operation == StatModifier.Operation.MULTIPLY:
-		return value * modifier.value
-	return value + modifier.value
+		return maxf(value * modifier.value, 0.0)
+	return maxf(value + modifier.value, 0.0)
