@@ -1,8 +1,54 @@
 class_name RubbleyStats
 extends Resource
-## Rubbley's numbers that advancement can change (ADR 0017). Read-only at runtime.
-## For now only Attract's and Repel's values; Mass, Stamina and Spin join them
-## with their features.
+## Rubbley's numbers that advancement can change (ADR 0017): his Stamina, what each move
+## costs and his Gravega values. Read-only at runtime: [RubbleyStatsBuilder] folds Stat
+## Modifiers over a copy. Mass joins them with its feature.
+
+## Every Stat a [StatModifier] can change, one per field below. Adding a Stat means adding
+## its field, its entry here and its arm in [RubbleyStatsBuilder].
+enum Stat {
+	STAMINA_MAX,
+	STAMINA_REGEN_PER_SECOND,
+	STAMINA_REGEN_DELAY_S,
+	ATTRACT_SELF_DRAIN_PER_SECOND,
+	ATTRACT_CELESTIAL_DRAIN_PER_SECOND,
+	REPEL_COST,
+	REPEL_PULSE_COST,
+	SPIN_COST,
+	ATTRACT_SELF_MULTIPLIER,
+	ATTRACT_CELESTIAL_MULTIPLIER,
+	GRAVITY_WELL_STRENGTH_M_PER_S2,
+	GRAVITY_WELL_RADIUS_M,
+	GRAVITY_WELL_DURATION_S,
+	GRAVITY_WELL_FADE_S,
+	REPEL_PULSE_SPEED_M_PER_S,
+	REPEL_PULSE_RADIUS_M,
+	REPEL_PULSE_STUN_S,
+	GRAVITY_RIPPLE_SPEED_M_PER_S,
+	GRAVITY_RIPPLE_RADIUS_M,
+	RADIAL_REPEL_REFERENCE_MASS_KG,
+	RADIAL_REPEL_MASS_FALLOFF,
+	TARGETED_REPEL_IMPULSE_N_S,
+}
+
+## The most Stamina Rubbley can hold. Every move draws on this one pool.
+@export_range(1.0, 1000.0, 0.1, "or_greater") var stamina_max := 100.0
+## How fast Stamina refills while no move uses it, per second.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var stamina_regen_per_second := 25.0
+## How long after a move last used Stamina before it starts to refill, in seconds.
+@export_range(0.0, 10.0, 0.01, "or_greater") var stamina_regen_delay_s := 0.0
+## The Stamina Attract on self drains per second while held.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var attract_self_drain_per_second := 20.0
+## The Stamina a Targeted Attract on a glowing Celestial Body drains per second while
+## held. Lower than on self (GDD).
+@export_range(0.0, 1000.0, 0.1, "or_greater") var attract_celestial_drain_per_second := 10.0
+## The Stamina a Targeted Repel or a Gravity Ripple costs. A Gravity Well costs half the
+## current Stamina instead, a rule in [RubbleyMoves] rather than a Stat.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var repel_cost := 15.0
+## The Stamina a Repel Pulse costs.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var repel_pulse_cost := 25.0
+## The Stamina one Spin costs. A Spin its lockout refuses costs nothing.
+@export_range(0.0, 1000.0, 0.1, "or_greater") var spin_cost := 10.0
 
 ## The Gravega multiplier on every pair Rubbley is in while he Attracts on self.
 @export_range(1.0, 10.0, 0.01, "or_greater") var attract_self_multiplier := 3.0

@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://game/gravity/gravity_well.tscn" id="8_well"]
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_spin.gd" id="9_spin"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/spin_tuning.tres" id="10_spin_tuning"]
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_live_stats.gd" id="11_live_stats"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 radius = 1.0
@@ -41,9 +42,13 @@ material_override = ExtResource("4_material")
 script = ExtResource("5_gravity")
 body = NodePath("..")
 
-[node name="Moves" type="Node" parent="." node_paths=PackedStringArray("gravity_body", "collider", "spin")]
+[node name="LiveStats" type="Node" parent="."]
+script = ExtResource("11_live_stats")
+base_stats = ExtResource("7_stats")
+
+[node name="Moves" type="Node" parent="." node_paths=PackedStringArray("live_stats", "gravity_body", "collider", "spin")]
 script = ExtResource("6_moves")
-stats = ExtResource("7_stats")
+live_stats = NodePath("../LiveStats")
 gravity_body = NodePath("../GravityBody")
 collider = NodePath("../Collider")
 gravity_well_scene = ExtResource("8_well")

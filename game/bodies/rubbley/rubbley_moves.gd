@@ -8,10 +8,13 @@ extends Node
 ## aim decides its use too: a Repel Pulse on Rubbley, a Targeted Repel on a glowing body,
 ## or a Gravity Ripple in empty space ([RepelImpulse] has the maths). Spin fires whatever
 ## else is going on, and [RubbleySpin] decides whether its lockout lets it.
+## Every move draws on Rubbley's Stamina (ADR 0017): Attract drains it while held, less on
+## a Celestial Body, and ends when it runs out; a Gravity Well costs half what is left;
+## Repel and Spin cost a fixed amount. A move Rubbley can't afford doesn't fire.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
 
-## Rubbley's Gravega values.
-@export var stats: RubbleyStats
+## Rubbley's effective Stats and live Stamina.
+@export var live_stats: RubbleyLiveStats
 ## Rubbley's gravity, whose Gravega multipliers Attract raises.
 @export var gravity_body: GravityBody
 ## Rubbley's sphere collider, whose radius decides when the aim is on him.
@@ -32,14 +35,14 @@ var _gravity_well: GravityWell
 
 
 func _ready() -> void:
-	assert(stats != null, "%s needs RubbleyStats" % name)
+	assert(live_stats != null, "%s needs RubbleyLiveStats" % name)
 	assert(gravity_body != null, "%s needs a GravityBody" % name)
 	assert(collider != null and collider.shape is SphereShape3D, "%s needs a sphere" % name)
 	assert(gravity_well_scene != null, "%s needs a Gravity Well scene" % name)
 	assert(spin != null, "%s needs a RubbleySpin" % name)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var frame := injected_frame
 	if frame == null:
 		frame = MoveInputService.instance.frame
@@ -52,13 +55,15 @@ func _physics_process(_delta: float) -> void:
 		_:
 			# Released, or idle after a release missed while the tree was paused.
 			_end_attract()
+	_drain_attract(delta)
 	if frame.repel_fired:
 		_repel(frame.aim)
 	if frame.spin_fired:
-		spin.fire()
+		_spin()
 
 
 func _start_attract(aim: Vector3) -> void:
+	var stats := live_stats.effective
 	var targetables := Targetable.all_in(get_tree())
 	var target := _target_under(aim, targetables)
 	match target.kind:
@@ -71,12 +76,34 @@ func _start_attract(aim: Vector3) -> void:
 				stats.attract_celestial_multiplier
 			)
 		AimTarget.Kind.EMPTY_SPACE:
-			_place_gravity_well(aim)
+			if live_stats.stamina.spend_half():
+				_place_gravity_well(aim)
+
+
+# Drains Stamina for a held Attract on self or on a body, ending it once Stamina is gone.
+# The press tick drains too, so an Attract pressed with none left never takes effect.
+func _drain_attract(delta: float) -> void:
+	var stats := live_stats.effective
+	var per_second := 0.0
+	if _attracting_self:
+		per_second = stats.attract_self_drain_per_second
+	elif _attract_target != null:
+		per_second = stats.attract_celestial_drain_per_second
+	else:
+		return
+	if not live_stats.stamina.drain(per_second, delta):
+		_end_attract()
 
 
 func _repel(aim: Vector3) -> void:
+	var stats := live_stats.effective
 	var targetables := Targetable.all_in(get_tree())
 	var target := _target_under(aim, targetables)
+	var cost := stats.repel_cost
+	if target.kind == AimTarget.Kind.RUBBLEY:
+		cost = stats.repel_pulse_cost
+	if not live_stats.stamina.spend(cost):
+		return
 	var rubbley := gravity_body.body
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
@@ -102,6 +129,13 @@ func _repel(aim: Vector3) -> void:
 			_push_away(aim, stats.gravity_ripple_speed_m_per_s, stats.gravity_ripple_radius_m, null)
 
 
+# Fires Spin if Rubbley can afford it, charging only a Spin its lockout lets fire.
+func _spin() -> void:
+	var cost := live_stats.effective.spin_cost
+	if live_stats.stamina.can_afford(cost) and spin.fire():
+		live_stats.stamina.spend(cost)
+
+
 # What is under [param aim], with [param targetables] as the glowing bodies to pick from.
 func _target_under(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
 	var positions := PackedVector3Array()
@@ -122,6 +156,7 @@ func _push_away(
 	radius_m: float,
 	spared: RigidBody3D,
 ) -> void:
+	var stats := live_stats.effective
 	for node in get_tree().get_nodes_in_group(GravityBody.GROUP):
 		var body := (node as GravityBody).body
 		if body == null or body == spared or body.freeze:
@@ -144,6 +179,7 @@ func _push_away(
 # Stuns every Stunnable body other than Rubbley within a Repel Pulse's radius of
 # [param centre], measured on the Play Plane.
 func _stun_around(centre: Vector3) -> void:
+	var stats := live_stats.effective
 	var flat_centre := Vector2(centre.x, centre.z)
 	for stunnable in Stunnable.all_in(get_tree()):
 		if stunnable.body == gravity_body.body:
@@ -171,6 +207,7 @@ func _place_gravity_well(aim: Vector3) -> void:
 	# Freed now, not queued, so the old Well pulls nothing more this tick.
 	if is_instance_valid(_gravity_well):
 		_gravity_well.free()
+	var stats := live_stats.effective
 	var well := gravity_well_scene.instantiate() as GravityWell
 	well.strength_m_per_s2 = stats.gravity_well_strength_m_per_s2
 	well.radius_m = stats.gravity_well_radius_m
