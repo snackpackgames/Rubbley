@@ -8,9 +8,20 @@
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_moves.gd" id="6_moves"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/rubbley_stats.tres" id="7_stats"]
 [ext_resource type="PackedScene" path="res://game/gravity/gravity_well.tscn" id="8_well"]
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_spin.gd" id="9_spin"]
+[ext_resource type="Resource" path="res://game/bodies/rubbley/spin_tuning.tres" id="10_spin_tuning"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 radius = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_shield"]
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shield"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.55, 0.85, 1, 0.35)
 
 [node name="Rubbley" type="RigidBody3D"]
 mass = 10.0
@@ -30,11 +41,25 @@ material_override = ExtResource("4_material")
 script = ExtResource("5_gravity")
 body = NodePath("..")
 
-[node name="Moves" type="Node" parent="." node_paths=PackedStringArray("gravity_body", "collider")]
+[node name="Moves" type="Node" parent="." node_paths=PackedStringArray("gravity_body", "collider", "spin")]
 script = ExtResource("6_moves")
 stats = ExtResource("7_stats")
 gravity_body = NodePath("../GravityBody")
 collider = NodePath("../Collider")
 gravity_well_scene = ExtResource("8_well")
+spin = NodePath("../Spin")
+
+[node name="Spin" type="Node" parent="." node_paths=PackedStringArray("body", "collider", "shield_mesh")]
+script = ExtResource("9_spin")
+tuning = ExtResource("10_spin_tuning")
+body = NodePath("..")
+collider = NodePath("../Collider")
+shield_mesh = NodePath("../Shield")
+
+[node name="Shield" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+mesh = SubResource("SphereMesh_shield")
+surface_material_override/0 = SubResource("StandardMaterial3D_shield")
 
 [editable path="Mesh"]

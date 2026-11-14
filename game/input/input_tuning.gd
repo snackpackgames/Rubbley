@@ -1,9 +1,9 @@
 class_name InputTuning
 extends Resource
 ## The input thresholds Move Input recognises moves by (ADR 0013). Read-only at runtime.
-## Seeded with the controller-aim values from ADR 0012; touch thresholds and the Spin
-## lockout join them with their schemes. Lengths on screen are fractions of half the
-## screen's short side.
+## Seeded with the controller-aim values from ADR 0012; touch thresholds join them with
+## their scheme. The Spin lockout is a gameplay rule, in [SpinTuning]. Lengths on screen
+## are fractions of half the screen's short side.
 
 ## Stick travel inside which the stick counts as at rest, aiming at Rubbley.
 @export_range(0.0, 1.0, 0.01) var stick_deadzone := 0.2
