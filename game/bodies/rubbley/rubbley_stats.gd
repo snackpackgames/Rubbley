@@ -1,12 +1,15 @@
 class_name RubbleyStats
 extends Resource
-## Rubbley's numbers that advancement can change (ADR 0017): his Stamina, what each move
-## costs and his Gravega values. Read-only at runtime: [RubbleyStatsBuilder] folds Stat
-## Modifiers over a copy. Mass joins them with its feature.
+## Rubbley's numbers that advancement can change (ADR 0017): his Mass limits and size, his
+## Stamina, what each move costs and his Gravega values. Read-only at runtime:
+## [RubbleyStatsBuilder] folds Stat Modifiers over a copy.
 
 ## Every Stat a [StatModifier] can change, one per field below. Adding a Stat means adding
 ## its field, its entry here and its arm in [RubbleyStatsBuilder].
 enum Stat {
+	STARTING_MASS_KG,
+	MIN_MASS_KG,
+	MAX_MASS_KG,
 	STAMINA_MAX,
 	STAMINA_REGEN_PER_SECOND,
 	STAMINA_REGEN_DELAY_S,
@@ -31,6 +34,18 @@ enum Stat {
 	RADIAL_REPEL_MASS_FALLOFF,
 	TARGETED_REPEL_IMPULSE_N_S,
 }
+
+## Rubbley's Mass when a level starts, in kg: his health, his gravitational weight and,
+## through [member mass_to_radius_m], his size. Held inside the min–max.
+@export_range(0.1, 1000.0, 0.1, "or_greater") var starting_mass_kg := 10.0
+## The least Mass collisions can leave Rubbley with, in kg.
+@export_range(0.1, 1000.0, 0.1, "or_greater") var min_mass_kg := 2.0
+## The most Mass absorbing debris can give Rubbley, in kg.
+@export_range(0.1, 1000.0, 0.1, "or_greater") var max_mass_kg := 100.0
+## Rubbley's radius in metres, for his Mass in kg along the curve's domain: his collider
+## and his mesh both take it, and the camera zooms out to keep it in view (ADR 0007).
+## It must only ever rise. Stat Modifiers can't change it.
+@export var mass_to_radius_m: Curve
 
 ## The most Stamina Rubbley can hold. Every move draws on this one pool.
 @export_range(1.0, 1000.0, 0.1, "or_greater") var stamina_max := 100.0

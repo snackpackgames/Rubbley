@@ -24,6 +24,7 @@ func before_test() -> void:
 	_world.add_child(_rubbley)
 	_rig = RIG_SCENE.instantiate()
 	_rig.target = _rubbley
+	_rig.target_mass = _rubbley.get_node("Mass") as RubbleyMass
 	_world.add_child(_rig)
 	await step_seconds(SETTLE_S)
 

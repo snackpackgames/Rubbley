@@ -25,6 +25,7 @@ func before_test() -> void:
 	_world.add_child(_rubbley)
 	_rig = RIG_SCENE.instantiate()
 	_rig.target = _rubbley
+	_rig.target_mass = _rubbley.get_node("Mass") as RubbleyMass
 	_world.add_child(_rig)
 
 
@@ -41,6 +42,28 @@ func test_rubbley_stays_within_the_max_offset_at_speed() -> void:
 		var offset_m := _flat(_rig.global_position).distance_to(_flat(_rubbley.global_position))
 		worst_m = maxf(worst_m, offset_m - _rig.tuning.max_offset * _rig.visible_extent_m)
 	assert_float(worst_m).is_less_equal(OFFSET_EPSILON_M)
+
+
+## Rubbley grown by Mass zooms the view out, keeping his radius the tuned share of the
+## short side.
+func test_the_view_zooms_out_as_rubbley_grows() -> void:
+	await step_seconds(0.5)
+	var before_m := _rig.visible_extent_m
+	var live_stats := _rubbley.get_node("LiveStats") as RubbleyLiveStats
+	var grow := StatModifier.new()
+	grow.stat = RubbleyStats.Stat.MIN_MASS_KG
+	grow.operation = StatModifier.Operation.ADD
+	grow.value = _rubbley.mass * 5.0
+	live_stats.add_modifier(grow)
+	await step_seconds(_rig.tuning.zoom_half_life_s * 10.0)
+
+	var radius_m := _rig.target_mass.radius_m()
+	assert_float(_rubbley.mass).is_greater(live_stats.base_stats.starting_mass_kg)
+	assert_float(_rig.visible_extent_m).is_greater(before_m)
+	assert_float(_rig.visible_extent_m).is_equal_approx(
+		radius_m / _rig.tuning.rubbley_screen_fraction,
+		1.0,
+	)
 
 
 ## Rubbley moved into a Camera Zone widens the view to the zone's extent.

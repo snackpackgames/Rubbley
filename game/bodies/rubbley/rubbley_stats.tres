@@ -2,8 +2,19 @@
 
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_stats.gd" id="1_stats"]
 
+[sub_resource type="Curve" id="Curve_mass_to_radius"]
+min_domain = 2.0
+max_domain = 100.0
+max_value = 3.0
+_data = [Vector2(2, 0.585), 0.06967, 0.06967, 1, 1, Vector2(5, 0.794), 0.06967, 0.0412, 1, 1, Vector2(10, 1.0), 0.0412, 0.0238, 1, 1, Vector2(25, 1.357), 0.0238, 0.01412, 1, 1, Vector2(50, 1.71), 0.01412, 0.00888, 1, 1, Vector2(100, 2.154), 0.00888, 0.00888, 1, 1]
+point_count = 6
+
 [resource]
 script = ExtResource("1_stats")
+starting_mass_kg = 10.0
+min_mass_kg = 2.0
+max_mass_kg = 100.0
+mass_to_radius_m = SubResource("Curve_mass_to_radius")
 stamina_max = 100.0
 stamina_regen_per_second = 25.0
 stamina_regen_delay_s = 0.0

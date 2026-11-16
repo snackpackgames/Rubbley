@@ -10,9 +10,8 @@ extends Node3D
 @export var tuning: CameraTuning
 ## The body the camera keeps centred: Rubbley.
 @export var target: PhysicsBody3D
-## The radius of [member target] in metres, which sets the zoom. Fixed until Mass sets
-## his size.
-@export_range(0.1, 100.0, 0.01, "or_greater") var target_radius_m := 1.0
+## The target's Mass, whose radius sets the zoom: the view zooms out as Rubbley grows.
+@export var target_mass: RubbleyMass
 ## The camera, a child of the rig, leaning back by the tuned tilt.
 @export var camera: Camera3D
 ## The background, scrolled against the rig every frame. Optional.
@@ -32,6 +31,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	assert(tuning != null, "%s needs a CameraTuning" % name)
 	assert(target != null, "%s needs a target" % name)
+	assert(target_mass != null, "%s needs the target's RubbleyMass" % name)
 	assert(camera != null, "%s needs a camera" % name)
 	_follow = CameraFollow.new(tuning)
 	_framing = CameraFraming.new(tuning)
@@ -43,7 +43,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	visible_extent_m = _framing.step(target_radius_m, _active_zones(), delta)
+	visible_extent_m = _framing.step(target_mass.radius_m(), _active_zones(), delta)
 	var rubbley_at := target.get_global_transform_interpolated().origin
 	# Screen up is away from the camera's lean, along -Z. Zero springs the view back.
 	var nudge := MoveInputService.instance.frame.nudge

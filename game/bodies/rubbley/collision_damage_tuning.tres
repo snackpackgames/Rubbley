@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CollisionDamageTuning" format=3]
+
+[ext_resource type="Script" path="res://game/bodies/rubbley/collision_damage_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+safe_impulse_n_s = 5.0
+mass_lost_kg_per_n_s = 0.03

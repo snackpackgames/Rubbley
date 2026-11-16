@@ -3,7 +3,11 @@ extends Node
 ## Rubbley's Stats as he plays (ADR 0017): his base Stats with the active Stat Modifiers
 ## folded over them by [RubbleyStatsBuilder], and his live [Stamina], which reads its
 ## limits from them. The fold reruns when a modifier is added or a timed one expires, and
-## Stamina is cut down to a smaller max. [RubbleyMoves] reads both each tick.
+## Stamina is cut down to a smaller max. [RubbleyMoves] reads both each tick, and
+## [RubbleyMass] holds Mass inside the new limits on [signal rebuilt].
+
+## The effective Stats were folded again, so live state must fit their new limits.
+signal rebuilt
 
 ## Rubbley's base Stats, before any modifier.
 @export var base_stats: RubbleyStats
@@ -43,3 +47,4 @@ func add_modifier(modifier: StatModifier) -> void:
 func _rebuild() -> void:
 	effective = RubbleyStatsBuilder.build(base_stats, _active.modifiers())
 	stamina.set_stats(effective)
+	rebuilt.emit()

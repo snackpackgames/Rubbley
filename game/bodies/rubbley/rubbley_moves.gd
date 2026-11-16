@@ -62,6 +62,11 @@ func _physics_process(delta: float) -> void:
 		_spin()
 
 
+## Whether Rubbley is Attracting on self this tick, so debris that hits him is absorbed.
+func is_attracting_self() -> bool:
+	return _attracting_self
+
+
 func _start_attract(aim: Vector3) -> void:
 	var stats := live_stats.effective
 	var targetables := Targetable.all_in(get_tree())
