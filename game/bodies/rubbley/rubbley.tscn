@@ -30,7 +30,7 @@ albedo_color = Color(0.55, 0.85, 1, 0.35)
 [node name="Rubbley" type="RigidBody3D"]
 mass = 10.0
 contact_monitor = true
-max_contacts_reported = 8
+max_contacts_reported = 32
 script = ExtResource("1_body")
 tuning = ExtResource("2_tuning")
 

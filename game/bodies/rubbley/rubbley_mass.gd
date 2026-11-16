@@ -7,7 +7,9 @@ extends Node
 ## A body that starts touching him takes Mass by [CollisionDamage], measured from the
 ## velocities both had before the tick's contact was solved. While Spin's shield is up he is
 ## impervious to it. Debris that touches him during Attract on self does no damage: it is
-## absorbed, and its mass is added to his.
+## absorbed, and its mass is added to his. Debris already resting on him when Attract on
+## self starts is absorbed too. It sits after [RubbleyMoves] in the tick, so it sees this
+## tick's Attract.
 
 ## The group a body joins, in its scene, to be Debris that Attract on self absorbs.
 const DEBRIS_GROUP := &"debris"
@@ -50,6 +52,9 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if moves.is_attracting_self():
+		for other in body.get_colliding_bodies():
+			_absorb_if_debris(other)
 	_velocities_before.clear()
 	for node in get_tree().get_nodes_in_group(GravityBody.GROUP):
 		var other := (node as GravityBody).body
@@ -67,9 +72,7 @@ func _on_body_entered(other: Node) -> void:
 	var other_body := other as RigidBody3D
 	if other_body == null or other_body.is_queued_for_deletion():
 		return
-	if moves.is_attracting_self() and other_body.is_in_group(DEBRIS_GROUP):
-		_set_mass(body.mass + other_body.mass)
-		other_body.queue_free()
+	if moves.is_attracting_self() and _absorb_if_debris(other_body):
 		return
 	if spin.is_spinning():
 		return
@@ -85,6 +88,17 @@ func _on_body_entered(other: Node) -> void:
 	var lost_kg := CollisionDamage.mass_lost_kg(impulse, damage_tuning)
 	if lost_kg > 0.0:
 		_set_mass(body.mass - lost_kg)
+
+
+# Absorbs [param other] into Rubbley's Mass and frees it, if it is debris not already
+# absorbed. Returns whether it was absorbed.
+func _absorb_if_debris(other: Node) -> bool:
+	var piece := other as RigidBody3D
+	if piece == null or piece.is_queued_for_deletion() or not piece.is_in_group(DEBRIS_GROUP):
+		return false
+	_set_mass(body.mass + piece.mass)
+	piece.queue_free()
+	return true
 
 
 func _on_stats_rebuilt() -> void:

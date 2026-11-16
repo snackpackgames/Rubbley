@@ -88,6 +88,24 @@ func test_debris_hitting_during_attract_on_self_is_absorbed() -> void:
 	_assert_size_matches_mass()
 
 
+## Debris already resting against Rubbley when Attract on self starts is absorbed too.
+func test_debris_resting_on_rubbley_is_absorbed_when_attract_starts() -> void:
+	_build_world()
+	var start_kg := _rubbley.mass
+	var debris := _add(DEBRIS_SCENE, Vector3(_mass.radius_m() + 0.35, 0, 0))
+	await step_seconds(0.5)
+	assert_bool(_rubbley.get_colliding_bodies().has(debris)).is_true()
+	var debris_kg := debris.mass
+	await _start_of_tick()
+	_frame.aim = _rubbley.global_position
+	_frame.attract = MoveInputFrame.Attract.PRESSED
+	await step_seconds(1.0 / Engine.physics_ticks_per_second)
+	_frame.attract = MoveInputFrame.Attract.HELD
+	await step_seconds(0.2)
+	assert_bool(is_instance_valid(debris)).is_false()
+	assert_float(_rubbley.mass).is_equal_approx(start_kg + debris_kg, 1e-4)
+
+
 ## The same debris hitting Rubbley with no Attract isn't absorbed, and takes Mass.
 func test_debris_hitting_without_attract_does_damage() -> void:
 	_build_world()

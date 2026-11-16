@@ -11,6 +11,9 @@ const ZONE_SCENE := preload("res://game/camera/camera_zone.tscn")
 const OFFSET_EPSILON_M := 1e-3
 ## How long Rubbley runs at his speed cap.
 const RUN_S := 2.0
+## How far the settled zoom may sit from Rubbley's size-driven extent, in metres: ten
+## half-lives leave about 0.1% of the gap, well under a metre.
+const ZOOM_TOLERANCE_M := 1.0
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -62,7 +65,7 @@ func test_the_view_zooms_out_as_rubbley_grows() -> void:
 	assert_float(_rig.visible_extent_m).is_greater(before_m)
 	assert_float(_rig.visible_extent_m).is_equal_approx(
 		radius_m / _rig.tuning.rubbley_screen_fraction,
-		1.0,
+		ZOOM_TOLERANCE_M,
 	)
 
 
