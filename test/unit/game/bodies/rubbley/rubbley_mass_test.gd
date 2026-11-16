@@ -88,6 +88,26 @@ func test_debris_hitting_during_attract_on_self_is_absorbed() -> void:
 	_assert_size_matches_mass()
 
 
+## Absorbing debris swells Rubbley's mesh in a pop, which then settles back to his size.
+func test_absorbing_debris_pops_rubbleys_mesh() -> void:
+	_build_world()
+	var pop := _rubbley.get_node("AbsorbPop") as RubbleyAbsorbPop
+	var pivot := _rubbley.get_node("Pop") as Node3D
+	await _start_of_tick()
+	_frame.aim = _rubbley.global_position
+	_frame.attract = MoveInputFrame.Attract.PRESSED
+	await step_seconds(1.0 / Engine.physics_ticks_per_second)
+	_frame.attract = MoveInputFrame.Attract.HELD
+	_throw_debris()
+	var widest := 0.0
+	for _tick in ceili(Engine.physics_ticks_per_second * 0.5):
+		await step_seconds(1.0 / Engine.physics_ticks_per_second)
+		widest = maxf(widest, pivot.scale.x)
+	await step_seconds(pop.tuning.duration_s + 0.1)
+	assert_float(widest).is_greater(1.0 + pop.tuning.swell * 0.5)
+	assert_float(pivot.scale.x).is_equal_approx(1.0, 1e-4)
+
+
 ## Debris already resting against Rubbley when Attract on self starts is absorbed too.
 func test_debris_resting_on_rubbley_is_absorbed_when_attract_starts() -> void:
 	_build_world()
@@ -156,7 +176,7 @@ func _assert_size_matches_mass() -> void:
 	assert_float(sphere.radius).is_equal_approx(expected_m, RADIUS_EPSILON_M)
 	assert_float(_mass.radius_m()).is_equal_approx(expected_m, RADIUS_EPSILON_M)
 	# The shipped mesh is 0.75 × its import at the 1 m radius it was placed for.
-	var mesh := _rubbley.get_node("Mesh") as Node3D
+	var mesh := _rubbley.get_node("Pop/Mesh") as Node3D
 	assert_float(mesh.scale.x).is_equal_approx(0.75 * expected_m, RADIUS_EPSILON_M)
 
 

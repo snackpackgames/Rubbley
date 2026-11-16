@@ -13,6 +13,8 @@
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_live_stats.gd" id="11_live_stats"]
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_mass.gd" id="12_mass"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/collision_damage_tuning.tres" id="13_damage"]
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_absorb_pop.gd" id="14_pop"]
+[ext_resource type="Resource" path="res://game/bodies/rubbley/absorb_pop_tuning.tres" id="15_pop_tuning"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 resource_local_to_scene = true
@@ -37,10 +39,12 @@ tuning = ExtResource("2_tuning")
 [node name="Collider" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_collider")
 
-[node name="Mesh" parent="." instance=ExtResource("3_asteroid")]
+[node name="Pop" type="Node3D" parent="."]
+
+[node name="Mesh" parent="Pop" instance=ExtResource("3_asteroid")]
 transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
 
-[node name="Asteroid" parent="Mesh" index="0"]
+[node name="Asteroid" parent="Pop/Mesh" index="0"]
 material_override = ExtResource("4_material")
 
 [node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
@@ -72,9 +76,15 @@ damage_tuning = ExtResource("13_damage")
 live_stats = NodePath("../LiveStats")
 body = NodePath("..")
 collider = NodePath("../Collider")
-mesh = NodePath("../Mesh")
+mesh = NodePath("../Pop/Mesh")
 moves = NodePath("../Moves")
 spin = NodePath("../Spin")
+
+[node name="AbsorbPop" type="Node" parent="." node_paths=PackedStringArray("mass", "pivot")]
+script = ExtResource("14_pop")
+tuning = ExtResource("15_pop_tuning")
+mass = NodePath("../Mass")
+pivot = NodePath("../Pop")
 
 [node name="Shield" type="MeshInstance3D" parent="."]
 visible = false
@@ -82,4 +92,4 @@ cast_shadow = 0
 mesh = SubResource("SphereMesh_shield")
 surface_material_override/0 = SubResource("StandardMaterial3D_shield")
 
-[editable path="Mesh"]
+[editable path="Pop/Mesh"]

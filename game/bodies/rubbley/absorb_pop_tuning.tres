@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="AbsorbPopTuning" format=3 uid="uid://d4lec6ovpnvyd"]
+
+[ext_resource type="Script" path="res://game/bodies/rubbley/absorb_pop_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+swell = 0.3
+duration_s = 0.25

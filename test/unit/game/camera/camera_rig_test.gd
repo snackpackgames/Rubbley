@@ -11,9 +11,6 @@ const ZONE_SCENE := preload("res://game/camera/camera_zone.tscn")
 const OFFSET_EPSILON_M := 1e-3
 ## How long Rubbley runs at his speed cap.
 const RUN_S := 2.0
-## How far the settled zoom may sit from Rubbley's size-driven extent, in metres: ten
-## half-lives leave about 0.1% of the gap, well under a metre.
-const ZOOM_TOLERANCE_M := 1.0
 
 var _world: Node3D
 var _rubbley: PlayPlaneBody
@@ -47,11 +44,12 @@ func test_rubbley_stays_within_the_max_offset_at_speed() -> void:
 	assert_float(worst_m).is_less_equal(OFFSET_EPSILON_M)
 
 
-## Rubbley grown by Mass zooms the view out, keeping his radius the tuned share of the
-## short side.
-func test_the_view_zooms_out_as_rubbley_grows() -> void:
+## Rubbley grown by Mass zooms the view out, but more slowly than he grows, so he
+## fills a bigger share of the short side.
+func test_the_view_zooms_out_as_rubbley_grows_and_he_fills_more_of_it() -> void:
 	await step_seconds(0.5)
 	var before_m := _rig.visible_extent_m
+	var before_share := _rig.target_mass.radius_m() / before_m
 	var live_stats := _rubbley.get_node("LiveStats") as RubbleyLiveStats
 	var grow := StatModifier.new()
 	grow.stat = RubbleyStats.Stat.MIN_MASS_KG
@@ -60,13 +58,10 @@ func test_the_view_zooms_out_as_rubbley_grows() -> void:
 	live_stats.add_modifier(grow)
 	await step_seconds(_rig.tuning.zoom_half_life_s * 10.0)
 
-	var radius_m := _rig.target_mass.radius_m()
+	var share := _rig.target_mass.radius_m() / _rig.visible_extent_m
 	assert_float(_rubbley.mass).is_greater(live_stats.base_stats.starting_mass_kg)
 	assert_float(_rig.visible_extent_m).is_greater(before_m)
-	assert_float(_rig.visible_extent_m).is_equal_approx(
-		radius_m / _rig.tuning.rubbley_screen_fraction,
-		ZOOM_TOLERANCE_M,
-	)
+	assert_float(share).is_greater(before_share)
 
 
 ## Rubbley moved into a Camera Zone widens the view to the zone's extent.

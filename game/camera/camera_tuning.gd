@@ -18,9 +18,16 @@ extends Resource
 @export_range(0.0, 60.0, 0.1) var tilt_deg := 15.0
 ## The camera's vertical field of view, in degrees, held on the short side (ADR 0007).
 @export_range(30.0, 40.0, 0.1) var fov_deg := 40.0
-## Rubbley's radius as a fraction of the short side, so the view zooms out as he grows.
+## Rubbley's radius as a fraction of the short side while he is at the reference radius.
 ## The controller-aim prototype shows about 80 m of short side round his 1 m radius.
 @export_range(0.001, 0.5, 0.0001) var rubbley_screen_fraction := 0.0125
+## The radius in metres at which Rubbley takes [member rubbley_screen_fraction] of the
+## short side: his size at his starting Mass.
+@export_range(0.1, 100.0, 0.01, "or_greater") var reference_radius_m := 1.0
+## How fast the view widens as Rubbley grows: the extent scales by his radius over the
+## reference radius to this power. 1 holds him at the same share of the screen, so growth
+## never shows on screen; below 1 he visibly fills more of it as he grows; 0 never zooms.
+@export_range(0.0, 1.0, 0.01) var size_zoom_exponent := 0.5
 ## The least the short side shows, in metres, however small Rubbley is.
 @export_range(1.0, 1000.0, 0.1) var min_extent_m := 40.0
 ## The most the short side shows from Rubbley's size alone, in metres. Camera Zones may

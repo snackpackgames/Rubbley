@@ -5,11 +5,14 @@ const NO_ZONES: Array[CameraZoneFraming] = []
 var _tuning: CameraTuning
 
 
-## Builds Camera Tuning where Rubbley's radius is a tenth of the short side, between
-## 10 m and 50 m, with a 1 s zoom half-life.
+## Builds Camera Tuning where Rubbley's 1 m reference radius is a tenth of the short
+## side and the view widens in proportion to his radius, between 10 m and 50 m, with a
+## 1 s zoom half-life.
 func before_test() -> void:
 	_tuning = CameraTuning.new()
 	_tuning.rubbley_screen_fraction = 0.1
+	_tuning.reference_radius_m = 1.0
+	_tuning.size_zoom_exponent = 1.0
 	_tuning.min_extent_m = 10.0
 	_tuning.max_extent_m = 50.0
 	_tuning.zoom_half_life_s = 1.0
@@ -19,6 +22,22 @@ func before_test() -> void:
 func test_the_extent_follows_rubbleys_size() -> void:
 	var framing := CameraFraming.new(_tuning)
 	assert_float(framing.target_extent_m(2.0, NO_ZONES)).is_equal_approx(20.0, 1e-4)
+
+
+## With an exponent below 1 the view widens more slowly than Rubbley grows, so he fills
+## more of the screen: at 0.5, a 4 m Rubbley shows 10 m × √4 = 20 m, not 40 m.
+func test_the_view_widens_slower_than_rubbley_grows() -> void:
+	_tuning.size_zoom_exponent = 0.5
+	var framing := CameraFraming.new(_tuning)
+	assert_float(framing.target_extent_m(4.0, NO_ZONES)).is_equal_approx(20.0, 1e-4)
+
+
+## At the reference radius the exponent changes nothing: he is the tuned share of the
+## short side, 1 m of 10 m.
+func test_the_reference_radius_shows_the_tuned_share() -> void:
+	_tuning.size_zoom_exponent = 0.5
+	var framing := CameraFraming.new(_tuning)
+	assert_float(framing.target_extent_m(1.0, NO_ZONES)).is_equal_approx(10.0, 1e-4)
 
 
 ## A tiny Rubbley still shows the least extent.

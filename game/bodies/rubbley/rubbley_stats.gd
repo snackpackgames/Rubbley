@@ -44,7 +44,8 @@ enum Stat {
 @export_range(0.1, 1000.0, 0.1, "or_greater") var max_mass_kg := 100.0
 ## Rubbley's radius in metres, for his Mass in kg along the curve's domain: his collider
 ## and his mesh both take it, and the camera zooms out to keep it in view (ADR 0007).
-## It must only ever rise. Stat Modifiers can't change it.
+## Shipped as the square root of Mass, density by area on the Play Plane, so growth shows
+## more than a cube root would. It must only ever rise. Stat Modifiers can't change it.
 @export var mass_to_radius_m: Curve
 
 ## The most Stamina Rubbley can hold. Every move draws on this one pool.

@@ -11,6 +11,9 @@ extends Node
 ## self starts is absorbed too. It sits after [RubbleyMoves] in the tick, so it sees this
 ## tick's Attract.
 
+## Rubbley absorbed a piece of debris of [param mass_kg].
+signal absorbed(mass_kg: float)
+
 ## The group a body joins, in its scene, to be Debris that Attract on self absorbs.
 const DEBRIS_GROUP := &"debris"
 
@@ -98,6 +101,7 @@ func _absorb_if_debris(other: Node) -> bool:
 		return false
 	_set_mass(body.mass + piece.mass)
 	piece.queue_free()
+	absorbed.emit(piece.mass)
 	return true
 
 
