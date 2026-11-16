@@ -14,10 +14,12 @@ func _init(tuning: SpinTuning) -> void:
 	_tuning = tuning
 
 
-## Raises the shield, unless it is already up or locked out.
-func fire() -> void:
-	if _elapsed_s >= _tuning.duration_s + _tuning.lockout_s:
-		_elapsed_s = 0.0
+## Raises the shield and returns true, or returns false when it is already up or locked out.
+func fire() -> bool:
+	if _elapsed_s < _tuning.duration_s + _tuning.lockout_s:
+		return false
+	_elapsed_s = 0.0
+	return true
 
 
 ## Moves time on by [param delta_s] seconds.

@@ -1,4 +1,4 @@
-<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-10-21.
+<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-11-14.
      Source of truth: https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/edit
      Re-export with: curl -L "https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/export?format=md" -->
 
@@ -51,7 +51,7 @@ Rubbley has three actions available to players, attract, repel and spin. All thr
 
 Attract causes Rubbley to place a gravity well in space, or use a special Gravega power to increase an entity's gravitational pull. All uses of Attract use the "pinch" gesture to activate.
 
-If Attract is used on anything other than Rubbley or a glowing celestial body, Rubbley will place a gravity well at the center of the "pinch" gesture. The gravity well will last for a certain amount of time, based on Rubbley's stats. This use of attract will consume one-half of Rubbley's current stamina, so it is possible for Rubbley to place two gravity wells in quick succession, if needed.
+If Attract is used on anything other than Rubbley or a glowing celestial body, Rubbley will place a gravity well at the center of the "pinch" gesture. The gravity well will last for a certain amount of time, based on Rubbley's stats. This use of attract consumes a set amount of stamina, enough that Rubbley can place two gravity wells in quick succession from full stamina, if needed, but not a third.
 
 While using Attract targeting himself, debris will not damage him but instead be absorbed and increase his size. Additionally using Attract will continuously drain stamina. Attract can also be used to influence the position of enemies around Rubbley, provided his gravitational pull is strong enough to affect them. This use of Attract requires pinching and holding on Rubbley to activate.
 

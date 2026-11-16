@@ -146,7 +146,8 @@ func test_a_new_gravity_well_replaces_the_old_one() -> void:
 func test_a_gravity_well_lasts_its_duration_and_fade() -> void:
 	_build_world()
 	await _hold_attract(Vector3(5, 0, 0), 1.0 / Engine.physics_ticks_per_second * 2.0)
-	var lifetime_s := _moves.stats.gravity_well_duration_s + _moves.stats.gravity_well_fade_s
+	var stats := _moves.live_stats.effective
+	var lifetime_s := stats.gravity_well_duration_s + stats.gravity_well_fade_s
 	await step_seconds(lifetime_s * 0.9)
 	var wells_before := _gravity_wells().size()
 	await step_seconds(lifetime_s * 0.2)
@@ -167,7 +168,7 @@ func test_repel_pulse_pushes_bodies_away_but_not_rubbley() -> void:
 ## A Repel Pulse stuns a stunnable body in its reach, and not one beyond it.
 func test_repel_pulse_stuns_what_it_reaches() -> void:
 	_build_world()
-	var reach_m := _moves.stats.repel_pulse_radius_m
+	var reach_m := _moves.live_stats.effective.repel_pulse_radius_m
 	var near := _add_stunnable(_add(DEBRIS_SCENE, Vector3(reach_m * 0.5, 0, 0)))
 	var far := _add_stunnable(_add(DEBRIS_SCENE, Vector3(0, 0, reach_m * 1.5)))
 	await _fire_repel(_rubbley.global_position)
@@ -220,7 +221,7 @@ func test_targeted_repel_pushes_rubbley_and_the_body_apart_by_mass() -> void:
 	await _fire_repel(planet.global_position)
 	var away := Vector3.FORWARD
 	var planet_speed := planet.linear_velocity.dot(away)
-	var expected := _moves.stats.targeted_repel_impulse_n_s / planet.mass
+	var expected := _moves.live_stats.effective.targeted_repel_impulse_n_s / planet.mass
 	assert_float(planet_speed).is_between(expected * 0.9, expected * 1.1)
 	assert_float(_rubbley.linear_velocity.dot(-away)).is_greater(MIN_PUSH_M_PER_S)
 

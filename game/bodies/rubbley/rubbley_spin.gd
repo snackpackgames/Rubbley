@@ -40,10 +40,11 @@ func _physics_process(delta: float) -> void:
 	_show_shield()
 
 
-## Raises the shield, unless it is already up or locked out.
-func fire() -> void:
-	_timer.fire()
+## Raises the shield and returns true, or returns false when it is already up or locked out.
+func fire() -> bool:
+	var fired := _timer.fire()
 	_show_shield()
+	return fired
 
 
 ## Whether the shield is up.
