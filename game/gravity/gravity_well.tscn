@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b77mryctsoqmn"]
 
 [ext_resource type="Script" path="res://game/gravity/gravity_well.gd" id="1_well"]
+[ext_resource type="Resource" path="res://game/common/attract_cue_tuning.tres" id="2_cue_tuning"]
 
 [sub_resource type="SphereShape3D" id="reach"]
 radius = 1.0
@@ -13,9 +14,23 @@ albedo_color = Color(0.55, 0.35, 1, 1)
 radius = 0.6
 height = 1.2
 
-[node name="GravityWell" type="Area3D" node_paths=PackedStringArray("reach")]
+[sub_resource type="StandardMaterial3D" id="ring_material"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.55, 0.35, 1, 1)
+
+[sub_resource type="TorusMesh" id="ring_mesh"]
+inner_radius = 0.95
+outer_radius = 1.0
+rings = 64
+ring_segments = 4
+
+[node name="GravityWell" type="Area3D" node_paths=PackedStringArray("reach", "rings")]
 script = ExtResource("1_well")
 reach = NodePath("Reach")
+cue_tuning = ExtResource("2_cue_tuning")
+rings = NodePath("Rings")
 
 [node name="Reach" type="CollisionShape3D" parent="."]
 shape = SubResource("reach")
@@ -24,3 +39,20 @@ shape = SubResource("reach")
 cast_shadow = 0
 mesh = SubResource("core_mesh")
 surface_material_override/0 = SubResource("core_material")
+
+[node name="Rings" type="Node3D" parent="."]
+
+[node name="Ring1" type="MeshInstance3D" parent="Rings"]
+cast_shadow = 0
+mesh = SubResource("ring_mesh")
+surface_material_override/0 = SubResource("ring_material")
+
+[node name="Ring2" type="MeshInstance3D" parent="Rings"]
+cast_shadow = 0
+mesh = SubResource("ring_mesh")
+surface_material_override/0 = SubResource("ring_material")
+
+[node name="Ring3" type="MeshInstance3D" parent="Rings"]
+cast_shadow = 0
+mesh = SubResource("ring_mesh")
+surface_material_override/0 = SubResource("ring_material")

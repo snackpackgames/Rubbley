@@ -15,6 +15,8 @@
 [ext_resource type="Resource" path="res://game/bodies/rubbley/collision_damage_tuning.tres" id="13_damage"]
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_absorb_pop.gd" id="14_pop"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/absorb_pop_tuning.tres" id="15_pop_tuning"]
+[ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_attract_cue.gd" id="16_cue"]
+[ext_resource type="Resource" path="res://game/common/attract_cue_tuning.tres" id="17_cue_tuning"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 resource_local_to_scene = true
@@ -28,6 +30,21 @@ height = 2.0
 transparency = 1
 shading_mode = 0
 albedo_color = Color(0.55, 0.85, 1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_attract"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.55, 0.35, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 0.9
+outer_radius = 1.0
+rings = 48
+ring_segments = 4
+
+[sub_resource type="BoxMesh" id="BoxMesh_tether"]
+size = Vector3(1, 1, 1)
 
 [node name="Rubbley" type="RigidBody3D"]
 mass = 10.0
@@ -85,6 +102,39 @@ script = ExtResource("14_pop")
 tuning = ExtResource("15_pop_tuning")
 mass = NodePath("../Mass")
 pivot = NodePath("../Pop")
+
+[node name="AttractRings" type="Node3D" parent="."]
+visible = false
+
+[node name="Ring1" type="MeshInstance3D" parent="AttractRings"]
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_attract")
+
+[node name="Ring2" type="MeshInstance3D" parent="AttractRings"]
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_attract")
+
+[node name="Ring3" type="MeshInstance3D" parent="AttractRings"]
+cast_shadow = 0
+mesh = SubResource("TorusMesh_ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_attract")
+
+[node name="AttractTether" type="MeshInstance3D" parent="."]
+top_level = true
+visible = false
+cast_shadow = 0
+mesh = SubResource("BoxMesh_tether")
+surface_material_override/0 = SubResource("StandardMaterial3D_attract")
+
+[node name="AttractCue" type="Node" parent="." node_paths=PackedStringArray("moves", "mass", "rings", "tether")]
+script = ExtResource("16_cue")
+tuning = ExtResource("17_cue_tuning")
+moves = NodePath("../Moves")
+mass = NodePath("../Mass")
+rings = NodePath("../AttractRings")
+tether = NodePath("../AttractTether")
 
 [node name="Shield" type="MeshInstance3D" parent="."]
 visible = false
