@@ -1,7 +1,7 @@
 class_name PlayPlaneBody
 extends RigidBody3D
-## A rigid body locked to the Play Plane (ADR 0003): it moves only in XZ and turns
-## only around Y. Its damping, speed cap and CCD come from its [BodyTuning].
+## A rigid body locked to the Play Plane (ADR 0003): it moves only in XZ, and turns
+## freely on every axis. Its damping, speed cap and CCD come from its [BodyTuning].
 
 ## The type-wide values for this body's type.
 @export var tuning: BodyTuning
@@ -10,8 +10,6 @@ extends RigidBody3D
 func _ready() -> void:
 	assert(tuning != null, "%s needs a BodyTuning" % name)
 	axis_lock_linear_y = true
-	axis_lock_angular_x = true
-	axis_lock_angular_z = true
 	# The project's default gravity is zero, so the only gravity a body feels through
 	# the physics engine is an Anchored Body's Area point gravity; the GravitySystem adds the rest.
 	gravity_scale = 1.0

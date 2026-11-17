@@ -6,7 +6,7 @@ extends Node3D
 ## Without one, the pieces float in a patch round the field, moving slowly in random
 ## directions. The pieces fly free afterwards: nothing holds them in Orbit.
 
-## The most a piece starts spinning round Y, either way, in radians per second.
+## The most a piece starts spinning, round a random axis, in radians per second.
 const MAX_SPIN_RAD_PER_S := 1.5
 
 ## The debris to scatter.
@@ -52,8 +52,10 @@ func _ready() -> void:
 			_launch_into_orbit(piece, rng)
 		else:
 			_set_floating(piece, rng)
-		var spin := rng.randf_range(-MAX_SPIN_RAD_PER_S, MAX_SPIN_RAD_PER_S)
-		piece.angular_velocity = Vector3.UP * spin
+		piece.angular_velocity = (
+			Vector3(rng.randfn(), rng.randfn(), rng.randfn()).normalized()
+			* rng.randf_range(0.0, MAX_SPIN_RAD_PER_S)
+		)
 
 
 func _launch_into_orbit(piece: RigidBody3D, rng: RandomNumberGenerator) -> void:
