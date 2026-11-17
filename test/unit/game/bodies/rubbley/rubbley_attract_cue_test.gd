@@ -41,6 +41,21 @@ func test_attract_on_self_shows_rings_until_released() -> void:
 	assert_bool(_rings.visible).is_false()
 
 
+## The rings lie flat on the Play Plane round Rubbley however he tumbles.
+func test_rings_stay_flat_and_centred_while_he_tumbles() -> void:
+	_build_world()
+	_rubbley.angular_velocity = Vector3(3.0, 0.0, 2.0)
+	_rubbley.linear_velocity = Vector3(2.0, 0.0, 0.0)
+	await _press_attract(_rubbley.global_position)
+	await step_seconds(0.5)
+	var up := _rings.global_basis.y.normalized()
+	var offset := _rings.global_position - _rubbley.global_position
+	await _release_attract()
+	assert_float(up.dot(Vector3.UP)).is_greater(0.999)
+	# They follow his drawn, interpolated position, which can trail the physics by a tick.
+	assert_float(offset.length()).is_less(0.2)
+
+
 ## A Targeted Attract shows a tether reaching from Rubbley toward the glowing planet,
 ## and releasing it hides the tether.
 func test_targeted_attract_shows_a_tether_until_released() -> void:

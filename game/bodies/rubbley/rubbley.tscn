@@ -104,6 +104,8 @@ mass = NodePath("../Mass")
 pivot = NodePath("../Pop")
 
 [node name="AttractRings" type="Node3D" parent="."]
+physics_interpolation_mode = 2
+top_level = true
 visible = false
 
 [node name="Ring1" type="MeshInstance3D" parent="AttractRings"]

@@ -11,7 +11,8 @@ extends Node
 @export var moves: RubbleyMoves
 ## Rubbley's Mass, whose radius the rings close on.
 @export var mass: RubbleyMass
-## The rings round Rubbley: each child is a flat unit ring, scaled to its radius.
+## The rings round Rubbley, set to top level so they lie flat however he tumbles: each
+## child is a flat unit ring, scaled to its radius.
 @export var rings: Node3D
 ## The tether, a unit box set to top level, stretched between Rubbley and the target.
 @export var tether: MeshInstance3D
@@ -23,7 +24,7 @@ func _ready() -> void:
 	assert(tuning != null, "%s needs AttractCueTuning" % name)
 	assert(moves != null, "%s needs RubbleyMoves" % name)
 	assert(mass != null, "%s needs RubbleyMass" % name)
-	assert(rings != null, "%s needs rings" % name)
+	assert(rings != null and rings.top_level, "%s needs top-level rings" % name)
 	assert(tether != null and tether.top_level, "%s needs a top-level tether" % name)
 	rings.visible = false
 	tether.visible = false
@@ -39,6 +40,10 @@ func _show_rings(on: bool) -> void:
 	rings.visible = on
 	if not on:
 		return
+	rings.global_transform = Transform3D(
+		Basis.IDENTITY,
+		mass.body.get_global_transform_interpolated().origin,
+	)
 	var inner_m := mass.radius_m()
 	var outer_m := inner_m * tuning.self_reach
 	var count := rings.get_child_count()
