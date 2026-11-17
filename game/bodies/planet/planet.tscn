@@ -3,16 +3,13 @@
 [ext_resource type="Script" path="res://game/bodies/play_plane_body.gd" id="1_body"]
 [ext_resource type="Resource" path="res://game/bodies/planet/planet_tuning.tres" id="2_tuning"]
 [ext_resource type="Material" path="res://game/bodies/planet/planet_material.tres" id="3_material"]
+[ext_resource type="PackedScene" uid="uid://6im221c0vsdh" path="res://game/bodies/planet/faceted_ball.glb" id="7_ball"]
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
 [ext_resource type="Script" path="res://game/bodies/targetable.gd" id="5_targetable"]
 [ext_resource type="Material" path="res://game/bodies/targetable_glow.tres" id="6_glow"]
 
 [sub_resource type="SphereShape3D" id="collider"]
 radius = 8.0
-
-[sub_resource type="SphereMesh" id="mesh"]
-radius = 8.0
-height = 16.0
 
 [node name="Planet" type="RigidBody3D"]
 mass = 250.0
@@ -22,9 +19,11 @@ tuning = ExtResource("2_tuning")
 [node name="Collider" type="CollisionShape3D" parent="."]
 shape = SubResource("collider")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("mesh")
-surface_material_override/0 = ExtResource("3_material")
+[node name="Mesh" parent="." instance=ExtResource("7_ball")]
+transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0)
+
+[node name="Ball" parent="Mesh" index="0"]
+material_override = ExtResource("3_material")
 
 [node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
 script = ExtResource("4_gravity")
@@ -35,5 +34,7 @@ body = NodePath("..")
 script = ExtResource("5_targetable")
 gravity_body = NodePath("../GravityBody")
 collider = NodePath("../Collider")
-glow_mesh = NodePath("../Mesh")
+glow_mesh = NodePath("../Mesh/Ball")
 glow_material = ExtResource("6_glow")
+
+[editable path="Mesh"]

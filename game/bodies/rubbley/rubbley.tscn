@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://game/bodies/play_plane_body.gd" id="1_body"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/rubbley_tuning.tres" id="2_tuning"]
-[ext_resource type="PackedScene" path="res://game/bodies/rubbley/asteroid.glb" id="3_asteroid"]
+[ext_resource type="PackedScene" uid="uid://fi5ocmxeblp0" path="res://game/bodies/rubbley/rubbley_rock.glb" id="3_rock"]
 [ext_resource type="Material" path="res://game/bodies/rubbley/rubbley_material.tres" id="4_material"]
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="5_gravity"]
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_moves.gd" id="6_moves"]
@@ -58,10 +58,10 @@ shape = SubResource("SphereShape3D_collider")
 
 [node name="Pop" type="Node3D" parent="."]
 
-[node name="Mesh" parent="Pop" instance=ExtResource("3_asteroid")]
+[node name="Mesh" parent="Pop" instance=ExtResource("3_rock")]
 transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
 
-[node name="Asteroid" parent="Pop/Mesh" index="0"]
+[node name="Rock" parent="Pop/Mesh" index="0"]
 material_override = ExtResource("4_material")
 
 [node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]

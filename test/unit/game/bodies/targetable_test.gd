@@ -24,5 +24,5 @@ func test_the_query_finds_targetable_bodies_only() -> void:
 func test_a_targetable_body_glows() -> void:
 	var planet: PlayPlaneBody = auto_free(PLANET_SCENE.instantiate())
 	add_child(planet)
-	var mesh := planet.get_node("Mesh") as MeshInstance3D
+	var mesh := planet.get_node("Mesh/Ball") as MeshInstance3D
 	assert_object(mesh.material_overlay).is_not_null()
