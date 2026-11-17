@@ -18,6 +18,18 @@ func _ready() -> void:
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	angular_damp = tuning.angular_damp_per_second
 	continuous_cd = tuning.continuous_cd
+	angular_velocity = _starting_spin()
+
+
+# A spin round a random axis, at a random speed inside the tuning's starting range.
+func _starting_spin() -> Vector3:
+	if tuning.max_starting_spin_rad_per_s <= 0.0:
+		return Vector3.ZERO
+	var axis := Vector3(randfn(0.0, 1.0), randfn(0.0, 1.0), randfn(0.0, 1.0)).normalized()
+	return axis * randf_range(
+		tuning.min_starting_spin_rad_per_s,
+		tuning.max_starting_spin_rad_per_s,
+	)
 
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
