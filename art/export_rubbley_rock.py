@@ -1,8 +1,7 @@
 # Exports Rubbley's rock from art/rubbley.blend to game/bodies/rubbley/rubbley_rock.glb:
 # centred, flat shaded, scaled to a mean width of 2.47 m so 0.75 x his collider radius
-# frames it (RubbleyMass). It also repairs the model on the way out: the .blend has two
-# stray triangles folded inside the rock, each with a loose edge, which show as a dark
-# hole; dropping them leaves it closed. Run:
+# frames it (RubbleyMass). It refuses a rock with a hole, which shows in game as a dark
+# gap you can see inside through. Run:
 # blender -b art/rubbley.blend --python art/export_rubbley_rock.py -- <out.glb>
 import sys
 
@@ -31,12 +30,7 @@ me.transform(mathutils.Matrix.Translation(-(lo + hi) / 2))
 me.transform(mathutils.Matrix.Scale(MEAN_WIDTH_M / (sum(hi - lo) / 3), 4))
 bm = bmesh.new()
 bm.from_mesh(me)
-strays = [f for f in bm.faces if any(len(e.link_faces) == 1 for e in f.edges)]
-bmesh.ops.delete(bm, geom=strays, context="FACES_ONLY")
-bmesh.ops.delete(bm, geom=[e for e in bm.edges if not e.link_faces], context="EDGES")
-bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-assert all(e.is_manifold for e in bm.edges), "Rubbley's rock still has a hole"
-bm.to_mesh(me)
+assert all(e.is_manifold for e in bm.edges), "Rubbley's rock has a hole; close it in Blender"
 bm.free()
 for poly in me.polygons:
     poly.use_smooth = False
