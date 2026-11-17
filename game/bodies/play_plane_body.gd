@@ -10,6 +10,9 @@ extends RigidBody3D
 func _ready() -> void:
 	assert(tuning != null, "%s needs a BodyTuning" % name)
 	axis_lock_linear_y = true
+	# The body turns round its origin, so an off-centre shape can't lift it off the plane.
+	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
+	center_of_mass = Vector3.ZERO
 	# The project's default gravity is zero, so the only gravity a body feels through
 	# the physics engine is an Anchored Body's Area point gravity; the GravitySystem adds the rest.
 	gravity_scale = 1.0
