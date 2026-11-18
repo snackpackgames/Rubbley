@@ -8,6 +8,7 @@ extends SimulationTestSuite
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const ANCHORED_PLANET_SCENE := preload("res://game/bodies/planet/anchored_planet.tscn")
 const DEBRIS_SCENE := preload("res://game/bodies/debris/debris.tscn")
+const THROWN_KG := 0.5
 # How fast Rubbley is flung into a planet, in m/s: well past the safe impulse at his Mass.
 const IMPACT_M_PER_S := 12.0
 # A hit's Mass loss must land within this share of the loss at the launch speed. The
@@ -207,6 +208,8 @@ func _fling_into_planet() -> void:
 # Throws a piece of debris at Rubbley from 4 m away.
 func _throw_debris() -> PlayPlaneBody:
 	var debris := _add(DEBRIS_SCENE, Vector3(4, 0, 0))
+	# Debris comes in random sizes and weights; a thrown piece always weighs the same.
+	debris.mass = THROWN_KG
 	debris.linear_velocity = Vector3(-DEBRIS_M_PER_S, 0, 0)
 	return debris
 

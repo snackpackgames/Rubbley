@@ -3,6 +3,7 @@ extends SimulationTestSuite
 ## Rubbley and debris scenes: the shield it raises, and the lockout after it.
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
+const THROWN_KG := 0.5
 const DEBRIS_SCENE := preload("res://game/bodies/debris/debris.tscn")
 const PLANET_SCENE := preload("res://game/bodies/planet/planet.tscn")
 # How fast debris is thrown at Rubbley, in m/s. Under the debris speed cap.
@@ -177,6 +178,8 @@ func _speed_away(body: RigidBody3D) -> float:
 # Adds debris [constant THROW_FROM_M] from Rubbley in [param from], flying straight at him.
 func _throw_debris(from: Vector3) -> PlayPlaneBody:
 	var debris := _add(DEBRIS_SCENE, from.normalized() * THROW_FROM_M)
+	# Debris comes in random sizes and weights; a thrown piece always weighs the same.
+	debris.mass = THROWN_KG
 	debris.linear_velocity = -from.normalized() * THROW_M_PER_S
 	return debris
 

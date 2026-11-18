@@ -9,5 +9,11 @@ extends Resource
 @export_range(0.0, 0.9, 0.01) var chip := 0.3
 ## How far the rock may be squashed or stretched along each axis, as a share of its width.
 @export_range(0.0, 0.9, 0.01) var max_stretch := 0.3
+## The smallest a piece comes, as a multiple of [member width_m]. Its Mass scales with
+## its volume, so a piece at half size weighs an eighth of the debris scene's Mass.
+@export_range(0.1, 5.0, 0.01) var min_size := 0.6
+## The largest a piece comes, as a multiple of [member width_m]. Sizes lean small: most
+## pieces are near the smallest, and few near the largest.
+@export_range(0.1, 5.0, 0.01) var max_size := 1.6
 ## How many rock shapes the debris shares; each piece picks one at random.
 @export_range(1, 64, 1) var shapes := 8

@@ -17,9 +17,10 @@ tuning = ExtResource("2_tuning")
 [node name="Mesh" type="MeshInstance3D" parent="."]
 material_override = ExtResource("3_material")
 
-[node name="Look" type="Node" parent="." node_paths=PackedStringArray("mesh", "collider")]
+[node name="Look" type="Node" parent="." node_paths=PackedStringArray("body", "mesh", "collider")]
 script = ExtResource("5_look")
 tuning = ExtResource("6_rock")
+body = NodePath("..")
 mesh = NodePath("../Mesh")
 collider = NodePath("../Collider")
 
