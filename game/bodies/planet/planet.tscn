@@ -11,10 +11,11 @@
 [sub_resource type="SphereShape3D" id="collider"]
 radius = 8.0
 
-[node name="Planet" type="RigidBody3D"]
+[node name="Planet" type="RigidBody3D" node_paths=PackedStringArray("spin_visual")]
 mass = 250.0
 script = ExtResource("1_body")
 tuning = ExtResource("2_tuning")
+spin_visual = NodePath("Mesh")
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 shape = SubResource("collider")

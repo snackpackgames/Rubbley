@@ -57,6 +57,32 @@ func test_a_body_starts_still_by_default() -> void:
 	assert_vector(piece.angular_velocity).is_equal(Vector3.ZERO)
 
 
+## A frozen body can't turn in the physics, so its starting spin turns only the visual it
+## names, and the body itself stays put.
+func test_a_frozen_body_spins_only_its_visual() -> void:
+	var tuning := BodyTuning.new()
+	tuning.min_starting_spin_rad_per_s = 0.3
+	tuning.max_starting_spin_rad_per_s = 0.6
+	var body := PlayPlaneBody.new()
+	body.tuning = tuning
+	body.freeze = true
+	var visual := Node3D.new()
+	visual.scale = Vector3(8.0, 8.0, 8.0)
+	body.add_child(visual)
+	body.spin_visual = visual
+	_world = Node3D.new()
+	add_child(_world)
+	_world.add_child(body)
+	var start := visual.basis
+	await step_seconds(1.0)
+	var turned := visual.basis.orthonormalized().get_rotation_quaternion().angle_to(
+		start.orthonormalized().get_rotation_quaternion()
+	)
+	assert_float(turned).is_between(0.2, 0.7)
+	assert_vector(visual.basis.get_scale()).is_equal_approx(Vector3(8, 8, 8), Vector3.ONE * 1e-3)
+	assert_bool(body.basis.is_equal_approx(Basis.IDENTITY)).is_true()
+
+
 func _add_body(tuning: BodyTuning) -> PlayPlaneBody:
 	if not is_instance_valid(_world):
 		_world = Node3D.new()

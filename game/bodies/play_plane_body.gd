@@ -5,6 +5,12 @@ extends RigidBody3D
 
 ## The type-wide values for this body's type.
 @export var tuning: BodyTuning
+## What turns in place of the body while it is frozen, such as an Anchored planet's
+## mesh: a frozen body can't turn in the physics, so its starting spin turns this instead.
+@export var spin_visual: Node3D
+
+# The starting spin a frozen body's visual turns at, in radians per second round its axis.
+var _visual_spin := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -21,7 +27,17 @@ func _ready() -> void:
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	angular_damp = tuning.angular_damp_per_second
 	continuous_cd = tuning.continuous_cd
-	angular_velocity = _starting_spin()
+	# A GravityBody child freezes an Anchored body in its own _ready, before this one.
+	if freeze:
+		_visual_spin = _starting_spin()
+	else:
+		angular_velocity = _starting_spin()
+	set_process(spin_visual != null and not _visual_spin.is_zero_approx())
+
+
+func _process(delta: float) -> void:
+	var speed := _visual_spin.length()
+	spin_visual.basis = Basis(_visual_spin / speed, speed * delta) * spin_visual.basis
 
 
 # A spin round a random axis, at a random speed inside the tuning's starting range.
