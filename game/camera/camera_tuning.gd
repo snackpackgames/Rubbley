@@ -28,7 +28,7 @@ extends Resource
 ## How fast the view widens as Rubbley grows: the extent scales by his radius over the
 ## reference radius to this power. 1 holds him at the same share of the screen, so growth
 ## never shows on screen; below 1 he visibly fills more of it as he grows; 0 never zooms.
-@export_range(0.0, 1.0, 0.01) var size_zoom_exponent := 0.5
+@export_range(0.0, 1.0, 0.01) var size_zoom_exponent := 0.3
 ## The least the short side shows, in metres, however small Rubbley is.
 @export_range(1.0, 1000.0, 0.1) var min_extent_m := 20.0
 ## The most the short side shows from Rubbley's size alone, in metres. Camera Zones may
