@@ -8,3 +8,5 @@ width_m = 0.6
 chip = 0.3
 max_stretch = 0.3
 shapes = 8
+min_size = 0.6
+max_size = 1.6
