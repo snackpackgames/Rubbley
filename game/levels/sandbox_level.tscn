@@ -35,8 +35,9 @@ drift_body = NodePath("../Rubbley/GravityBody")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 0)
 linear_velocity = Vector3(12, 0, 0)
 
-[node name="CameraRig" parent="." node_paths=PackedStringArray("target") instance=ExtResource("10_rig")]
+[node name="CameraRig" parent="." node_paths=PackedStringArray("target", "target_mass") instance=ExtResource("10_rig")]
 target = NodePath("../Rubbley")
+target_mass = NodePath("../Rubbley/Mass")
 
 [node name="Planet1" type="RigidBody3D" parent="." unique_id=1647583383 instance=ExtResource("6_qyvks")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -24)

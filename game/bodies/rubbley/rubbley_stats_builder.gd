@@ -29,6 +29,12 @@ static func _apply_all(
 # Applies [param modifier] to its Stat on [param stats].
 static func _apply(stats: RubbleyStats, modifier: StatModifier) -> void:
 	match modifier.stat:
+		RubbleyStats.Stat.STARTING_MASS_KG:
+			stats.starting_mass_kg = _changed(stats.starting_mass_kg, modifier)
+		RubbleyStats.Stat.MIN_MASS_KG:
+			stats.min_mass_kg = _changed(stats.min_mass_kg, modifier)
+		RubbleyStats.Stat.MAX_MASS_KG:
+			stats.max_mass_kg = _changed(stats.max_mass_kg, modifier)
 		RubbleyStats.Stat.STAMINA_MAX:
 			stats.stamina_max = _changed(stats.stamina_max, modifier)
 		RubbleyStats.Stat.STAMINA_REGEN_PER_SECOND:

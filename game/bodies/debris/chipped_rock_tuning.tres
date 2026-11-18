@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ChippedRockTuning" format=3 uid="uid://bmq1ea7ejcjod"]
+
+[ext_resource type="Script" path="res://game/bodies/debris/chipped_rock_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+width_m = 0.6
+chip = 0.3
+max_stretch = 0.3
+shapes = 8

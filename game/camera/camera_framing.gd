@@ -1,8 +1,8 @@
 class_name CameraFraming
 extends RefCounted
 ## How much of the Play Plane the CameraRig shows (ADR 0007): the screen's short side
-## holds an extent that keeps Rubbley's radius a set share of it, between a least and
-## a most extent.
+## holds an extent that widens as Rubbley grows, but more slowly than he does, so he
+## visibly fills more of the screen, between a least and a most extent.
 
 var _tuning: CameraTuning
 var _started := false
@@ -25,8 +25,10 @@ func _init(tuning: CameraTuning) -> void:
 ## [param radius_m] inside the Camera Zones framed by [param zones]. The highest
 ## priority zone may widen the view, even past the most extent, but never narrow it.
 func target_extent_m(radius_m: float, zones: Array[CameraZoneFraming]) -> float:
+	var reference_extent_m := _tuning.reference_radius_m / _tuning.rubbley_screen_fraction
+	var growth := radius_m / _tuning.reference_radius_m
 	var by_size := clampf(
-		radius_m / _tuning.rubbley_screen_fraction,
+		reference_extent_m * pow(growth, _tuning.size_zoom_exponent),
 		_tuning.min_extent_m,
 		_tuning.max_extent_m,
 	)

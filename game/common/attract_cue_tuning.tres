@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AttractCueTuning" format=3 uid="uid://1iq1xlavgxag"]
+
+[ext_resource type="Script" path="res://game/common/attract_cue_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+pulse_period_s = 0.7
+self_reach = 5.0
+max_opacity = 0.7
+tether_width_m = 0.3

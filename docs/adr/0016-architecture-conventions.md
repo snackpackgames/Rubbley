@@ -10,7 +10,7 @@ game/
   input/        move_input.gd, recognisers/
   camera/       camera_rig.tscn
   bodies/
-    rubbley/    rubbley.tscn, asteroid.glb (Rubbley's placeholder body, ADR 0008)
+    rubbley/    rubbley.tscn, rubbley_rock.glb (Rubbley's body, exported from art/rubbley.blend)
   levels/
   ui/
   store/

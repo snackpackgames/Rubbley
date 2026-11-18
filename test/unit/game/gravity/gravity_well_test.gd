@@ -45,6 +45,22 @@ func test_pulls_bodies_inside_it() -> void:
 	assert_float(debris.linear_velocity.x).is_less(0.0)
 
 
+## A Well shows rings contracting inward from its edge, so players can see how far it
+## pulls: every ring sits inside its radius, and they are spread across it.
+func test_shows_rings_contracting_inside_its_reach() -> void:
+	var well := _add_well(1.0, 0.0)
+	await step_seconds(0.2)
+	var rings := well.get_node("Rings") as Node3D
+	var radii: Array[float] = []
+	for ring: Node3D in rings.get_children():
+		radii.append(ring.scale.x)
+	assert_bool(rings.visible).is_true()
+	assert_int(radii.size()).is_greater(1)
+	for radius_m in radii:
+		assert_float(radius_m).is_less_equal(RADIUS_M)
+	assert_float(radii.max() - radii.min()).is_greater(RADIUS_M * 0.2)
+
+
 ## Full strength through its duration, half way through its fade at half strength, then gone.
 func test_pulls_for_its_duration_then_fades_out_and_goes() -> void:
 	var well := _add_well(1.0, 1.0)

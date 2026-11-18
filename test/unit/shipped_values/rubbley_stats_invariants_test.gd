@@ -31,3 +31,28 @@ func test_stamina_refills_and_celestial_attract_drains_less() -> void:
 	assert_float(STATS.attract_celestial_drain_per_second).is_less(
 		STATS.attract_self_drain_per_second,
 	)
+
+
+## Rubbley starts inside his Mass limits, and the least is below the most.
+func test_starting_mass_is_inside_the_limits() -> void:
+	assert_float(STATS.min_mass_kg).is_greater(0.0)
+	assert_float(STATS.min_mass_kg).is_less(STATS.max_mass_kg)
+	assert_float(STATS.starting_mass_kg).is_between(STATS.min_mass_kg, STATS.max_mass_kg)
+
+
+## The Mass→size curve covers every Mass Rubbley can have and only ever rises, so more
+## Mass is never a smaller Rubbley.
+func test_the_size_curve_rises_over_the_mass_limits() -> void:
+	var curve := STATS.mass_to_radius_m
+	assert_object(curve).is_not_null()
+	assert_float(curve.min_domain).is_less_equal(STATS.min_mass_kg)
+	assert_float(curve.max_domain).is_greater_equal(STATS.max_mass_kg)
+	assert_float(curve.sample(STATS.min_mass_kg)).is_greater(0.0)
+	var samples := 100
+	var previous := -INF
+	for i in samples + 1:
+		var mass_kg := lerpf(STATS.min_mass_kg, STATS.max_mass_kg, float(i) / samples)
+		var radius_m := curve.sample(mass_kg)
+		assert_float(radius_m).is_greater_equal(previous)
+		previous = radius_m
+	assert_float(curve.sample(STATS.max_mass_kg)).is_greater(curve.sample(STATS.min_mass_kg))
