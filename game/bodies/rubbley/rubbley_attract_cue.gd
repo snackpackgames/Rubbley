@@ -1,7 +1,8 @@
 class_name RubbleyAttractCue
 extends Node
 ## Placeholder feedback for Rubbley's Attract, so players can see when it is on. While he
-## Attracts on self, rings contract onto him from a few times his radius ([AttractPulse]).
+## Attracts on self, rings contract onto him from a few times his radius, thickening as
+## they close, as a Gravity Well's do ([AttractPulse]).
 ## While a Targeted Attract holds a glowing body, a tether joins his surface to its
 ## surface. It polls [RubbleyMoves] each frame. Art direction will replace it.
 
@@ -11,9 +12,9 @@ extends Node
 @export var moves: RubbleyMoves
 ## Rubbley's Mass, whose radius the rings close on.
 @export var mass: RubbleyMass
-## The rings round Rubbley, set to top level so they lie flat however he tumbles: each
-## child is a flat unit ring, scaled to its radius.
-@export var rings: Node3D
+## The rings round Rubbley, set to top level so they lie flat however he tumbles. Its
+## mesh is an [ImmediateMesh] the rings are drawn into each frame ([FlatRings]).
+@export var rings: MeshInstance3D
 ## The tether, a unit box set to top level, stretched between Rubbley and the target.
 @export var tether: MeshInstance3D
 
@@ -25,6 +26,7 @@ func _ready() -> void:
 	assert(moves != null, "%s needs RubbleyMoves" % name)
 	assert(mass != null, "%s needs RubbleyMass" % name)
 	assert(rings != null and rings.top_level, "%s needs top-level rings" % name)
+	assert(rings.mesh is ImmediateMesh, "%s needs rings drawn into an ImmediateMesh" % name)
 	assert(tether != null and tether.top_level, "%s needs a top-level tether" % name)
 	rings.visible = false
 	tether.visible = false
@@ -46,10 +48,10 @@ func _show_rings(on: bool) -> void:
 	)
 	var inner_m := mass.radius_m()
 	var outer_m := inner_m * tuning.self_reach
-	var count := rings.get_child_count()
-	for i in count:
-		var ring := rings.get_child(i) as GeometryInstance3D
-		var offset := float(i) / count
+	var mesh := rings.mesh as ImmediateMesh
+	FlatRings.clear(mesh)
+	for i in tuning.ring_count:
+		var offset := float(i) / tuning.ring_count
 		var radius_m := AttractPulse.ring_radius_m(
 			_time_s,
 			tuning.pulse_period_s,
@@ -57,9 +59,9 @@ func _show_rings(on: bool) -> void:
 			outer_m,
 			offset,
 		)
-		ring.scale = Vector3(radius_m, 1.0, radius_m)
+		var width_m := AttractPulse.ring_width_m(radius_m, outer_m, outer_m * tuning.widest_ring)
 		var opacity := AttractPulse.ring_opacity(_time_s, tuning.pulse_period_s, offset)
-		ring.transparency = 1.0 - opacity * tuning.max_opacity
+		FlatRings.add(mesh, radius_m, width_m, Color(1, 1, 1, opacity * tuning.max_opacity))
 
 
 func _show_tether(target: Targetable) -> void:

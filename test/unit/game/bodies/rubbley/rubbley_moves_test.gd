@@ -235,6 +235,39 @@ func test_targeted_repel_off_an_anchored_planet_moves_only_rubbley() -> void:
 	assert_float(_rubbley.linear_velocity.dot(Vector3.BACK)).is_greater(MIN_PUSH_M_PER_S)
 
 
+## A Repel Pulse signals where it fired and how far it reaches, for its cue.
+func test_a_repel_pulse_signals_its_reach() -> void:
+	_build_world()
+	var heard := _record(_moves.repel_pulse_fired)
+	await _fire_repel(_rubbley.global_position)
+	var reach_m := _moves.live_stats.effective.repel_pulse_radius_m
+	assert_int(heard.size()).is_equal(1)
+	assert_vector(heard[0][0]).is_equal_approx(Vector3.ZERO, Vector3.ONE * 0.1)
+	assert_float(heard[0][1]).is_equal(reach_m)
+
+
+## A Gravity Ripple signals the aim and how far it reaches, for its cue.
+func test_a_gravity_ripple_signals_its_reach() -> void:
+	_build_world()
+	var heard := _record(_moves.gravity_ripple_fired)
+	await _fire_repel(Vector3(-6, 0, 2))
+	var reach_m := _moves.live_stats.effective.gravity_ripple_radius_m
+	assert_int(heard.size()).is_equal(1)
+	assert_vector(heard[0][0]).is_equal(Vector3(-6, 0, 2))
+	assert_float(heard[0][1]).is_equal(reach_m)
+
+
+## A Targeted Repel signals the body it pushed, for its cue.
+func test_a_targeted_repel_signals_its_body() -> void:
+	_build_world()
+	var planet := _add(ANCHORED_PLANET_SCENE, Vector3(0, 0, -20))
+	var heard := _record(_moves.targeted_repel_fired)
+	await _fire_repel(planet.global_position)
+	assert_int(heard.size()).is_equal(1)
+	var target: Targetable = heard[0][0]
+	assert_object(target.body()).is_same(planet)
+
+
 # Rubbley's speed toward a free planet 20 m away after the hold time, with or without
 # a Targeted Attract on it.
 func _rubbley_speed_toward_planet(attract: bool) -> float:
@@ -324,6 +357,16 @@ func _hold_attract(aim: Vector3, seconds: float) -> void:
 	_frame.attract = MoveInputFrame.Attract.RELEASED
 	await step_seconds(tick_s)
 	_frame.attract = MoveInputFrame.Attract.IDLE
+
+
+# Records every emission of [param event], each as an array of its arguments.
+func _record(event: Signal) -> Array[Array]:
+	var heard: Array[Array] = []
+	event.connect(
+		func(...args: Array) -> void:
+			heard.append(args),
+	)
+	return heard
 
 
 # Makes [param body] stunnable, as an enemy would be.

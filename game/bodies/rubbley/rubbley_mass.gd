@@ -13,6 +13,9 @@ extends Node
 
 ## Rubbley absorbed a piece of debris of [param mass_kg].
 signal absorbed(mass_kg: float)
+## A hit hurt Rubbley, taking [param lost_kg] of his Mass: 0 for a hit at his least Mass,
+## which can take no more.
+signal hurt(lost_kg: float)
 
 ## The group a body joins, in its scene, to be Debris that Attract on self absorbs.
 const DEBRIS_GROUP := &"debris"
@@ -90,7 +93,9 @@ func _on_body_entered(other: Node) -> void:
 	)
 	var lost_kg := CollisionDamage.mass_lost_kg(impulse, damage_tuning)
 	if lost_kg > 0.0:
+		var before_kg := body.mass
 		_set_mass(body.mass - lost_kg)
+		hurt.emit(before_kg - body.mass)
 
 
 # Absorbs [param other] into Rubbley's Mass and frees it, if it is debris not already

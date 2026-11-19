@@ -6,7 +6,8 @@ extends Area3D
 ## never pulled. Nothing slows what it pulls, so it can fling bodies through. It pulls
 ## at full strength for its duration, then fades out over its fade, and frees itself.
 ## Placeholder rings contract from its edge to its core while it pulls ([AttractPulse]),
-## fading with it, so players can see how far it reaches.
+## fading with it, so players can see how far it reaches. They thicken as they close,
+## as wide as the pull is strong, so they read its falloff.
 
 # Inside this distance from the centre it doesn't pull, so a body at the centre has a
 # direction to fall in and doesn't jitter across it. The prototype's 8 px.
@@ -19,8 +20,8 @@ const CORE_MESH_M := 0.6
 @export var reach: CollisionShape3D
 ## How its rings look and move.
 @export var cue_tuning: AttractCueTuning
-## Its rings: each child is a flat unit ring, scaled to its radius.
-@export var rings: Node3D
+## Its rings, drawn each frame into this node's [ImmediateMesh] ([FlatRings]).
+@export var rings: MeshInstance3D
 
 ## How hard it pulls at its centre at full strength, in m/s². Set before it enters the tree.
 var strength_m_per_s2 := 0.0
@@ -38,7 +39,9 @@ var _age_s := 0.0
 func _ready() -> void:
 	assert(reach != null and reach.shape is SphereShape3D, "%s needs a sphere reach" % name)
 	assert(cue_tuning != null, "%s needs AttractCueTuning" % name)
-	assert(rings != null, "%s needs rings" % name)
+	assert(rings != null and rings.mesh is ImmediateMesh, "%s needs rings to draw" % name)
+	# Each Well draws its own rings.
+	rings.mesh = ImmediateMesh.new()
 	# Each Well has its own sphere, so resizing one never resizes another.
 	var sphere := reach.shape.duplicate() as SphereShape3D
 	sphere.radius = radius_m
@@ -46,10 +49,10 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var count := rings.get_child_count()
-	for i in count:
-		var ring := rings.get_child(i) as GeometryInstance3D
-		var offset := float(i) / count
+	var mesh := rings.mesh as ImmediateMesh
+	FlatRings.clear(mesh)
+	for i in cue_tuning.ring_count:
+		var offset := float(i) / cue_tuning.ring_count
 		var radius_m_now := AttractPulse.ring_radius_m(
 			_age_s,
 			cue_tuning.pulse_period_s,
@@ -57,9 +60,14 @@ func _process(_delta: float) -> void:
 			radius_m,
 			offset,
 		)
-		ring.scale = Vector3(radius_m_now, 1.0, radius_m_now)
+		var width_m := AttractPulse.ring_width_m(
+			radius_m_now,
+			radius_m,
+			radius_m * cue_tuning.widest_ring,
+		)
 		var opacity := AttractPulse.ring_opacity(_age_s, cue_tuning.pulse_period_s, offset)
-		ring.transparency = 1.0 - opacity * cue_tuning.max_opacity * _strength_share()
+		var alpha := opacity * cue_tuning.max_opacity * _strength_share()
+		FlatRings.add(mesh, radius_m_now, width_m, Color(1, 1, 1, alpha))
 
 
 func _physics_process(delta: float) -> void:

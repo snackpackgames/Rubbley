@@ -169,6 +169,58 @@ func test_a_spin_the_lockout_refuses_costs_nothing() -> void:
 	assert_float(_stamina()).is_greater_equal(after_first)
 
 
+## An Attract pressed with no Stamina signals a refusal, so the HUD can show it.
+func test_an_attract_with_no_stamina_signals_a_refusal() -> void:
+	_build_world()
+	var refusals := _count_refusals()
+	_live_stats.stamina.spend(_stamina())
+	await _hold_attract(_rubbley.global_position, 2.0 / Engine.physics_ticks_per_second)
+	assert_int(refusals[0]).is_equal(1)
+
+
+## A Gravity Well Rubbley can't afford signals a refusal.
+func test_a_gravity_well_it_cant_afford_signals_a_refusal() -> void:
+	_build_world()
+	var refusals := _count_refusals()
+	_live_stats.stamina.spend(_stamina() - (_stats().gravity_well_cost - SHORT_BY))
+	await _hold_attract(Vector3(5, 0, 0), 2.0 / Engine.physics_ticks_per_second)
+	assert_int(refusals[0]).is_equal(1)
+
+
+## A Repel Rubbley can't afford signals a refusal.
+func test_a_repel_it_cant_afford_signals_a_refusal() -> void:
+	_build_world()
+	var refusals := _count_refusals()
+	_live_stats.stamina.spend(_stamina() - (_stats().repel_pulse_cost - SHORT_BY))
+	await _fire_repel(_rubbley.global_position)
+	assert_int(refusals[0]).is_equal(1)
+
+
+## A Spin Rubbley can't afford signals a refusal, but one its lockout refuses doesn't:
+## that isn't for want of Stamina.
+func test_only_a_spin_it_cant_afford_signals_a_refusal() -> void:
+	_build_world()
+	var refusals := _count_refusals()
+	await _fire_spin()
+	await _fire_spin()
+	var after_lockout := refusals[0]
+	await step_seconds(1.0)
+	_live_stats.stamina.spend(_stamina() - (_stats().spin_cost - SHORT_BY))
+	await _fire_spin()
+	assert_int(after_lockout).is_equal(0)
+	assert_int(refusals[0]).is_equal(1)
+
+
+## Moves Rubbley can afford signal no refusal.
+func test_affordable_moves_signal_no_refusal() -> void:
+	_build_world()
+	var refusals := _count_refusals()
+	await _hold_attract(_rubbley.global_position, 0.2)
+	await _fire_repel(Vector3(8, 0, 0))
+	await _fire_spin()
+	assert_int(refusals[0]).is_equal(0)
+
+
 ## Stamina refills once Rubbley stops using it.
 func test_stamina_refills_after_use() -> void:
 	_build_world()
@@ -195,6 +247,16 @@ func test_a_timed_modifier_changes_the_max_until_it_expires() -> void:
 	assert_float(max_while_active).is_equal_approx(base_max * 0.5, 1e-6)
 	assert_float(stamina_while_active).is_equal_approx(base_max * 0.5, 1e-6)
 	assert_float(_stats().stamina_max).is_equal_approx(base_max, 1e-6)
+
+
+# Counts [signal RubbleyMoves.move_refused] into the returned array's only element.
+func _count_refusals() -> Array[int]:
+	var refusals: Array[int] = [0]
+	_moves.move_refused.connect(
+		func() -> void:
+			refusals[0] += 1,
+	)
+	return refusals
 
 
 func _stats() -> RubbleyStats:
