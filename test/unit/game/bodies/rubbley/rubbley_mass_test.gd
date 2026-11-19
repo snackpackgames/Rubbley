@@ -71,6 +71,56 @@ func test_spin_makes_rubbley_impervious_to_collision_damage() -> void:
 	assert_float(_rubbley.mass).is_equal(start_kg)
 
 
+## Each hit that takes Mass signals it, with the Mass it took, for the hit flash and
+## screen shake. A fling into a planet can bounce in again, so it may hit more than once.
+func test_a_hit_that_takes_mass_signals_it() -> void:
+	_build_world()
+	var hurts: Array[float] = []
+	_mass.hurt.connect(
+		func(lost_kg: float) -> void:
+			hurts.append(lost_kg),
+	)
+	var start_kg := _rubbley.mass
+	await _fling_into_planet()
+	var total_kg := 0.0
+	for lost_kg in hurts:
+		total_kg += lost_kg
+	assert_int(hurts.size()).is_greater_equal(1)
+	assert_float(total_kg).is_equal_approx(start_kg - _rubbley.mass, 1e-4)
+
+
+## A hit flashes Rubbley's rock, and the flash fades.
+func test_a_hit_flashes_rubbley() -> void:
+	_build_world()
+	var flash := _rubbley.get_node("HitFlash") as RubbleyHitFlash
+	var at_hit: Array[float] = []
+	_mass.hurt.connect(
+		func(_lost_kg: float) -> void:
+			at_hit.append(flash.strength()),
+	)
+	await _fling_into_planet()
+	await step_seconds(flash.tuning.duration_s + 0.1)
+	assert_array(at_hit).is_not_empty()
+	assert_float(at_hit[0]).is_equal(1.0)
+	assert_float(flash.strength()).is_equal(0.0)
+
+
+## A hit while Spin's shield is up signals nothing.
+func test_a_shielded_hit_signals_nothing() -> void:
+	_build_world()
+	var hurts: Array[float] = []
+	_mass.hurt.connect(
+		func(lost_kg: float) -> void:
+			hurts.append(lost_kg),
+	)
+	await _start_of_tick()
+	_frame.spin_fired = true
+	await step_seconds(1.0 / Engine.physics_ticks_per_second)
+	_frame.spin_fired = false
+	await _fling_into_planet()
+	assert_array(hurts).is_empty()
+
+
 ## Debris that hits Rubbley during Attract on self is absorbed: it is gone, he gains its
 ## Mass, takes no damage from it, and grows to match.
 func test_debris_hitting_during_attract_on_self_is_absorbed() -> void:

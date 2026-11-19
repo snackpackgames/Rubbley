@@ -46,3 +46,16 @@ func test_a_ring_fades_in_as_it_closes() -> void:
 	assert_float(appearing).is_equal_approx(0.0, TOLERANCE)
 	assert_float(halfway).is_equal_approx(0.5, TOLERANCE)
 	assert_float(closing).is_greater(halfway)
+
+
+## A ring is as wide as the pull is strong where it is: the pull falls off in a straight
+## line from full at the centre to nothing at the outer radius, so a ring at the outer
+## radius has no width and one halfway in is half the widest.
+func test_a_ring_widens_with_the_pull_as_it_closes() -> void:
+	# A 10 m reach whose widest ring is 2 m.
+	var at_edge := AttractPulse.ring_width_m(10.0, 10.0, 2.0)
+	var halfway := AttractPulse.ring_width_m(5.0, 10.0, 2.0)
+	var near_centre := AttractPulse.ring_width_m(1.0, 10.0, 2.0)
+	assert_float(at_edge).is_equal_approx(0.0, TOLERANCE)
+	assert_float(halfway).is_equal_approx(1.0, TOLERANCE)
+	assert_float(near_centre).is_equal_approx(1.8, TOLERANCE)

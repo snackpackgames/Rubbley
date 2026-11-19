@@ -36,3 +36,13 @@ extends Resource
 @export_range(1.0, 1000.0, 0.1) var max_extent_m := 300.0
 ## Seconds for the zoom to close half its gap to the extent it is heading for.
 @export_range(0.0, 5.0, 0.01, "or_greater") var zoom_half_life_s := 0.5
+## How far the screen shakes at full trauma, as a fraction of the short side.
+@export_range(0.0, 0.2, 0.001) var shake_max_offset := 0.015
+## The trauma a hit adds even when it takes no Mass, from 0 to 1.
+@export_range(0.0, 1.0, 0.01) var shake_least_trauma := 0.3
+## The Mass in kg a hit must take to shake the screen fully.
+@export_range(0.01, 100.0, 0.01, "or_greater") var shake_full_hit_kg := 2.0
+## How much trauma dies away each second.
+@export_range(0.1, 20.0, 0.1, "or_greater") var shake_decay_per_s := 2.0
+## How fast the shake swings, in hertz.
+@export_range(1.0, 60.0, 0.1) var shake_frequency_hz := 15.0
