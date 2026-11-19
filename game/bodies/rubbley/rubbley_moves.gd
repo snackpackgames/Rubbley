@@ -49,7 +49,7 @@ func _physics_process(delta: float) -> void:
 	match frame.attract:
 		MoveInputFrame.Attract.PRESSED:
 			_end_attract()
-			_start_attract(frame.aim)
+			_start_attract(frame.aim, frame.aim_hit_radius_m)
 		MoveInputFrame.Attract.HELD:
 			pass
 		_:
@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			_end_attract()
 	_drain_attract(delta)
 	if frame.repel_fired:
-		_repel(frame.aim)
+		_repel(frame.aim, frame.aim_hit_radius_m)
 	if frame.spin_fired:
 		_spin()
 
@@ -72,10 +72,10 @@ func attract_target() -> Targetable:
 	return _attract_target if is_instance_valid(_attract_target) else null
 
 
-func _start_attract(aim: Vector3) -> void:
+func _start_attract(aim: Vector3, hit_radius_m: float) -> void:
 	var stats := live_stats.effective
 	var targetables := Targetable.all_in(get_tree())
-	var target := _target_under(aim, targetables)
+	var target := _target_under(aim, hit_radius_m, targetables)
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
 			_attracting_self = true
@@ -105,10 +105,10 @@ func _drain_attract(delta: float) -> void:
 		_end_attract()
 
 
-func _repel(aim: Vector3) -> void:
+func _repel(aim: Vector3, hit_radius_m: float) -> void:
 	var stats := live_stats.effective
 	var targetables := Targetable.all_in(get_tree())
-	var target := _target_under(aim, targetables)
+	var target := _target_under(aim, hit_radius_m, targetables)
 	var cost := stats.repel_cost
 	if target.kind == AimTarget.Kind.RUBBLEY:
 		cost = stats.repel_pulse_cost
@@ -146,8 +146,9 @@ func _spin() -> void:
 		live_stats.stamina.spend(cost)
 
 
-# What is under [param aim], with [param targetables] as the glowing bodies to pick from.
-func _target_under(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
+# What is under [param aim], forgiving [param hit_radius_m], with [param targetables] as
+# the glowing bodies to pick from.
+func _target_under(aim: Vector3, hit_radius_m: float, targetables: Array[Targetable]) -> AimTarget:
 	var positions := PackedVector3Array()
 	var radii := PackedFloat64Array()
 	for targetable in targetables:
@@ -155,7 +156,7 @@ func _target_under(aim: Vector3, targetables: Array[Targetable]) -> AimTarget:
 		radii.append(targetable.radius_m())
 	var sphere := collider.shape as SphereShape3D
 	var rubbley_at := gravity_body.body.global_position
-	return AimTarget.resolve(aim, rubbley_at, sphere.radius, positions, radii)
+	return AimTarget.resolve(aim, rubbley_at, sphere.radius, positions, radii, hit_radius_m)
 
 
 # Gives every gravity body in range of [param centre], except [param spared], a radial

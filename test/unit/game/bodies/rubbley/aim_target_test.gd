@@ -52,5 +52,47 @@ func test_height_is_ignored() -> void:
 	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
 
 
+## A forgiving hit radius picks Rubbley from just outside him.
+func test_a_hit_radius_reaches_rubbley() -> void:
+	var aim := Vector3(11.5, 0, 0)
+	var precise := _resolve(aim)
+	var forgiving := AimTarget.resolve(
+		aim,
+		RUBBLEY_AT,
+		RUBBLEY_RADIUS_M,
+		BODY_POSITIONS,
+		BODY_RADII,
+		1.0,
+	)
+	assert_int(precise.kind).is_equal(AimTarget.Kind.EMPTY_SPACE)
+	assert_int(forgiving.kind).is_equal(AimTarget.Kind.RUBBLEY)
+
+
+## A forgiving hit radius picks a glowing body from just past its edge.
+func test_a_hit_radius_reaches_a_body() -> void:
+	# 1 m past the small body's edge.
+	var target := AimTarget.resolve(
+		Vector3(33, 0, 0),
+		RUBBLEY_AT,
+		RUBBLEY_RADIUS_M,
+		BODY_POSITIONS,
+		BODY_RADII,
+		1.5,
+	)
+	assert_int(target.kind).is_equal(AimTarget.Kind.CELESTIAL_BODY)
+	assert_int(target.body_index).is_equal(1)
+
+
+## Rubbley still wins ties when the hit radius reaches both him and a body, even one the
+## aim is inside.
+func test_rubbley_wins_ties_inside_the_hit_radius() -> void:
+	var positions: PackedVector3Array = [Vector3(14, 0, 0)]
+	var radii: PackedFloat64Array = [2.0]
+	# Inside the body, 1.5 m outside Rubbley.
+	var aim := Vector3(12.5, 0, 0)
+	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
+	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
+
+
 func _resolve(aim: Vector3) -> AimTarget:
 	return AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, BODY_POSITIONS, BODY_RADII)
