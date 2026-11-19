@@ -48,20 +48,7 @@ func _show_rings(on: bool) -> void:
 	)
 	var inner_m := mass.radius_m()
 	var outer_m := inner_m * tuning.self_reach
-	var mesh := rings.mesh as ImmediateMesh
-	FlatRings.clear(mesh)
-	for i in tuning.ring_count:
-		var offset := float(i) / tuning.ring_count
-		var radius_m := AttractPulse.ring_radius_m(
-			_time_s,
-			tuning.pulse_period_s,
-			inner_m,
-			outer_m,
-			offset,
-		)
-		var width_m := AttractPulse.ring_width_m(radius_m, outer_m, outer_m * tuning.widest_ring)
-		var opacity := AttractPulse.ring_opacity(_time_s, tuning.pulse_period_s, offset)
-		FlatRings.add(mesh, radius_m, width_m, Color(1, 1, 1, opacity * tuning.max_opacity))
+	AttractPulse.draw(rings.mesh as ImmediateMesh, tuning, _time_s, inner_m, outer_m)
 
 
 func _show_tether(target: Targetable) -> void:
