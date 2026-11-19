@@ -103,8 +103,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch:
-		_touch_input(event)
+	# Lifts were already read in _input.
+	var touch := event as InputEventScreenTouch
+	if touch != null:
+		if touch.pressed:
+			_touch_input(touch)
 		return
 	if event.is_action_pressed(&"attract"):
 		_latch.press_attract()
@@ -163,13 +166,12 @@ func _touch_input(event: InputEvent) -> void:
 		_touch.drag(drag.index, drag.position, now_s)
 		return
 	var touch := event as InputEventScreenTouch
+	if touch.pressed:
+		_touch.press(touch.index, touch.position, now_s)
+		return
 	if touch.canceled:
 		interrupt()
-		_touch.release(touch.index, touch.position, now_s)
-	elif touch.pressed:
-		_touch.press(touch.index, touch.position, now_s)
-	else:
-		_touch.release(touch.index, touch.position, now_s)
+	_touch.release(touch.index)
 
 
 func _on_pinched_in(at: Vector2) -> void:

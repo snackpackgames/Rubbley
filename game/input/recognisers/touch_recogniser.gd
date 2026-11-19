@@ -59,7 +59,7 @@ func drag(index: int, position: Vector2, time_s: float) -> void:
 	finger.position = position
 	finger.time_s = time_s
 	# Fingers move in bursts: a slow stretch restarts the swipe from where it is now.
-	if elapsed > 0.0 and travel / elapsed < _tuning.swipe_speed:
+	if elapsed > 0.0 and travel / elapsed < _tuning.swipe_speed_per_s:
 		finger.swipe_from = position
 	match finger.role:
 		Finger.Role.SWIPE_CANDIDATE:
@@ -72,14 +72,14 @@ func drag(index: int, position: Vector2, time_s: float) -> void:
 
 
 ## Records finger [param index] lifting. Ends its pair, if it was in one.
-func release(index: int, _position: Vector2, _time_s: float) -> void:
+func release(index: int) -> void:
 	var finger: Finger = _fingers.get(index)
 	if finger == null:
 		return
 	_fingers.erase(index)
 	if finger.role != Finger.Role.PAIRED:
 		return
-	var other := _pair.b if _pair.a == index else _pair.a
+	var other := _pair.second if _pair.first == index else _pair.first
 	var other_finger: Finger = _fingers.get(other)
 	if other_finger != null:
 		other_finger.role = Finger.Role.IGNORED
@@ -145,7 +145,7 @@ func _partner_for(time_s: float) -> int:
 # Classifies the pair as a pinch or a Nudge once its gap or its midpoint has changed
 # enough. If both cross in one move, the one further past its threshold wins.
 func _classify() -> void:
-	var gap := _fingers[_pair.a].position.distance_to(_fingers[_pair.b].position)
+	var gap := _fingers[_pair.first].position.distance_to(_fingers[_pair.second].position)
 	var gap_change := (gap - _pair.start_gap) / unit_px
 	var pinch := absf(gap_change) / _tuning.pinch_distance
 	var shift := _midpoint().distance_to(_pair.start_midpoint) / unit_px / _tuning.nudge_distance
@@ -164,7 +164,7 @@ func _classify() -> void:
 
 
 func _midpoint() -> Vector2:
-	return (_fingers[_pair.a].position + _fingers[_pair.b].position) / 2.0
+	return (_fingers[_pair.first].position + _fingers[_pair.second].position) / 2.0
 
 
 ## One finger on the screen.
@@ -219,9 +219,9 @@ class Pair:
 	## What the pair was classified as.
 	var kind := Kind.UNCLASSIFIED
 	## The first finger's touch index.
-	var a: int
+	var first: int
 	## The second finger's touch index.
-	var b: int
+	var second: int
 	## The gap between the fingers when they paired, in pixels.
 	var start_gap: float
 	## The fingers' midpoint when they paired, in pixels.
@@ -230,8 +230,8 @@ class Pair:
 	var aim: Vector2
 
 
-	func _init(first: int, second: int, first_at: Vector2, second_at: Vector2) -> void:
-		a = first
-		b = second
+	func _init(first_index: int, second_index: int, first_at: Vector2, second_at: Vector2) -> void:
+		first = first_index
+		second = second_index
 		start_gap = first_at.distance_to(second_at)
 		start_midpoint = (first_at + second_at) / 2.0

@@ -24,7 +24,8 @@ var body_index := -1
 ## [param rubbley_radius_m], else the glowing body at [param body_positions] with
 ## [param body_radii] whose edge the aim is deepest behind, else empty space.
 ## [param hit_radius_m] forgives an imprecise aim, such as a finger's: anything whose edge
-## is within it of the aim counts as under it. Distances are measured on the Play Plane.
+## is within it of the aim counts as under it, but an aim inside an edge beats one that
+## is only forgiven, and Rubbley wins a tie. Distances are measured on the Play Plane.
 static func resolve(
 	aim: Vector3,
 	rubbley_at: Vector3,
@@ -35,7 +36,8 @@ static func resolve(
 ) -> AimTarget:
 	var target := AimTarget.new()
 	var on_plane := _flat(aim)
-	if on_plane.distance_to(_flat(rubbley_at)) <= rubbley_radius_m + hit_radius_m:
+	var past_rubbley := on_plane.distance_to(_flat(rubbley_at)) - rubbley_radius_m
+	if past_rubbley <= 0.0:
 		target.kind = Kind.RUBBLEY
 		return target
 	var deepest := hit_radius_m
@@ -45,6 +47,9 @@ static func resolve(
 			deepest = past_edge
 			target.kind = Kind.CELESTIAL_BODY
 			target.body_index = i
+	if deepest > 0.0 and past_rubbley <= hit_radius_m:
+		target.kind = Kind.RUBBLEY
+		target.body_index = -1
 	return target
 
 

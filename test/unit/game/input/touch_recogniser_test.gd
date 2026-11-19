@@ -20,7 +20,14 @@ var _down_at: PackedVector2Array = []
 ## Builds a recogniser on default tuning and records what it emits.
 func before_test() -> void:
 	_heard.clear()
+	# Every threshold the recogniser reads, set here so a retune doesn't break the tests.
 	_tuning = InputTuning.new()
+	_tuning.swipe_distance = 0.15
+	_tuning.swipe_speed_per_s = 1.5
+	_tuning.second_finger_window_s = 0.15
+	_tuning.pinch_distance = 0.08
+	_tuning.nudge_distance = 0.08
+	_tuning.nudge_full_drag = 0.4
 	_recogniser = TouchRecogniser.new(_tuning)
 	_recogniser.unit_px = UNIT_PX
 	_recogniser.spin_swiped.connect(
@@ -70,7 +77,7 @@ func test_a_pinch_in_attracts_at_the_centre_until_a_finger_lifts() -> void:
 	_two_fingers_down(Vector2(100, 200), Vector2(300, 200))
 	_pinch(Vector2(100, 200), Vector2(300, 200), 60.0)
 	assert_array(_heard).contains_exactly([[&"in", Vector2(200, 200)]])
-	_recogniser.release(1, Vector2(240, 200), 1.0)
+	_recogniser.release(1)
 	assert_array(_names()).contains_exactly([&"in", &"released"])
 
 
@@ -79,8 +86,8 @@ func test_a_pinch_in_attracts_at_the_centre_until_a_finger_lifts() -> void:
 func test_a_pinch_out_repels_once() -> void:
 	_two_fingers_down(Vector2(150, 200), Vector2(250, 200))
 	_pinch(Vector2(150, 200), Vector2(250, 200), -80.0)
-	_recogniser.release(0, Vector2(70, 200), 1.0)
-	_recogniser.release(1, Vector2(330, 200), 1.0)
+	_recogniser.release(0)
+	_recogniser.release(1)
 	assert_array(_names()).contains_exactly([&"out"])
 	assert_vector(_heard[0][1]).is_equal_approx(
 		Vector2(200, 200),
@@ -94,7 +101,7 @@ func test_a_two_finger_drag_nudges() -> void:
 	# 20 px right and 20 px up is half the full drag of 0.4 screen lengths each way.
 	_drag_both(Vector2(20, -20))
 	var nudge := _recogniser.nudge()
-	_recogniser.release(0, Vector2(120, 180), 1.0)
+	_recogniser.release(0)
 
 	assert_vector(nudge).is_equal_approx(Vector2(0.5, 0.5), Vector2.ONE * 1e-4)
 	assert_vector(_recogniser.nudge()).is_equal(Vector2.ZERO)
@@ -146,7 +153,7 @@ func test_a_third_finger_spins_during_attract() -> void:
 func test_the_finger_left_after_a_pinch_is_ignored() -> void:
 	_two_fingers_down(Vector2(100, 200), Vector2(300, 200))
 	_pinch(Vector2(100, 200), Vector2(300, 200), 60.0)
-	_recogniser.release(1, Vector2(240, 200), 0.3)
+	_recogniser.release(1)
 	_recogniser.press(2, Vector2(400, 400), 0.31)
 	_recogniser.drag(0, Vector2(400, 200), 0.32)
 	assert_array(_names()).contains_exactly([&"in", &"released"])
@@ -183,8 +190,8 @@ func test_drop_ignores_every_finger_until_it_lifts() -> void:
 	_recogniser.drop()
 	_recogniser.drag(0, Vector2(500, 200), 0.3)
 	var down_after_drop := _recogniser.is_anything_down()
-	_recogniser.release(0, Vector2(500, 200), 0.4)
-	_recogniser.release(1, Vector2(240, 200), 0.4)
+	_recogniser.release(0)
+	_recogniser.release(1)
 
 	assert_array(_names()).contains_exactly([&"in"])
 	assert_bool(down_after_drop).is_true()

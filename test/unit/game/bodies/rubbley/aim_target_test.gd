@@ -83,15 +83,25 @@ func test_a_hit_radius_reaches_a_body() -> void:
 	assert_int(target.body_index).is_equal(1)
 
 
-## Rubbley still wins ties when the hit radius reaches both him and a body, even one the
-## aim is inside.
+## When the hit radius reaches both Rubbley and a body, and the aim is inside neither,
+## Rubbley wins the tie.
 func test_rubbley_wins_ties_inside_the_hit_radius() -> void:
+	var positions: PackedVector3Array = [Vector3(15, 0, 0)]
+	var radii: PackedFloat64Array = [2.0]
+	# 1.5 m outside Rubbley, 1.5 m outside the body.
+	var aim := Vector3(11.5 + 1.0, 0, 0)
+	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
+	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
+
+
+## An aim squarely inside a body picks it over Rubbley, who is only within the hit radius.
+func test_an_aim_inside_a_body_beats_a_forgiven_rubbley() -> void:
 	var positions: PackedVector3Array = [Vector3(14, 0, 0)]
 	var radii: PackedFloat64Array = [2.0]
 	# Inside the body, 1.5 m outside Rubbley.
 	var aim := Vector3(12.5, 0, 0)
 	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
-	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
+	assert_int(target.kind).is_equal(AimTarget.Kind.CELESTIAL_BODY)
 
 
 func _resolve(aim: Vector3) -> AimTarget:

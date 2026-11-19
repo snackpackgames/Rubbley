@@ -26,7 +26,7 @@ extends Resource
 ## How far a finger must travel quickly, from where it last went slow, to swipe a Spin.
 @export_range(0.0, 1.0, 0.01) var swipe_distance := 0.15
 ## How fast a finger must move to count toward a swipe, in screen lengths per second.
-@export_range(0.0, 10.0, 0.01, "or_greater") var swipe_speed := 1.5
+@export_range(0.0, 10.0, 0.01, "or_greater") var swipe_speed_per_s := 1.5
 ## Seconds after a finger goes down in which a second finger pairs with it for a pinch
 ## or Nudge, instead of being a swipe candidate of its own.
 @export_range(0.0, 1.0, 0.001) var second_finger_window_s := 0.15
