@@ -49,25 +49,14 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var mesh := rings.mesh as ImmediateMesh
-	FlatRings.clear(mesh)
-	for i in cue_tuning.ring_count:
-		var offset := float(i) / cue_tuning.ring_count
-		var radius_m_now := AttractPulse.ring_radius_m(
-			_age_s,
-			cue_tuning.pulse_period_s,
-			CORE_MESH_M,
-			radius_m,
-			offset,
-		)
-		var width_m := AttractPulse.ring_width_m(
-			radius_m_now,
-			radius_m,
-			radius_m * cue_tuning.widest_ring,
-		)
-		var opacity := AttractPulse.ring_opacity(_age_s, cue_tuning.pulse_period_s, offset)
-		var alpha := opacity * cue_tuning.max_opacity * _strength_share()
-		FlatRings.add(mesh, radius_m_now, width_m, Color(1, 1, 1, alpha))
+	AttractPulse.draw(
+		rings.mesh as ImmediateMesh,
+		cue_tuning,
+		_age_s,
+		CORE_MESH_M,
+		radius_m,
+		_strength_share(),
+	)
 
 
 func _physics_process(delta: float) -> void:

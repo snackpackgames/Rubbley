@@ -8,6 +8,26 @@ extends RefCounted
 ## will replace it.
 
 
+## Draws the rings into [param mesh] at [param time_s], by [param tuning]: contracting
+## from [param outer_m] onto [param inner_m], as wide as a pull that runs out at the outer
+## radius, and as opaque as they are closed in, times [param strength].
+static func draw(
+	mesh: ImmediateMesh,
+	tuning: AttractCueTuning,
+	time_s: float,
+	inner_m: float,
+	outer_m: float,
+	strength := 1.0,
+) -> void:
+	FlatRings.clear(mesh)
+	for i in tuning.ring_count:
+		var offset := float(i) / tuning.ring_count
+		var radius_m := ring_radius_m(time_s, tuning.pulse_period_s, inner_m, outer_m, offset)
+		var width_m := ring_width_m(radius_m, outer_m, outer_m * tuning.widest_ring)
+		var alpha := ring_opacity(time_s, tuning.pulse_period_s, offset) * tuning.max_opacity
+		FlatRings.add(mesh, radius_m, width_m, Color(1, 1, 1, alpha * strength))
+
+
 ## Returns a ring's radius in metres at [param time_s], contracting from
 ## [param outer_m] to [param inner_m] once every [param period_s] seconds, started
 ## [param offset] of a period ahead.

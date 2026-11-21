@@ -2,7 +2,13 @@
 
 [ext_resource type="Script" uid="uid://b7wmcchr6tmgh" path="res://game/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://bwm8cvtm2rdlv" path="res://game/levels/sandbox_level.tscn" id="2_level"]
+[ext_resource type="PackedScene" uid="uid://tv7vuo68ap15" path="res://game/ui/hud.tscn" id="3_hud"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" node_paths=PackedStringArray("hud")]
 script = ExtResource("1_main")
 start_level = ExtResource("2_level")
+hud = NodePath("UI/Hud")
+
+[node name="UI" type="Node" parent="."]
+
+[node name="Hud" parent="UI" instance=ExtResource("3_hud")]
