@@ -18,13 +18,10 @@ height = 1.2
 transparency = 1
 cull_mode = 2
 shading_mode = 0
+vertex_color_use_as_albedo = true
 albedo_color = Color(0.55, 0.35, 1, 1)
 
-[sub_resource type="TorusMesh" id="ring_mesh"]
-inner_radius = 0.95
-outer_radius = 1.0
-rings = 64
-ring_segments = 4
+[sub_resource type="ImmediateMesh" id="ring_mesh"]
 
 [node name="GravityWell" type="Area3D" node_paths=PackedStringArray("reach", "rings")]
 script = ExtResource("1_well")
@@ -40,19 +37,7 @@ cast_shadow = 0
 mesh = SubResource("core_mesh")
 surface_material_override/0 = SubResource("core_material")
 
-[node name="Rings" type="Node3D" parent="."]
-
-[node name="Ring1" type="MeshInstance3D" parent="Rings"]
+[node name="Rings" type="MeshInstance3D" parent="."]
 cast_shadow = 0
 mesh = SubResource("ring_mesh")
-surface_material_override/0 = SubResource("ring_material")
-
-[node name="Ring2" type="MeshInstance3D" parent="Rings"]
-cast_shadow = 0
-mesh = SubResource("ring_mesh")
-surface_material_override/0 = SubResource("ring_material")
-
-[node name="Ring3" type="MeshInstance3D" parent="Rings"]
-cast_shadow = 0
-mesh = SubResource("ring_mesh")
-surface_material_override/0 = SubResource("ring_material")
+material_override = SubResource("ring_material")

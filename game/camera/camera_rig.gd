@@ -5,12 +5,14 @@ extends Node3D
 ## picks each frame, at the distance [CameraFraming] picks. The screen's short side
 ## shows the same extent in portrait and landscape. It registers its camera with Move
 ## Input, which aims the mouse through it, and peeks by the Nudge in Move Input's frame.
+## The screen shakes when Rubbley is hurt ([CameraShake]).
 
 ## The camera's follow, framing and zoom values.
 @export var tuning: CameraTuning
 ## The body the camera keeps centred: Rubbley.
 @export var target: PhysicsBody3D
-## The target's Mass, whose radius sets the zoom: the view zooms out as Rubbley grows.
+## The target's Mass, whose radius sets the zoom: the view zooms out as Rubbley grows. Its
+## hits shake the screen.
 @export var target_mass: RubbleyMass
 ## The camera, a child of the rig, leaning back by the tuned tilt.
 @export var camera: Camera3D
@@ -22,6 +24,7 @@ var visible_extent_m := 0.0
 
 var _follow: CameraFollow
 var _framing: CameraFraming
+var _shake: CameraShake
 
 
 func _enter_tree() -> void:
@@ -35,6 +38,8 @@ func _ready() -> void:
 	assert(camera != null, "%s needs a camera" % name)
 	_follow = CameraFollow.new(tuning)
 	_framing = CameraFraming.new(tuning)
+	_shake = CameraShake.new(tuning)
+	target_mass.hurt.connect(_shake.hit)
 	# The rig moves every rendered frame from the target's interpolated position, so
 	# physics interpolation must not smooth it a second time.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
@@ -51,6 +56,9 @@ func _process(delta: float) -> void:
 	global_position = _follow.step(rubbley_at, nudge_on_play_plane, visible_extent_m, delta)
 	camera.keep_aspect = CameraFraming.keep_aspect_for(get_viewport().get_visible_rect().size)
 	camera.position = camera.basis.z * _framing.distance_m(visible_extent_m)
+	_shake.advance(delta)
+	var shake := _shake.offset() * tuning.shake_max_offset * visible_extent_m
+	camera.position += camera.basis.x * shake.x + camera.basis.y * shake.y
 	if starfield != null:
 		starfield.scroll(global_position, visible_extent_m)
 

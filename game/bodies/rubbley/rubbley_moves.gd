@@ -12,6 +12,18 @@ extends Node
 ## a Celestial Body, and ends when it runs out; a Gravity Well, Repel and Spin each cost a
 ## fixed amount. A move Rubbley can't afford doesn't fire.
 ## It runs before the [GravitySystem] in the tick, so a multiplier applies at once.
+## It signals each Repel, for its cue, and each move refused for want of Stamina, for
+## the HUD.
+
+## A Repel Pulse fired from [param at], reaching [param radius_m].
+signal repel_pulse_fired(at: Vector3, radius_m: float)
+## A Gravity Ripple went out from [param at], reaching [param radius_m].
+signal gravity_ripple_fired(at: Vector3, radius_m: float)
+## A Targeted Repel pushed Rubbley and [param target] apart.
+signal targeted_repel_fired(target: Targetable)
+## A move didn't fire because Rubbley hadn't the Stamina for it. A Spin its lockout
+## refuses isn't one.
+signal move_refused
 
 ## Rubbley's effective Stats and live Stamina.
 @export var live_stats: RubbleyLiveStats
@@ -78,9 +90,11 @@ func _start_attract(aim: Vector3, hit_radius_m: float) -> void:
 	var target := _target_under(aim, hit_radius_m, targetables)
 	match target.kind:
 		AimTarget.Kind.RUBBLEY:
+			_refuse_if_empty()
 			_attracting_self = true
 			gravity_body.gravega_multiplier = stats.attract_self_multiplier
 		AimTarget.Kind.CELESTIAL_BODY:
+			_refuse_if_empty()
 			_attract_target = targetables[target.body_index]
 			gravity_body.pair_multipliers[_attract_target.gravity_body] = (
 				stats.attract_celestial_multiplier
@@ -88,6 +102,8 @@ func _start_attract(aim: Vector3, hit_radius_m: float) -> void:
 		AimTarget.Kind.EMPTY_SPACE:
 			if live_stats.stamina.spend(stats.gravity_well_cost):
 				_place_gravity_well(aim)
+			else:
+				move_refused.emit()
 
 
 # Drains Stamina for a held Attract on self or on a body, ending it once Stamina is gone.
@@ -113,6 +129,7 @@ func _repel(aim: Vector3, hit_radius_m: float) -> void:
 	if target.kind == AimTarget.Kind.RUBBLEY:
 		cost = stats.repel_pulse_cost
 	if not live_stats.stamina.spend(cost):
+		move_refused.emit()
 		return
 	var rubbley := gravity_body.body
 	match target.kind:
@@ -124,6 +141,7 @@ func _repel(aim: Vector3, hit_radius_m: float) -> void:
 				rubbley,
 			)
 			_stun_around(rubbley.global_position)
+			repel_pulse_fired.emit(rubbley.global_position, stats.repel_pulse_radius_m)
 		AimTarget.Kind.CELESTIAL_BODY:
 			var body := targetables[target.body_index].body()
 			var impulse := RepelImpulse.targeted_impulse(
@@ -135,15 +153,26 @@ func _repel(aim: Vector3, hit_radius_m: float) -> void:
 			if not body.freeze:
 				body.apply_central_impulse(impulse)
 			rubbley.apply_central_impulse(-impulse)
+			targeted_repel_fired.emit(targetables[target.body_index])
 		AimTarget.Kind.EMPTY_SPACE:
 			_push_away(aim, stats.gravity_ripple_speed_m_per_s, stats.gravity_ripple_radius_m, null)
+			gravity_ripple_fired.emit(aim, stats.gravity_ripple_radius_m)
 
 
 # Fires Spin if Rubbley can afford it, charging only a Spin its lockout lets fire.
 func _spin() -> void:
 	var cost := live_stats.effective.spin_cost
-	if live_stats.stamina.can_afford(cost) and spin.fire():
+	if not live_stats.stamina.can_afford(cost):
+		move_refused.emit()
+	elif spin.fire():
 		live_stats.stamina.spend(cost)
+
+
+# Signals a refusal for a held Attract starting with no Stamina to drain, which this
+# tick's drain then ends.
+func _refuse_if_empty() -> void:
+	if live_stats.stamina.current() <= 0.0:
+		move_refused.emit()
 
 
 # What is under [param aim], forgiving [param hit_radius_m], with [param targetables] as
