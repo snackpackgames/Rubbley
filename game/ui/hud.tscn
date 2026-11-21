@@ -46,7 +46,7 @@ fill_color = Color(0.85, 0.7, 0.45, 1)
 [node name="SizeLabel" type="Label" parent="Panel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "SIZE"
+text = "HEALTH"
 
 [node name="SizeBar" type="Control" parent="Panel"]
 custom_minimum_size = Vector2(220, 12)

@@ -89,3 +89,10 @@ func test_the_mass_and_size_bars_can_be_turned_off() -> void:
 	assert_bool(mass_shown).is_false()
 	assert_bool(_hud.mass_bar.visible).is_true()
 	assert_bool(_hud.size_bar.visible or _hud.size_label.visible).is_false()
+
+
+## The shipped HUD shows his size as his Health, and keeps the Mass bar off.
+func test_the_shipped_hud_shows_size_as_health_and_hides_mass() -> void:
+	assert_bool(_hud.size_bar.visible).is_true()
+	assert_str((_hud.size_label as Label).text).is_equal("HEALTH")
+	assert_bool(_hud.mass_bar.visible or _hud.mass_label.visible).is_false()

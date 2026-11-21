@@ -4,10 +4,10 @@ extends CanvasLayer
 ## 0016). Main tells it which Rubbley to watch when a level loads. It shows:
 ## [br]- a green Stamina bar, which flashes red all over when Rubbley refuses a move for
 ## want of Stamina, empty part and outline too, since an empty bar has no fill to show it;
-## [br]- a Mass bar, where his Mass sits between his least and most, in kg;
-## [br]- a Size bar, where his radius sits between his least and most, by his Stats'
-## Mass→size curve, so it moves as much as he visibly grows or shrinks.
-## [br]Each of the last two can be turned off. It reads Rubbley's live Stats and Mass
+## [br]- a Health bar, where his radius sits between his least and most, by his Stats'
+## Mass→size curve, so it moves as much as he visibly grows or shrinks (the Size bar);
+## [br]- a Mass bar, where his Mass sits between his least and most, in kg, off by default.
+## [br]Each of the last two can be turned on or off. It reads Rubbley's live Stats and Mass
 ## each frame, listens to [RubbleyMoves] for refusals, and scales with the screen's
 ## short side.
 
@@ -21,11 +21,11 @@ const REFERENCE_SHORT_SIDE_PX := 720.0
 ## The Mass bar, by kg, and its label.
 @export var mass_bar: HudBar
 @export var mass_label: Control
-## The Size bar, by radius, and its label.
+## The Size bar, by radius, labelled Health, and its label.
 @export var size_bar: HudBar
 @export var size_label: Control
-## Whether the Mass bar shows.
-@export var show_mass_bar := true:
+## Whether the Mass bar shows. Off: the Health bar says the same thing as he sees it.
+@export var show_mass_bar := false:
 	set(on):
 		show_mass_bar = on
 		_show_bars()
