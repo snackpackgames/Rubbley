@@ -43,7 +43,8 @@ func after_test() -> void:
 
 
 ## A pinch-in Attracts at the pinch centre while both fingers stay down, shows the
-## reticle, and places a Gravity Well there; lifting one finger releases it.
+## reticle, and places a Gravity Well there; lifting one finger releases it and hides the
+## reticle.
 func test_a_pinch_in_attracts_at_the_pinch_centre() -> void:
 	var pinched := Vector3(6, 0, 3)
 	var centre := _rig.camera.unproject_position(pinched)
@@ -62,6 +63,7 @@ func test_a_pinch_in_attracts_at_the_pinch_centre() -> void:
 	assert_array(states).contains([MoveInputFrame.Attract.PRESSED, MoveInputFrame.Attract.HELD])
 	assert_array(states).contains([MoveInputFrame.Attract.RELEASED])
 	assert_bool(reticle_shown).is_true()
+	assert_bool(MoveInputService.instance.reticle.visible).is_false()
 	assert_float(Vector2(aim.x - pinched.x, aim.z - pinched.z).length()).is_less(AIM_TOLERANCE_M)
 	var moves := _rubbley.get_node("Moves") as RubbleyMoves
 	var wells := moves.get_children().filter(
@@ -71,7 +73,7 @@ func test_a_pinch_in_attracts_at_the_pinch_centre() -> void:
 	assert_int(wells.size()).is_equal(1)
 
 
-## A pinch-out fires one Repel, and never Attracts.
+## A pinch-out fires one Repel, and never Attracts or shows the reticle.
 func test_a_pinch_out_fires_repel() -> void:
 	var centre := _rig.camera.unproject_position(Vector3(6, 0, 3))
 	var a := centre + Vector2(-40, 0)
@@ -81,9 +83,11 @@ func test_a_pinch_out_fires_repel() -> void:
 	await get_tree().process_frame
 	var repels := [0]
 	var attracted := [false]
+	var reticle_shown := [false]
 	var count := func() -> void:
 		repels[0] += int(_frame().repel_fired)
 		attracted[0] = attracted[0] or _frame().attract != MoveInputFrame.Attract.IDLE
+		reticle_shown[0] = reticle_shown[0] or MoveInputService.instance.reticle.visible
 	get_tree().physics_frame.connect(count)
 	await _pinch(a, b, -STEP_PX)
 	await step_seconds(SETTLE_S)
@@ -91,6 +95,34 @@ func test_a_pinch_out_fires_repel() -> void:
 
 	assert_int(repels[0]).is_equal(1)
 	assert_bool(attracted[0]).is_false()
+	assert_bool(reticle_shown[0]).is_false()
+
+
+## A touch cancel mid-pinch releases Attract and hides the reticle, and input stays
+## swallowed while a finger is still down: a third finger's swipe doesn't Spin.
+func test_a_touch_cancel_interrupts_a_pinch() -> void:
+	var centre := _rig.camera.unproject_position(Vector3(6, 0, 3))
+	var a := centre + Vector2(-60, 0)
+	var b := centre + Vector2(60, 0)
+	_touch(0, true, a)
+	_touch(1, true, b)
+	await get_tree().process_frame
+	var states := await _pinch(a, b, STEP_PX)
+	_cancel(1, b)
+	states.append_array(await _attract_states_over(SETTLE_S))
+	var reticle_shown := MoveInputService.instance.reticle.visible
+	var swipe_at := Vector2(200, 200)
+	_touch(2, true, swipe_at)
+	var spun := 0
+	for step in range(1, GESTURE_FRAMES + 1):
+		_drag(2, swipe_at + Vector2(30 * step, 0))
+		await get_tree().physics_frame
+		spun += int(_frame().spin_fired)
+
+	assert_array(states).contains([MoveInputFrame.Attract.PRESSED])
+	assert_that(states.back()).is_not_equal(MoveInputFrame.Attract.HELD)
+	assert_bool(reticle_shown).is_false()
+	assert_int(spun).is_equal(0)
 
 
 ## A one-finger swipe fires one Spin.
@@ -163,6 +195,14 @@ func _touch(index: int, pressed: bool, at: Vector2) -> void:
 	var event := InputEventScreenTouch.new()
 	event.index = index
 	event.pressed = pressed
+	event.position = at
+	Input.parse_input_event(event)
+
+
+func _cancel(index: int, at: Vector2) -> void:
+	var event := InputEventScreenTouch.new()
+	event.index = index
+	event.canceled = true
 	event.position = at
 	Input.parse_input_event(event)
 

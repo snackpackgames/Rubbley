@@ -86,10 +86,32 @@ func test_a_hit_radius_reaches_a_body() -> void:
 ## When the hit radius reaches both Rubbley and a body, and the aim is inside neither,
 ## Rubbley wins the tie.
 func test_rubbley_wins_ties_inside_the_hit_radius() -> void:
-	var positions: PackedVector3Array = [Vector3(15, 0, 0)]
+	var positions: PackedVector3Array = [Vector3(16, 0, 0)]
 	var radii: PackedFloat64Array = [2.0]
 	# 1.5 m outside Rubbley, 1.5 m outside the body.
 	var aim := Vector3(11.5 + 1.0, 0, 0)
+	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
+	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
+
+
+## When the hit radius reaches both Rubbley and a body, and the aim is inside neither,
+## the nearer edge wins: here the body's.
+func test_a_nearer_forgiven_body_beats_a_forgiven_rubbley() -> void:
+	var positions: PackedVector3Array = [Vector3(15, 0, 0)]
+	var radii: PackedFloat64Array = [2.0]
+	# 1.9 m outside Rubbley, 0.1 m outside the body.
+	var aim := Vector3(12.9, 0, 0)
+	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
+	assert_int(target.kind).is_equal(AimTarget.Kind.CELESTIAL_BODY)
+	assert_int(target.body_index).is_equal(0)
+
+
+## When the hit radius reaches both, and Rubbley's edge is the nearer, he wins.
+func test_a_nearer_forgiven_rubbley_beats_a_forgiven_body() -> void:
+	var positions: PackedVector3Array = [Vector3(15, 0, 0)]
+	var radii: PackedFloat64Array = [2.0]
+	# 0.1 m outside Rubbley, 1.9 m outside the body.
+	var aim := Vector3(11.1, 0, 0)
 	var target := AimTarget.resolve(aim, RUBBLEY_AT, RUBBLEY_RADIUS_M, positions, radii, 2.0)
 	assert_int(target.kind).is_equal(AimTarget.Kind.RUBBLEY)
 

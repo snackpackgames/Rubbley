@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://game/input/move_input_service.gd" id="1_input"]
 [ext_resource type="Resource" path="res://game/input/input_tuning.tres" id="2_tuning"]
 [ext_resource type="Script" path="res://game/input/touch_reticle.gd" id="3_reticle"]
+[ext_resource type="Resource" path="res://game/input/touch_reticle_tuning.tres" id="4_reticle_tuning"]
 
 [node name="MoveInput" type="Node" node_paths=PackedStringArray("reticle")]
 script = ExtResource("1_input")
@@ -14,3 +15,4 @@ layer = 10
 
 [node name="TouchReticle" type="Node2D" parent="ReticleLayer"]
 script = ExtResource("3_reticle")
+tuning = ExtResource("4_reticle_tuning")

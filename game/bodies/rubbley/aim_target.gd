@@ -13,6 +13,9 @@ enum Kind {
 	EMPTY_SPACE,
 }
 
+# How close two forgiven edges' distances must be to count as a tie, in metres.
+const _TIE_M := 0.001
+
 ## What the aim is on.
 var kind := Kind.EMPTY_SPACE
 ## For [constant Kind.CELESTIAL_BODY], the body's index in the arrays given to
@@ -24,8 +27,9 @@ var body_index := -1
 ## [param rubbley_radius_m], else the glowing body at [param body_positions] with
 ## [param body_radii] whose edge the aim is deepest behind, else empty space.
 ## [param hit_radius_m] forgives an imprecise aim, such as a finger's: anything whose edge
-## is within it of the aim counts as under it, but an aim inside an edge beats one that
-## is only forgiven, and Rubbley wins a tie. Distances are measured on the Play Plane.
+## is within it of the aim counts as under it. An aim inside an edge beats one that is
+## only forgiven; among forgiven edges the nearest wins, and Rubbley wins a tie.
+## Distances are measured on the Play Plane.
 static func resolve(
 	aim: Vector3,
 	rubbley_at: Vector3,
@@ -47,7 +51,7 @@ static func resolve(
 			deepest = past_edge
 			target.kind = Kind.CELESTIAL_BODY
 			target.body_index = i
-	if deepest > 0.0 and past_rubbley <= hit_radius_m:
+	if deepest > 0.0 and past_rubbley <= deepest + _TIE_M:
 		target.kind = Kind.RUBBLEY
 		target.body_index = -1
 	return target

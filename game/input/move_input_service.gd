@@ -31,7 +31,7 @@ static var instance: MoveInputService
 
 ## The thresholds moves are recognised by.
 @export var tuning: InputTuning
-## Shows where two fingers aim, and how forgiving that aim is.
+## Shows where a pinch-in aims, and how forgiving that aim is.
 @export var reticle: TouchReticle
 
 ## This tick's frame. Gameplay and the CameraRig read it and never write to it.
@@ -59,14 +59,16 @@ func _ready() -> void:
 	_touch.pinched_in.connect(_on_pinched_in)
 	_touch.pinched_out.connect(_on_pinched_out)
 	_touch.pinch_released.connect(_latch.release_attract)
+	_size_touch_unit()
+	get_viewport().size_changed.connect(_size_touch_unit)
 	# It keeps tracking releases while the game is paused, so input can stop being swallowed.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	process_physics_priority = PHYSICS_PRIORITY
 
 
 func _process(_delta: float) -> void:
-	if _touch.is_aiming():
-		reticle.show_at(_touch.aim_point(), tuning.touch_hit_radius * _touch.unit_px)
+	if _touch.is_pinching_in():
+		reticle.show_at(_touch.pinch_centre(), _touch_hit_radius_px())
 	else:
 		reticle.hide()
 
@@ -159,8 +161,6 @@ func _play_plane_point(screen_point: Vector2) -> Vector3:
 # Feeds a touch or drag to the recogniser, timestamped now. A touch cancel interrupts.
 func _touch_input(event: InputEvent) -> void:
 	var now_s := Time.get_ticks_usec() / 1_000_000.0
-	var screen := get_viewport().get_visible_rect().size
-	_touch.unit_px = minf(screen.x, screen.y) / 2.0
 	var drag := event as InputEventScreenDrag
 	if drag != null:
 		_touch.drag(drag.index, drag.position, now_s)
@@ -187,7 +187,18 @@ func _on_pinched_out(at: Vector2) -> void:
 # Makes the pinch centre [param at] the aim, forgiving a finger's imprecision.
 func _aim_by_touch(at: Vector2) -> void:
 	_pointer = at
-	_hit_radius_px = tuning.touch_hit_radius * _touch.unit_px
+	_hit_radius_px = _touch_hit_radius_px()
+
+
+# How far a pinch centre forgives, in pixels.
+func _touch_hit_radius_px() -> float:
+	return tuning.touch_hit_radius * _touch.unit_px
+
+
+# Sizes the recogniser's unit, half the screen's short side, to the viewport.
+func _size_touch_unit() -> void:
+	var screen := get_viewport().get_visible_rect().size
+	_touch.unit_px = minf(screen.x, screen.y) / 2.0
 
 
 func _anything_held() -> bool:

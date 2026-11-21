@@ -25,6 +25,7 @@ signal pinched_out(at: Vector2)
 signal pinch_released
 
 ## Pixels in half the screen's short side, the unit tuning lengths are fractions of.
+## Move Input keeps it in step with the viewport's size.
 var unit_px := 1.0
 
 var _tuning: InputTuning
@@ -54,10 +55,10 @@ func drag(index: int, position: Vector2, time_s: float) -> void:
 	var finger: Finger = _fingers.get(index)
 	if finger == null:
 		return
-	var elapsed := time_s - finger.time_s
+	var elapsed := time_s - finger.moved_s
 	var travel := finger.position.distance_to(position) / unit_px
 	finger.position = position
-	finger.time_s = time_s
+	finger.moved_s = time_s
 	# Fingers move in bursts: a slow stretch restarts the swipe from where it is now.
 	if elapsed > 0.0 and travel / elapsed < _tuning.swipe_speed_per_s:
 		finger.swipe_from = position
@@ -111,19 +112,15 @@ func nudge() -> Vector2:
 	return Vector2(moved.x, -moved.y).limit_length(1.0)
 
 
-## Whether two paired fingers are aiming: unclassified yet, or pinching.
-func is_aiming() -> bool:
-	return _pair != null and _pair.kind != Pair.Kind.NUDGE
+## Whether a pinch-in is holding Attract: from its classification until a finger lifts.
+func is_pinching_in() -> bool:
+	return _pair != null and _pair.kind == Pair.Kind.PINCH_IN
 
 
-## Where a pair aims, in pixels: the pinch centre, locked once it classified as a pinch.
-## Only meaningful while [method is_aiming].
-func aim_point() -> Vector2:
-	if _pair == null:
-		return Vector2.ZERO
-	if _pair.kind == Pair.Kind.UNCLASSIFIED:
-		return _midpoint()
-	return _pair.aim
+## The pinch-in's centre in pixels, locked at classification; zero when
+## [method is_pinching_in] is false.
+func pinch_centre() -> Vector2:
+	return _pair.aim if is_pinching_in() else Vector2.ZERO
 
 
 # The most recent swipe candidate still inside the second-finger window at
@@ -188,7 +185,7 @@ class Finger:
 	## When the finger went down.
 	var down_s: float
 	## When the finger last moved, or went down.
-	var time_s: float
+	var moved_s: float
 	## Where the finger last moved slower than a swipe.
 	var swipe_from: Vector2
 
@@ -196,7 +193,7 @@ class Finger:
 	func _init(at: Vector2, at_time_s: float) -> void:
 		position = at
 		down_s = at_time_s
-		time_s = at_time_s
+		moved_s = at_time_s
 		swipe_from = at
 
 

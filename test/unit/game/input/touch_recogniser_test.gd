@@ -157,7 +157,7 @@ func test_the_finger_left_after_a_pinch_is_ignored() -> void:
 	_recogniser.press(2, Vector2(400, 400), 0.31)
 	_recogniser.drag(0, Vector2(400, 200), 0.32)
 	assert_array(_names()).contains_exactly([&"in", &"released"])
-	assert_bool(_recogniser.is_aiming()).is_false()
+	assert_bool(_recogniser.is_pinching_in()).is_false()
 
 
 ## Two fingers resting with no threshold crossed stay unclassified, however long.
@@ -166,20 +166,37 @@ func test_resting_fingers_stay_unclassified() -> void:
 	_recogniser.drag(0, Vector2(102, 201), 30.0)
 	_recogniser.drag(1, Vector2(299, 199), 60.0)
 	assert_array(_heard).is_empty()
-	assert_bool(_recogniser.is_aiming()).is_true()
+	assert_bool(_recogniser.is_pinching_in()).is_false()
 
 
-## Two resting fingers aim at their midpoint, and a pinch keeps the centre it classified
-## at however the fingers move afterwards. A Nudge doesn't aim.
-func test_the_aim_point_follows_then_locks() -> void:
+## A pinch-in keeps the centre it classified at however the fingers move afterwards.
+func test_a_pinch_in_keeps_the_centre_it_classified_at() -> void:
 	_two_fingers_down(Vector2(100, 200), Vector2(300, 220))
-	var resting := _recogniser.aim_point()
 	_pinch(Vector2(100, 200), Vector2(300, 220), 60.0)
 	_recogniser.drag(0, Vector2(400, 400), 0.4)
-	var locked := _recogniser.aim_point()
 
-	assert_vector(resting).is_equal(Vector2(200, 210))
-	assert_vector(locked).is_equal(Vector2(200, 210))
+	assert_bool(_recogniser.is_pinching_in()).is_true()
+	assert_vector(_recogniser.pinch_centre()).is_equal(Vector2(200, 210))
+
+
+## Only a pinch-in counts as pinching in: a pinch-out has already fired its Repel, and a
+## Nudge doesn't aim.
+func test_a_pinch_out_or_a_nudge_is_not_pinching_in() -> void:
+	_two_fingers_down(Vector2(100, 200), Vector2(300, 200))
+	_pinch(Vector2(100, 200), Vector2(300, 200), -60.0)
+	var after_pinch_out := _recogniser.is_pinching_in()
+	_recogniser.release(0)
+	_recogniser.release(1)
+	_recogniser.press(0, Vector2(100, 200), 1.0)
+	_recogniser.press(1, Vector2(300, 200), 1.01)
+	for step in range(1, 11):
+		var by := Vector2(0, -4.0 * step)
+		_recogniser.drag(0, Vector2(100, 200) + by, 1.1 + 0.01 * step)
+		_recogniser.drag(1, Vector2(300, 200) + by, 1.1 + 0.01 * step)
+
+	assert_bool(after_pinch_out).is_false()
+	assert_vector(_recogniser.nudge()).is_not_equal(Vector2.ZERO)
+	assert_bool(_recogniser.is_pinching_in()).is_false()
 
 
 ## Dropping mid-pinch emits nothing, and ignores every finger until it lifts, while the
@@ -196,7 +213,7 @@ func test_drop_ignores_every_finger_until_it_lifts() -> void:
 	assert_array(_names()).contains_exactly([&"in"])
 	assert_bool(down_after_drop).is_true()
 	assert_bool(_recogniser.is_anything_down()).is_false()
-	assert_bool(_recogniser.is_aiming()).is_false()
+	assert_bool(_recogniser.is_pinching_in()).is_false()
 
 
 func _names() -> Array[StringName]:
