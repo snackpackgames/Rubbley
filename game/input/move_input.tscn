@@ -4,11 +4,14 @@
 [ext_resource type="Resource" path="res://game/input/input_tuning.tres" id="2_tuning"]
 [ext_resource type="Script" path="res://game/input/touch_reticle.gd" id="3_reticle"]
 [ext_resource type="Resource" path="res://game/input/touch_reticle_tuning.tres" id="4_reticle_tuning"]
+[ext_resource type="Script" path="res://game/input/aim_cursor.gd" id="5_cursor"]
+[ext_resource type="Resource" path="res://game/input/aim_cursor_tuning.tres" id="6_cursor_tuning"]
 
-[node name="MoveInput" type="Node" node_paths=PackedStringArray("reticle")]
+[node name="MoveInput" type="Node" node_paths=PackedStringArray("reticle", "aim_cursor")]
 script = ExtResource("1_input")
 tuning = ExtResource("2_tuning")
 reticle = NodePath("ReticleLayer/TouchReticle")
+aim_cursor = NodePath("ReticleLayer/AimCursor")
 
 [node name="ReticleLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -16,3 +19,7 @@ layer = 10
 [node name="TouchReticle" type="Node2D" parent="ReticleLayer"]
 script = ExtResource("3_reticle")
 tuning = ExtResource("4_reticle_tuning")
+
+[node name="AimCursor" type="Node2D" parent="ReticleLayer"]
+script = ExtResource("5_cursor")
+tuning = ExtResource("6_cursor_tuning")
