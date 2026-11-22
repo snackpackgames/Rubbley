@@ -1,0 +1,99 @@
+[gd_scene format=3 uid="uid://c8k4n2p9v5m1x"]
+
+[ext_resource type="Script" path="res://game/levels/sandbox_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://game/gravity/gravity_system.gd" id="2_grav"]
+[ext_resource type="Resource" path="res://game/gravity/gravity_tuning.tres" id="3_gtuning"]
+[ext_resource type="PackedScene" path="res://game/bodies/rubbley/rubbley.tscn" id="4_rubbley"]
+[ext_resource type="PackedScene" path="res://game/bodies/planet/anchored_planet.tscn" id="5_planet"]
+[ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="6_debris"]
+[ext_resource type="Script" path="res://game/bodies/debris/debris_field.gd" id="7_field"]
+[ext_resource type="PackedScene" path="res://game/camera/camera_rig.tscn" id="8_rig"]
+[ext_resource type="PackedScene" path="res://game/camera/camera_zone.tscn" id="9_zone"]
+[ext_resource type="Script" path="res://game/camera/camera_zone_framing.gd" id="10_framing"]
+
+[sub_resource type="Environment" id="Environment_gated"]
+background_mode = 1
+background_color = Color(0.04, 0.02, 0.07, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.65, 0.6, 0.7, 1)
+ambient_light_energy = 0.45
+
+[sub_resource type="Resource" id="Resource_wide_zone"]
+script = ExtResource("10_framing")
+priority = 1
+extent_m = 130.0
+
+[node name="SandboxGatedLevel" type="Node3D" node_paths=PackedStringArray("gravity_system", "rubbley_mass")]
+script = ExtResource("1_level")
+gravity_system = NodePath("GravitySystem")
+rubbley_mass = NodePath("Rubbley/Mass")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_gated")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
+
+[node name="GravitySystem" type="Node" parent="." node_paths=PackedStringArray("drift_body")]
+script = ExtResource("2_grav")
+tuning = ExtResource("3_gtuning")
+drift_body = NodePath("../Rubbley/GravityBody")
+
+[node name="Rubbley" type="RigidBody3D" parent="." instance=ExtResource("4_rubbley")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, 0)
+linear_velocity = Vector3(12, 0, 0)
+
+[node name="CameraRig" parent="." node_paths=PackedStringArray("target", "target_mass") instance=ExtResource("8_rig")]
+target = NodePath("../Rubbley")
+target_mass = NodePath("../Rubbley/Mass")
+
+[node name="TwinZone" parent="." instance=ExtResource("9_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, 0)
+framing = SubResource("Resource_wide_zone")
+
+[node name="TwinNorth" type="RigidBody3D" parent="." instance=ExtResource("5_planet")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -28)
+
+[node name="TwinSouth" type="RigidBody3D" parent="." instance=ExtResource("5_planet")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, 28)
+
+[node name="OuterAnchor" type="RigidBody3D" parent="." instance=ExtResource("5_planet")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -18)
+
+[node name="Debris" type="Node3D" parent="."]
+
+[node name="TwinNorthRing" type="Node3D" parent="Debris" node_paths=PackedStringArray("primary")]
+script = ExtResource("7_field")
+debris_scene = ExtResource("6_debris")
+gravity_tuning = ExtResource("3_gtuning")
+scatter_seed = 11
+count = 10
+min_distance_m = 12.0
+max_distance_m = 18.0
+primary = NodePath("../../TwinNorth")
+min_speed_multiple = 0.95
+max_speed_multiple = 1.05
+
+[node name="TwinSouthRing" type="Node3D" parent="Debris" node_paths=PackedStringArray("primary")]
+script = ExtResource("7_field")
+debris_scene = ExtResource("6_debris")
+gravity_tuning = ExtResource("3_gtuning")
+scatter_seed = 12
+count = 10
+min_distance_m = 12.0
+max_distance_m = 20.0
+primary = NodePath("../../TwinSouth")
+min_speed_multiple = 0.9
+max_speed_multiple = 1.1
+anticlockwise_share = 0.0
+
+[node name="MidstreamBelt" type="Node3D" parent="Debris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, 8)
+script = ExtResource("7_field")
+debris_scene = ExtResource("6_debris")
+gravity_tuning = ExtResource("3_gtuning")
+scatter_seed = 13
+count = 10
+min_distance_m = 0.0
+max_distance_m = 12.0
+floating_speed_m_per_s = 1.2

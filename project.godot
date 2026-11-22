@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 MoveInput="*res://game/input/move_input.tscn"
+PlatformServices="*res://game/store/platform_services_service.gd"
 
 [debug]
 

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FreeLevelsList" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/store/free_levels_list.gd" id="1_free"]
+
+[resource]
+script = ExtResource("1_free")
+free_level_ids = Array[StringName]([&"sandbox_free"])

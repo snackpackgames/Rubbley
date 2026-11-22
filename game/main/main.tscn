@@ -3,12 +3,24 @@
 [ext_resource type="Script" uid="uid://b7wmcchr6tmgh" path="res://game/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://bwm8cvtm2rdlv" path="res://game/levels/sandbox_level.tscn" id="2_level"]
 [ext_resource type="PackedScene" uid="uid://tv7vuo68ap15" path="res://game/ui/hud.tscn" id="3_hud"]
+[ext_resource type="Resource" path="res://game/levels/sandbox_levels.tres" id="4_catalog"]
+[ext_resource type="Resource" path="res://game/store/free_levels.tres" id="5_free_levels"]
+[ext_resource type="PackedScene" uid="uid://d7m3q8r2w6n4y" path="res://game/ui/level_switcher.tscn" id="6_switcher"]
+[ext_resource type="PackedScene" uid="uid://e6p9s4t7x3k8z" path="res://game/ui/unlock_prompt.tscn" id="7_unlock"]
 
-[node name="Main" type="Node" node_paths=PackedStringArray("hud")]
+[node name="Main" type="Node" node_paths=PackedStringArray("hud", "level_switcher", "unlock_prompt")]
 script = ExtResource("1_main")
 start_level = ExtResource("2_level")
+level_catalog = ExtResource("4_catalog")
+free_levels = ExtResource("5_free_levels")
 hud = NodePath("UI/Hud")
+level_switcher = NodePath("UI/LevelSwitcher")
+unlock_prompt = NodePath("UI/UnlockPrompt")
 
 [node name="UI" type="Node" parent="."]
 
 [node name="Hud" parent="UI" instance=ExtResource("3_hud")]
+
+[node name="LevelSwitcher" parent="UI" instance=ExtResource("6_switcher")]
+
+[node name="UnlockPrompt" parent="UI" instance=ExtResource("7_unlock")]
