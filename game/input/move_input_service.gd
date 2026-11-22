@@ -71,6 +71,8 @@ var _pointer := Vector2.ZERO
 # Half the screen's short side in pixels, the unit screen lengths in tuning are shares of.
 var _unit_px := 1.0
 var _was_paused := false
+# Whether the aim cursor shows: while the controller owns the aim.
+var _cursor_shown := false
 # Physics time in seconds, which the controller's release grace runs on.
 var _physics_s := 0.0
 
@@ -108,7 +110,7 @@ func _process(_delta: float) -> void:
 		reticle.show_at(_touch.pinch_centre(), _touch_hit_radius_px())
 	else:
 		reticle.hide()
-	if _aim_scheme == Scheme.CONTROLLER and _camera != null:
+	if _cursor_shown and _camera != null:
 		aim_cursor.show_at(_camera.unproject_position(frame.aim), _controller.is_on_rubbley())
 	else:
 		aim_cursor.hide()
@@ -124,9 +126,12 @@ func _physics_process(delta: float) -> void:
 	_aim_controller()
 	var aim := _play_plane_point(_pointer)
 	var hit_radius_m := 0.0
+	_cursor_shown = false
+	# The one place the aim's owner decides how it aims and what shows.
 	match _aim_scheme:
 		Scheme.CONTROLLER:
 			aim = Vector3(_controller.point().x, 0.0, _controller.point().y)
+			_cursor_shown = true
 		Scheme.TOUCH:
 			hit_radius_m = _metres_across(_pointer, _touch_hit_radius_px())
 	frame = _latch.tick(aim, nudge, _anything_held())

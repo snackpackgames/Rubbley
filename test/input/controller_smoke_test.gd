@@ -7,6 +7,7 @@ extends SimulationTestSuite
 
 const RUBBLEY_SCENE := preload("res://game/bodies/rubbley/rubbley.tscn")
 const RIG_SCENE := preload("res://game/camera/camera_rig.tscn")
+const HUD_SCENE := preload("res://game/ui/hud.tscn")
 ## Long enough for Move Input to read a batch of events and latch it.
 const SETTLE_S := 0.1
 ## Longer than the aim's release grace, so a stick at rest aims at Rubbley.
@@ -88,6 +89,24 @@ func test_a_trigger_with_the_stick_at_rest_attracts_on_self() -> void:
 	assert_int(scheme_before).is_equal(MoveInputService.Scheme.MOUSE_KEYBOARD)
 	assert_int(MoveInputService.instance.aim_scheme()).is_equal(MoveInputService.Scheme.CONTROLLER)
 	assert_bool(attracting).is_true()
+
+
+## The HUD's prompts follow the scheme that owns the aim: the mouse's, then the
+## controller's once a face button is pressed.
+func test_the_prompts_follow_the_aims_owner() -> void:
+	var hud: Hud = HUD_SCENE.instantiate()
+	_world.add_child(hud)
+	hud.watch(_rubbley.get_node("Mass") as RubbleyMass)
+	var mouse := InputEventMouseMotion.new()
+	mouse.position = Vector2(5.0, 5.0)
+	Input.parse_input_event(mouse)
+	await step_seconds(SETTLE_S)
+	var mouse_prompts := hud.prompt_label.text
+	_button(JOY_BUTTON_A, true)
+	await step_seconds(SETTLE_S)
+
+	assert_str(mouse_prompts).is_equal(Hud.PROMPTS[Hud.SCHEME.MOUSE_KEYBOARD])
+	assert_str(hud.prompt_label.text).is_equal(Hud.PROMPTS[Hud.SCHEME.CONTROLLER])
 
 
 ## After an interruption, a trigger resting below its release point doesn't keep input
