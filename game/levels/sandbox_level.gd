@@ -1,4 +1,5 @@
-extends Node3D
+class_name SandboxLevel
+extends Level
 ## The gravity sandbox. Until levels have stage paths, Drift's direction meanders as
 ## in the controller-aim prototype.
 

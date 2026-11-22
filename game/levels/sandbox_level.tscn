@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="8_di3dc"]
 [ext_resource type="Script" path="res://game/bodies/debris/debris_field.gd" id="9_field"]
 [ext_resource type="PackedScene" path="res://game/camera/camera_rig.tscn" id="10_rig"]
-[ext_resource type="PackedScene" path="res://game/ui/hud.tscn" id="11_hud"]
 
 [sub_resource type="Environment" id="Environment_x1j3g"]
 background_mode = 1
@@ -17,9 +16,10 @@ ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.6, 0.6, 1)
 ambient_light_energy = 0.4
 
-[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system")]
+[node name="SandboxLevel" type="Node3D" unique_id=1926548440 node_paths=PackedStringArray("gravity_system", "rubbley_mass")]
 script = ExtResource("0_level")
 gravity_system = NodePath("GravitySystem")
+rubbley_mass = NodePath("Rubbley/Mass")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=514243655]
 environment = SubResource("Environment_x1j3g")
@@ -109,8 +109,3 @@ count = 6
 min_distance_m = 0.0
 max_distance_m = 7.0
 floating_speed_m_per_s = 1.5
-
-[node name="Hud" parent="." node_paths=PackedStringArray("live_stats", "mass", "moves") instance=ExtResource("11_hud")]
-live_stats = NodePath("../Rubbley/LiveStats")
-mass = NodePath("../Rubbley/Mass")
-moves = NodePath("../Rubbley/Moves")
