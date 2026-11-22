@@ -26,10 +26,13 @@ static var instance: PlatformServicesService
 
 var _backend: StoreBackend
 var _force_free_tier := false
+var _cached_full_game := false
+var _effective_full_game := false
 
 
 func _enter_tree() -> void:
-	instance = self
+	if instance == null:
+		instance = self
 
 
 func _ready() -> void:
@@ -44,6 +47,7 @@ func _ready() -> void:
 		)
 		var selected := StoreBackendSelector.create_backend(OS.has_feature, ResourceLoader.load)
 		_attach_backend(selected)
+		_sync_effective_full_game(false)
 
 
 func _process(delta: float) -> void:
@@ -58,25 +62,21 @@ func _exit_tree() -> void:
 
 
 ## Replaces the active backend (used by tests to inject [FakeStoreBackend]). Clears any
-## forced Free Tier override so the injected backend controls [method has_full_game].
+## forced Free Tier override and cached fallback so the injected backend starts clean.
 func set_backend(new_backend: StoreBackend) -> void:
 	assert(new_backend != null, "PlatformServices requires a non-null StoreBackend")
-	var previous_full_game := has_full_game() if _backend != null else false
 	var had_backend := _backend != null
 	_force_free_tier = false
+	_cached_full_game = false
 	_attach_backend(new_backend)
-	if had_backend and has_full_game() != previous_full_game:
-		full_game_changed.emit(has_full_game())
+	_sync_effective_full_game(had_backend)
 
 
 ## Forces [method has_full_game] to return false when [param enabled] is true, emitting
 ## [signal full_game_changed] if the effective answer changed.
 func set_force_free_tier(enabled: bool) -> void:
-	var previous := has_full_game()
 	_force_free_tier = enabled
-	var current := has_full_game()
-	if current != previous:
-		full_game_changed.emit(current)
+	_sync_effective_full_game(_backend != null)
 
 
 ## Returns whether the forced Free Tier override is currently active.
@@ -91,26 +91,59 @@ func backend() -> StoreBackend:
 
 ## Returns the active store's capabilities for UI hiding.
 func capabilities() -> StoreCapabilities:
+	if _backend == null:
+		return StoreCapabilities.new()
 	return _backend.capabilities()
 
 
 ## Returns the active store's cloud save capability.
 func cloud_capability() -> StoreBackend.CloudCapability:
+	if _backend == null:
+		return StoreBackend.CloudCapability.NONE
 	return _backend.cloud_capability()
 
 
-## Returns whether the player has the Full Game.
+## Returns whether the player has the Full Game. Uses the store's verified answer when
+## available, falling back to the cached answer while unverified (pending or offline)
+## (ADR 0019).
 func has_full_game() -> bool:
-	if _force_free_tier:
+	if _force_free_tier or _backend == null:
 		return false
-	return _backend.has_full_game()
+	if _backend.is_entitlement_verified():
+		return _backend.has_full_game()
+	return _cached_full_game
+
+
+## Supplies the cached [code]has_full_game()[/code] answer from Save/Settings for offline
+## fallback (ADR 0019). Emits [signal full_game_changed] if the effective answer changes.
+func set_cached_full_game(unlocked: bool) -> void:
+	_cached_full_game = unlocked
+	_sync_effective_full_game(_backend != null)
 
 
 ## Returns whether [method has_full_game] came from a verified store answer.
 func is_entitlement_verified() -> bool:
 	if _force_free_tier:
 		return true
+	if _backend == null:
+		return false
 	return _backend.is_entitlement_verified()
+
+
+## Returns whether the underlying store backend has verified the entitlement, ignoring any
+## debug forced Free Tier override.
+func is_store_entitlement_verified() -> bool:
+	if _backend == null:
+		return false
+	return _backend.is_entitlement_verified()
+
+
+## Returns the underlying store backend's [code]has_full_game()[/code] answer, ignoring
+## any debug forced Free Tier override.
+func store_has_full_game() -> bool:
+	if _backend == null:
+		return false
+	return _backend.has_full_game()
 
 
 ## Starts purchasing the single one-time Unlock.
@@ -138,14 +171,23 @@ func load_leaderboard(board: StoreBackend.Leaderboard) -> void:
 	_backend.load_leaderboard(board)
 
 
-## Pushes save bytes on [enum StoreBackend.CloudCapability].IN_CODE stores.
+## Pushes save bytes on [constant StoreBackend.CloudCapability.IN_CODE] stores.
 func push_save(bytes: PackedByteArray) -> void:
 	_backend.push_save(bytes)
 
 
-## Pulls save bytes on [enum StoreBackend.CloudCapability].IN_CODE stores.
+## Pulls save bytes on [constant StoreBackend.CloudCapability.IN_CODE] stores.
 func pull_save() -> void:
 	_backend.pull_save()
+
+
+func _sync_effective_full_game(should_emit: bool) -> void:
+	var current := has_full_game()
+	if current == _effective_full_game:
+		return
+	_effective_full_game = current
+	if should_emit:
+		full_game_changed.emit(current)
 
 
 func _attach_backend(new_backend: StoreBackend) -> void:
@@ -181,10 +223,11 @@ func _disconnect_backend() -> void:
 
 
 func _on_backend_full_game_changed(_unlocked: bool) -> void:
-	full_game_changed.emit(has_full_game())
+	_sync_effective_full_game(true)
 
 
 func _on_backend_full_game_check_finished(ok: bool, _unlocked: bool) -> void:
+	_sync_effective_full_game(true)
 	full_game_check_finished.emit(ok, has_full_game())
 
 
