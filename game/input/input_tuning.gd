@@ -23,6 +23,13 @@ extends Resource
 @export_range(0.0, 45.0, 0.1) var reach_distance_bias_deg := 5.0
 ## Seconds the last aim is kept after the stick returns to rest.
 @export_range(0.0, 1.0, 0.001) var aim_release_grace_s := 0.12
+## Trigger travel past which a trigger presses Attract or Repel.
+@export_range(0.0, 1.0, 0.01) var trigger_press_point := 0.6
+## Trigger travel below which a pressed trigger lets go. Below the press point, so a
+## trigger resting near it doesn't chatter.
+@export_range(0.0, 1.0, 0.01) var trigger_release_point := 0.4
+## Right-stick travel inside which the stick doesn't Nudge.
+@export_range(0.0, 1.0, 0.01) var nudge_deadzone := 0.2
 ## How far a finger must travel quickly, from where it last went slow, to swipe a Spin.
 @export_range(0.0, 1.0, 0.01) var swipe_distance := 0.15
 ## How fast a finger must move to count toward a swipe, in screen lengths per second.

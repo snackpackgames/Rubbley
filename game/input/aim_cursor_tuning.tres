@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AimCursorTuning" format=3 uid="uid://b2qw8ycmk5ra4"]
+
+[ext_resource type="Script" path="res://game/input/aim_cursor_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+color = Color(0.3, 1, 1, 1)
+on_rubbley_color = Color(1, 1, 1, 0.6)
+radius_px = 14.0
+crosshair_px = 20.0
+width_px = 2.0
