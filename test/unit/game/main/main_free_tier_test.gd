@@ -9,6 +9,8 @@ var _original_force_free: bool
 
 
 func before_test() -> void:
+	if SaveSettingsService.instance != null:
+		SaveSettingsService.instance.disconnect_services()
 	_original_backend = PlatformServicesService.instance.backend()
 	_original_force_free = PlatformServicesService.instance.is_force_free_tier()
 
@@ -16,6 +18,8 @@ func before_test() -> void:
 func after_test() -> void:
 	PlatformServicesService.instance.set_backend(_original_backend)
 	PlatformServicesService.instance.set_force_free_tier(_original_force_free)
+	if SaveSettingsService.instance != null:
+		SaveSettingsService.instance.sync_with_platform_services(PlatformServicesService.instance)
 
 
 ## Under Free Tier on a mobile store (unlock_purchase = true), picking the gated level
