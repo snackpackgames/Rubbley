@@ -23,5 +23,9 @@ var repel_fired := false
 var spin_fired := false
 ## The aim, a world point on the Play Plane.
 var aim := Vector3.ZERO
+## How far from [member aim], in metres on the Play Plane, Rubbley's or a body's edge
+## may be and still count as under it: forgiveness for an imprecise aim such as a
+## finger's, and 0 for a precise one.
+var aim_hit_radius_m := 0.0
 ## The Nudge in screen terms, x right and y up, length up to 1.
 var nudge := Vector2.ZERO

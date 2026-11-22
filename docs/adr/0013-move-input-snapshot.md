@@ -6,6 +6,7 @@ All three control schemes feed one autoload, Move Input, which once per physics 
 - **Repel fired** and **Spin fired**
 - **Aim**: a world point on the Play Plane
 - **Nudge**: a vector of length ≤ 1
+- **Aim hit radius**: how far from the aim an edge may be and still count as under it. It is 0 for a precise aim, and the touch scheme's forgiving radius for a pinch. It was added with the touch scheme.
 
 Bindings for controller and keyboard are named actions in Godot's native `InputMap`. The touch recognisers are hand-rolled. A polled frame keeps every scheme on the same path through gameplay, and tests can inject frames without faking devices.
 
