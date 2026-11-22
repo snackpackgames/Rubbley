@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelCatalog" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/levels/level_catalog.gd" id="1_catalog"]
+[ext_resource type="Script" path="res://game/levels/level_entry.gd" id="2_entry"]
+[ext_resource type="PackedScene" uid="uid://bwm8cvtm2rdlv" path="res://game/levels/sandbox_level.tscn" id="3_free_scene"]
+[ext_resource type="PackedScene" uid="uid://c8k4n2p9v5m1x" path="res://game/levels/sandbox_gated_level.tscn" id="4_gated_scene"]
+
+[sub_resource type="Resource" id="Resource_free"]
+script = ExtResource("2_entry")
+id = &"sandbox_free"
+display_name = "Sandbox 1"
+scene = ExtResource("3_free_scene")
+
+[sub_resource type="Resource" id="Resource_gated"]
+script = ExtResource("2_entry")
+id = &"sandbox_gated"
+display_name = "Sandbox 2"
+scene = ExtResource("4_gated_scene")
+
+[resource]
+script = ExtResource("1_catalog")
+entries = Array[ExtResource("2_entry")]([SubResource("Resource_free"), SubResource("Resource_gated")])

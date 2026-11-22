@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://e6p9s4t7x3k8z"]
+
+[ext_resource type="Script" path="res://game/ui/unlock_prompt.gd" id="1_prompt"]
+
+[node name="UnlockPrompt" type="CanvasLayer" node_paths=PackedStringArray("backdrop", "title_label", "message_label", "status_label", "purchase_button", "restore_button", "close_button")]
+layer = 5
+script = ExtResource("1_prompt")
+backdrop = NodePath("Backdrop")
+title_label = NodePath("Backdrop/Center/Card/Margin/Column/TitleLabel")
+message_label = NodePath("Backdrop/Center/Card/Margin/Column/MessageLabel")
+status_label = NodePath("Backdrop/Center/Card/Margin/Column/StatusLabel")
+purchase_button = NodePath("Backdrop/Center/Card/Margin/Column/Actions/PurchaseButton")
+restore_button = NodePath("Backdrop/Center/Card/Margin/Column/Actions/RestoreButton")
+close_button = NodePath("Backdrop/Center/Card/Margin/Column/Actions/CloseButton")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.05, 0.72)
+
+[node name="Center" type="CenterContainer" parent="Backdrop"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Backdrop/Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Backdrop/Center/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
+
+[node name="Column" type="VBoxContainer" parent="Backdrop/Center/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Backdrop/Center/Card/Margin/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Full Game"
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="Backdrop/Center/Card/Margin/Column"]
+layout_mode = 2
+text = "This level is part of the Full Game."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StatusLabel" type="Label" parent="Backdrop/Center/Card/Margin/Column"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Backdrop/Center/Card/Margin/Column"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="PurchaseButton" type="Button" parent="Backdrop/Center/Card/Margin/Column/Actions"]
+layout_mode = 2
+text = "Unlock Full Game"
+
+[node name="RestoreButton" type="Button" parent="Backdrop/Center/Card/Margin/Column/Actions"]
+layout_mode = 2
+text = "Restore Purchases"
+
+[node name="CloseButton" type="Button" parent="Backdrop/Center/Card/Margin/Column/Actions"]
+layout_mode = 2
+text = "Back"
