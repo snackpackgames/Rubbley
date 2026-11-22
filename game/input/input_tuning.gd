@@ -11,7 +11,11 @@ extends Resource
 @export_range(0.0, 1.0, 0.01) var aim_range := 0.9
 ## How close a glowing body's edge must be to the cursor for the aim to snap to it.
 @export_range(0.0, 1.0, 0.001) var aim_snap_radius := 0.167
-## Stick travel from which the stick counts as fully tilted, so the reach cone picks.
+## Stick travel at which the cursor reaches the full aim range. Tilt runs from 0 at the
+## deadzone to 1 here.
+@export_range(0.0, 1.0, 0.01) var stick_saturation := 0.95
+## Tilt, from 0 at the deadzone to 1 at saturation, from which the stick counts as fully
+## tilted, so the reach cone picks.
 @export_range(0.0, 1.0, 0.01) var full_tilt := 0.95
 ## The full-tilt reach cone's full angle, in degrees.
 @export_range(0.0, 90.0, 0.1) var reach_cone_deg := 12.0
@@ -28,7 +32,8 @@ extends Resource
 ## Trigger travel below which a pressed trigger lets go. Below the press point, so a
 ## trigger resting near it doesn't chatter.
 @export_range(0.0, 1.0, 0.01) var trigger_release_point := 0.4
-## Right-stick travel inside which the stick doesn't Nudge.
+## Right-stick travel inside which the stick doesn't Nudge. Past it, the stick Nudges by
+## its raw travel.
 @export_range(0.0, 1.0, 0.01) var nudge_deadzone := 0.2
 ## How far a finger must travel quickly, from where it last went slow, to swipe a Spin.
 @export_range(0.0, 1.0, 0.01) var swipe_distance := 0.15

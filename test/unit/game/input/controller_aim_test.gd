@@ -7,7 +7,7 @@ extends GdUnitTestSuite
 const UNIT_M := 10.0
 const RUBBLEY_AT := Vector2.ZERO
 const SNAP_M := 1.67
-## Stick travel that tilts the stick halfway between the deadzone and full tilt.
+## Stick travel that tilts the stick halfway between the deadzone and saturation.
 const HALF_TILT := 0.575
 
 var _aim: ControllerAim
@@ -21,6 +21,7 @@ func before_test() -> void:
 	tuning.stick_deadzone = 0.2
 	tuning.aim_range = 0.9
 	tuning.aim_snap_radius = 0.167
+	tuning.stick_saturation = 0.95
 	tuning.full_tilt = 0.95
 	tuning.reach_cone_deg = 12.0
 	tuning.reach_range_multiple = 2.0
@@ -39,8 +40,8 @@ func test_a_stick_at_rest_aims_at_rubbley() -> void:
 	assert_bool(_aim.is_tilted()).is_false()
 
 
-## The cursor sits at Rubbley + stick × range, tilt measured from the deadzone to full
-## tilt.
+## The cursor sits at Rubbley + stick × range, tilt measured from the deadzone to
+## saturation.
 func test_the_cursor_sits_at_stick_times_range() -> void:
 	_update(Vector2(HALF_TILT, 0.0), [])
 	assert_vector(_aim.point()).is_equal_approx(Vector2(4.5, 0.0), Vector2(0.01, 0.01))
@@ -75,7 +76,7 @@ func test_the_nearest_edge_snaps_first() -> void:
 ## Nothing within the snap radius leaves the aim on the cursor.
 func test_a_body_out_of_snap_range_is_not_picked() -> void:
 	_update(Vector2(HALF_TILT, 0.0), [_body(1, Vector2(4.5, 3.0), 1.0)])
-	assert_int(_aim.picked()).is_equal(-1)
+	assert_int(_aim.picked()).is_equal(ControllerAim.NO_PICK)
 	assert_vector(_aim.point()).is_equal_approx(Vector2(4.5, 0.0), Vector2(0.01, 0.01))
 
 
@@ -88,10 +89,17 @@ func test_full_tilt_reaches_a_distant_body() -> void:
 	assert_vector(_aim.point()).is_equal(Vector2(15.0, 1.0))
 
 
-## Short of full tilt, the cone doesn't reach.
+## Short of full tilt, the cone doesn't reach: 0.9 travel is 93% tilt.
 func test_short_of_full_tilt_does_not_reach() -> void:
 	_update(Vector2(0.9, 0.0), [_body(3, Vector2(15.0, 1.0), 1.0)])
-	assert_int(_aim.picked()).is_equal(-1)
+	assert_int(_aim.picked()).is_equal(ControllerAim.NO_PICK)
+
+
+## Full tilt is a share of the tilt, as in the prototype, not of raw travel: 0.92 travel
+## is 96% tilt, so the cone reaches.
+func test_full_tilt_is_measured_on_the_tilt() -> void:
+	_update(Vector2(0.92, 0.0), [_body(3, Vector2(15.0, 1.0), 1.0)])
+	assert_int(_aim.picked()).is_equal(3)
 
 
 ## The cone measures to a body's edge: a big body off to the side is in the cone when
@@ -121,7 +129,7 @@ func test_a_pick_lets_go_past_the_keep_radius() -> void:
 	var body := _body(1, Vector2(4.5, 1.8), 0.5)
 	_update(Vector2(HALF_TILT, 0.08), [body])
 	_update(Vector2(HALF_TILT, -0.3), [body])
-	assert_int(_aim.picked()).is_equal(-1)
+	assert_int(_aim.picked()).is_equal(ControllerAim.NO_PICK)
 
 
 ## A body the cone picked stays picked while it stays inside the cone plus the
@@ -165,7 +173,18 @@ func test_a_cycled_pick_holds() -> void:
 func test_cycling_with_nothing_selectable_does_nothing() -> void:
 	_update(Vector2(HALF_TILT, 0.0), [])
 	_aim.cycle()
-	assert_int(_aim.picked()).is_equal(-1)
+	assert_int(_aim.picked()).is_equal(ControllerAim.NO_PICK)
+
+
+## A body that goes during the release grace can't be cycled to.
+func test_cycling_in_the_grace_skips_a_body_that_went() -> void:
+	var stays := _body(1, Vector2(4.5, 0.6), 0.5)
+	var goes := _body(2, Vector2(4.5, -1.0), 0.5)
+	_update(Vector2(HALF_TILT, 0.0), [stays, goes])
+	_update(Vector2.ZERO, [stays])
+	_aim.cycle()
+	assert_int(_aim.picked()).is_equal(1)
+	assert_vector(_aim.point()).is_equal(Vector2(4.5, 0.6))
 
 
 ## For the release grace after the stick returns to rest, the last aim holds; after it,
@@ -198,7 +217,7 @@ func test_the_release_grace_follows_a_picked_body() -> void:
 func test_a_pick_drops_when_its_body_goes() -> void:
 	_update(Vector2(HALF_TILT, 0.0), [_body(7, Vector2(6.0, 0.0), 1.0)])
 	_update(Vector2(HALF_TILT, 0.0), [])
-	assert_int(_aim.picked()).is_equal(-1)
+	assert_int(_aim.picked()).is_equal(ControllerAim.NO_PICK)
 
 
 func _update(stick: Vector2, bodies: Array[ControllerAim.Body]) -> void:

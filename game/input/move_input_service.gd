@@ -9,11 +9,13 @@ extends Node
 ## the Play Plane. A controller Attracts and Repels with the triggers, with hysteresis
 ## ([TriggerPress]), Spins with any face button, Nudges with the right stick and aims with
 ## a [ControllerAim] cursor around the Rubbley that registers himself, which the
-## [AimCursor] shows. Every scheme is live at once, and the one that last moved the aim
-## owns it. Focus loss, pause, an open menu, a level unload, a touch cancel or a
-## controller disconnect interrupt it: every move is released and input is swallowed
-## until nothing is held. Callers reach it through [member instance], typed, since Godot
-## types a scene autoload's global only as its root's base type.
+## [AimCursor] shows. Every scheme is live at once. The mouse or a pinch takes the aim
+## for its scheme, and any controller input takes it for the controller, so a trigger
+## pulled with the stick at rest fires on Rubbley. Focus loss, pause, an open menu, a
+## level unload, a touch cancel or a controller disconnect interrupt it: every move is
+## released and input is swallowed until nothing is held. Callers reach it through
+## [member instance], typed, since Godot types a scene autoload's global only as its
+## root's base type.
 
 ## A control scheme, as the owner of the aim.
 enum Scheme {
@@ -27,7 +29,8 @@ enum Scheme {
 
 ## Runs before gameplay's physics tick, so gameplay reads this tick's frame.
 const PHYSICS_PRIORITY := -100
-## Every action Move Input reads, all of which must be let go after an interruption.
+## Every button action Move Input reads, all of which must be let go after an
+## interruption. The triggers' actions are read through their [TriggerPress]es instead.
 const ACTIONS: Array[StringName] = [
 	&"attract",
 	&"repel",
@@ -117,18 +120,17 @@ func _physics_process(delta: float) -> void:
 	if paused and not _was_paused:
 		interrupt()
 	_was_paused = paused
-	var nudge := Input.get_vector(
-		&"nudge_left",
-		&"nudge_right",
-		&"nudge_down",
-		&"nudge_up",
-		tuning.nudge_deadzone,
-	)
-	nudge += _touch.nudge()
+	var nudge := _stick_nudge() + _touch.nudge()
 	_aim_controller()
-	frame = _latch.tick(_aim(), nudge, _anything_held())
-	if _aim_scheme == Scheme.TOUCH:
-		frame.aim_hit_radius_m = _metres_across(_pointer, _touch_hit_radius_px())
+	var aim := _play_plane_point(_pointer)
+	var hit_radius_m := 0.0
+	match _aim_scheme:
+		Scheme.CONTROLLER:
+			aim = Vector3(_controller.point().x, 0.0, _controller.point().y)
+		Scheme.TOUCH:
+			hit_radius_m = _metres_across(_pointer, _touch_hit_radius_px())
+	frame = _latch.tick(aim, nudge, _anything_held())
+	frame.aim_hit_radius_m = hit_radius_m
 
 
 func _exit_tree() -> void:
@@ -160,6 +162,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if motion != null:
 		_trigger_input(motion)
 		return
+	if event is InputEventJoypadButton and event.is_pressed():
+		_aim_scheme = Scheme.CONTROLLER
 	if event.is_action_pressed(&"cycle_target"):
 		_controller.cycle()
 	if event.is_action_pressed(&"attract"):
@@ -186,8 +190,8 @@ func interrupt() -> void:
 	_repel_trigger.reset()
 
 
-## Which scheme last moved the aim, and so owns the aim, the button prompts and whether
-## the reticle or the aim cursor shows.
+## Which scheme owns the aim, the button prompts and whether the reticle or the aim
+## cursor shows: the last to move the aim, or for a controller, the last used.
 func aim_scheme() -> Scheme:
 	return _aim_scheme
 
@@ -273,12 +277,12 @@ func _size_unit() -> void:
 	_touch.unit_px = _unit_px
 
 
-# This tick's aim on the Play Plane, from whichever scheme owns it.
-func _aim() -> Vector3:
-	if _aim_scheme == Scheme.CONTROLLER:
-		var point := _controller.point()
-		return Vector3(point.x, 0.0, point.y)
-	return _play_plane_point(_pointer)
+# The right stick's Nudge: its raw travel once past the deadzone, as the prototype had.
+func _stick_nudge() -> Vector2:
+	var stick := Input.get_vector(&"nudge_left", &"nudge_right", &"nudge_down", &"nudge_up", 0.0)
+	if stick.length() <= tuning.nudge_deadzone:
+		return Vector2.ZERO
+	return stick
 
 
 # Moves the controller's cursor with the left stick, and gives the controller the aim
@@ -312,15 +316,19 @@ func _metres_across(screen_point: Vector2, length_px: float) -> float:
 	return _flat(to).distance_to(_flat(from))
 
 
-# Presses or releases Attract and fires Repel as a trigger crosses its points.
+# Presses or releases Attract and fires Repel as a trigger crosses its points. A trigger
+# press gives the controller the aim.
 func _trigger_input(motion: InputEventJoypadMotion) -> void:
-	if motion.is_action(&"attract") and _attract_trigger.update(motion.axis_value):
-		if _attract_trigger.is_down():
+	if motion.is_action(&"attract_trigger"):
+		var edge := _attract_trigger.update(motion.axis_value)
+		if edge == TriggerPress.Edge.PRESSED:
+			_aim_scheme = Scheme.CONTROLLER
 			_latch.press_attract()
-		else:
+		elif edge == TriggerPress.Edge.RELEASED:
 			_latch.release_attract()
-	if motion.is_action(&"repel") and _repel_trigger.update(motion.axis_value):
-		if _repel_trigger.is_down():
+	elif motion.is_action(&"repel_trigger"):
+		if _repel_trigger.update(motion.axis_value) == TriggerPress.Edge.PRESSED:
+			_aim_scheme = Scheme.CONTROLLER
 			_latch.fire_repel()
 
 
@@ -330,7 +338,7 @@ func _on_joy_connection_changed(_device: int, connected: bool) -> void:
 
 
 func _anything_held() -> bool:
-	if _touch.is_anything_down():
+	if _touch.is_anything_down() or _attract_trigger.is_held() or _repel_trigger.is_held():
 		return true
 	for action in ACTIONS:
 		if Input.is_action_pressed(action):

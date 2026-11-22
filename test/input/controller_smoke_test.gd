@@ -71,6 +71,36 @@ func test_the_stick_aims_and_the_left_trigger_places_a_well() -> void:
 	assert_int(wells.size()).is_equal(1)
 
 
+## A trigger pulled while the mouse owns the aim and the stick has never tilted takes
+## the aim for the controller, and Attracts on self.
+func test_a_trigger_with_the_stick_at_rest_attracts_on_self() -> void:
+	var mouse := InputEventMouseMotion.new()
+	mouse.position = Vector2(5.0, 5.0)
+	Input.parse_input_event(mouse)
+	await step_seconds(SETTLE_S)
+	var scheme_before := MoveInputService.instance.aim_scheme()
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	await step_seconds(SETTLE_S)
+	var attracting := _moves().is_attracting_self()
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	await step_seconds(SETTLE_S)
+
+	assert_int(scheme_before).is_equal(MoveInputService.Scheme.MOUSE_KEYBOARD)
+	assert_int(MoveInputService.instance.aim_scheme()).is_equal(MoveInputService.Scheme.CONTROLLER)
+	assert_bool(attracting).is_true()
+
+
+## After an interruption, a trigger resting below its release point doesn't keep input
+## swallowed, so the right stick Nudges.
+func test_a_trigger_resting_low_does_not_swallow_input() -> void:
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.3)
+	await step_seconds(SETTLE_S)
+	MoveInputService.instance.interrupt()
+	_axis(JOY_AXIS_RIGHT_Y, -1.0)
+	await step_seconds(SETTLE_S)
+	assert_float(_frame().nudge.y).is_greater(0.9)
+
+
 ## With the stick back at rest past the release grace, the left trigger Attracts on self
 ## while held.
 func test_a_stick_at_rest_attracts_on_self() -> void:
@@ -137,6 +167,13 @@ func test_the_right_stick_nudges() -> void:
 	assert_float(nudge.y).is_greater(0.9)
 	assert_float(absf(nudge.x)).is_less(1e-3)
 	assert_vector(_frame().nudge).is_equal(Vector2.ZERO)
+
+
+## Past its deadzone, the right stick Nudges by its raw travel, as in the prototype.
+func test_a_small_push_nudges_by_its_raw_travel() -> void:
+	_axis(JOY_AXIS_RIGHT_X, 0.3)
+	await step_seconds(SETTLE_S)
+	assert_float(_frame().nudge.x).is_equal_approx(0.3, 0.01)
 
 
 func _frame() -> MoveInputFrame:
