@@ -1,0 +1,185 @@
+# Release-tag export workflow (ADRs 0010, 0011, 0015, 0019, 0020).
+#
+# On every version tag (v*) or manual dispatch, verifies all quality gates and
+# tests, then exports all six platform targets unsigned or debug-signed:
+#   - ubuntu-latest: Linux, Windows, Android and Web presets
+#   - macos-latest:  macOS and iOS presets
+#
+# Signing secrets and store uploads belong to the future release-submission
+# pipeline.
+name: Release Exports
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned Godot version
+        id: godot
+        run: echo "version=$(tr -d '[:space:]' < .godot-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ steps.godot.outputs.version }}
+          use-dotnet: false
+          include-templates: false
+
+      - name: Quality gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check.sh
+
+      - name: Tests
+        run: xvfb-run --auto-servernum scripts/test.sh
+
+  export-linux-windows-android-web:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned Godot version
+        id: godot
+        run: echo "version=$(tr -d '[:space:]' < .godot-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ steps.godot.outputs.version }}
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Verify Android SDK and generate ephemeral debug keystore
+        run: |
+          test -n "${ANDROID_HOME:-}"
+          test -d "$ANDROID_HOME/build-tools"
+          test -d "$ANDROID_HOME/platform-tools"
+          keytool -genkeypair -v \
+            -keystore /tmp/rubbley-debug.keystore \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android \
+            -keypass android \
+            -dname "CN=Rubbley Debug,O=Snackpack Games,C=US"
+
+      - name: Export Linux presets
+        run: |
+          for preset in steam-linux itch-linux; do
+            mkdir -p "build/$preset"
+            godot --headless --path . --export-release "$preset" "build/$preset/Rubbley.x86_64"
+            test -s "build/$preset/Rubbley.x86_64"
+          done
+
+      - name: Export Windows presets
+        run: |
+          for preset in steam-windows epic-windows itch-windows; do
+            mkdir -p "build/$preset"
+            godot --headless --path . --export-release "$preset" "build/$preset/Rubbley.exe"
+            test -s "build/$preset/Rubbley.exe"
+          done
+
+      - name: Export Web presets
+        run: |
+          for preset in itch-web web-playtest; do
+            mkdir -p "build/$preset"
+            godot --headless --path . --export-release "$preset" "build/$preset/index.html"
+            test -s "build/$preset/index.pck"
+          done
+
+      - name: Export Android preset (debug-signed)
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /tmp/rubbley-debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build/android
+          godot --headless --path . --export-debug android build/android/Rubbley.apk
+          test -s build/android/Rubbley.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-linux-windows-android-web
+          path: |
+            build/steam-linux/
+            build/itch-linux/
+            build/steam-windows/
+            build/epic-windows/
+            build/itch-windows/
+            build/itch-web/
+            build/web-playtest/
+            build/android/
+          if-no-files-found: error
+
+  export-macos-ios:
+    needs: check
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned Godot version
+        id: godot
+        run: echo "version=$(tr -d '[:space:]' < .godot-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ steps.godot.outputs.version }}
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Export macOS presets (ad-hoc signed)
+        run: |
+          for preset in steam-macos epic-macos itch-macos; do
+            mkdir -p "build/$preset"
+            godot --headless --path . --export-release "$preset" "build/$preset/Rubbley.zip"
+            test -s "build/$preset/Rubbley.zip"
+          done
+
+      - name: Export iOS preset (unsigned Xcode project)
+        run: |
+          mkdir -p build/ios
+          godot --headless --path . --export-debug ios build/ios/Rubbley.xcodeproj
+          test -d build/ios/Rubbley.xcodeproj
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-macos-ios
+          path: |
+            build/steam-macos/
+            build/epic-macos/
+            build/itch-macos/
+            build/ios/
+          if-no-files-found: error
