@@ -44,6 +44,12 @@ func _ready() -> void:
 	rng.seed = scatter_seed
 	for i in count:
 		var piece := debris_scene.instantiate() as RigidBody3D
+		var play_body := piece as PlayPlaneBody
+		if play_body != null:
+			play_body.rng = rng
+		var look := piece.get_node_or_null("Look") as DebrisLook
+		if look != null:
+			look.rng = rng
 		add_child(piece)
 		if primary != null:
 			_launch_into_orbit(piece, rng)
