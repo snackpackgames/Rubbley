@@ -195,6 +195,32 @@ func test_a_small_push_nudges_by_its_raw_travel() -> void:
 	assert_float(_frame().nudge.x).is_equal_approx(0.3, 0.01)
 
 
+## Leaving the controller idle past the cursor's hold and fade hides the cursor without
+## giving up controller aim ownership, and using a skill or stick brings it right back.
+func test_the_aim_cursor_fades_out_when_idle_and_returns_on_input() -> void:
+	var cursor := MoveInputService.instance.aim_cursor
+	_axis(JOY_AXIS_LEFT_X, 0.6)
+	await step_seconds(SETTLE_S)
+	var visible_while_tilted := cursor.visible
+	var alpha_while_tilted := cursor.modulate.a
+	_axis(JOY_AXIS_LEFT_X, 0.0)
+	var fade_total_s := cursor.tuning.idle_hold_s + cursor.tuning.fade_out_s + 0.1
+	await step_seconds(fade_total_s)
+	var visible_when_idle := cursor.visible
+	var scheme_when_idle := MoveInputService.instance.aim_scheme()
+	_button(JOY_BUTTON_A, true)
+	await step_seconds(SETTLE_S)
+	var visible_after_input := cursor.visible
+	var alpha_after_input := cursor.modulate.a
+
+	assert_bool(visible_while_tilted).is_true()
+	assert_float(alpha_while_tilted).is_equal_approx(1.0, 1e-3)
+	assert_bool(visible_when_idle).is_false()
+	assert_int(scheme_when_idle).is_equal(MoveInputService.Scheme.CONTROLLER)
+	assert_bool(visible_after_input).is_true()
+	assert_float(alpha_after_input).is_equal_approx(1.0, 1e-3)
+
+
 func _frame() -> MoveInputFrame:
 	return MoveInputService.instance.frame
 

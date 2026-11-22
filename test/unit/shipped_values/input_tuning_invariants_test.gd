@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 ## control that chatters or can never fire.
 
 const TUNING := preload("res://game/input/input_tuning.tres")
+const CURSOR_TUNING := preload("res://game/input/aim_cursor_tuning.tres")
 
 
 ## A trigger lets go below where it presses, so one resting near the press point doesn't
@@ -25,3 +26,9 @@ func test_the_stick_tilts_past_its_deadzone_to_full_tilt() -> void:
 func test_picks_keep_past_where_they_pick() -> void:
 	assert_float(TUNING.reach_hysteresis_deg).is_greater_equal(0.0)
 	assert_float(TUNING.reach_range_multiple).is_greater_equal(1.0)
+
+
+## The aim cursor holds briefly and fades out cleanly when idle.
+func test_aim_cursor_idle_fade_is_non_negative() -> void:
+	assert_float(CURSOR_TUNING.idle_hold_s).is_greater(0.0)
+	assert_float(CURSOR_TUNING.fade_out_s).is_greater_equal(0.0)

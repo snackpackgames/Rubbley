@@ -60,6 +60,7 @@ var frame := MoveInputFrame.new()
 var _latch := MoveInputLatch.new()
 var _touch: TouchRecogniser
 var _controller: ControllerAim
+var _cursor_fade: AimCursorFade
 var _attract_trigger: TriggerPress
 var _repel_trigger: TriggerPress
 var _camera: Camera3D
@@ -90,6 +91,7 @@ func _ready() -> void:
 	assert(reticle != null, "Move Input needs a TouchReticle")
 	assert(aim_cursor != null, "Move Input needs an AimCursor")
 	_controller = ControllerAim.new(tuning)
+	_cursor_fade = AimCursorFade.new(aim_cursor.tuning)
 	_attract_trigger = TriggerPress.new(tuning)
 	_repel_trigger = TriggerPress.new(tuning)
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
@@ -111,7 +113,11 @@ func _process(_delta: float) -> void:
 	else:
 		reticle.hide()
 	if _cursor_shown and _camera != null:
-		aim_cursor.show_at(_camera.unproject_position(frame.aim), _controller.is_on_rubbley())
+		aim_cursor.show_at(
+			_camera.unproject_position(frame.aim),
+			_controller.is_on_rubbley(),
+			_cursor_fade.opacity(),
+		)
 	else:
 		aim_cursor.hide()
 
@@ -122,7 +128,8 @@ func _physics_process(delta: float) -> void:
 	if paused and not _was_paused:
 		interrupt()
 	_was_paused = paused
-	var nudge := _stick_nudge() + _touch.nudge()
+	var stick_nudge := _stick_nudge()
+	var nudge := stick_nudge + _touch.nudge()
 	_aim_controller()
 	var aim := _play_plane_point(_pointer)
 	var hit_radius_m := 0.0
@@ -131,9 +138,13 @@ func _physics_process(delta: float) -> void:
 	match _aim_scheme:
 		Scheme.CONTROLLER:
 			aim = Vector3(_controller.point().x, 0.0, _controller.point().y)
-			_cursor_shown = true
+			_cursor_fade.advance(delta, _controller_is_active(stick_nudge))
+			_cursor_shown = _cursor_fade.opacity() > 0.0
 		Scheme.TOUCH:
+			_cursor_fade.hide_now()
 			hit_radius_m = _metres_across(_pointer, _touch_hit_radius_px())
+		_:
+			_cursor_fade.hide_now()
 	frame = _latch.tick(aim, nudge, _anything_held())
 	frame.aim_hit_radius_m = hit_radius_m
 
@@ -169,6 +180,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventJoypadButton and event.is_pressed():
 		_aim_scheme = Scheme.CONTROLLER
+		_cursor_fade.mark_active()
 	if event.is_action_pressed(&"cycle_target"):
 		_controller.cycle()
 	if event.is_action_pressed(&"attract"):
@@ -301,6 +313,15 @@ func _aim_controller() -> void:
 	_controller.update(stick, _flat(rubbley_at), unit_m, _aim_bodies(), _physics_s)
 	if _controller.is_tilted():
 		_aim_scheme = Scheme.CONTROLLER
+		_cursor_fade.mark_active()
+
+
+# Whether any controller stick or move is currently active, keeping the aim cursor lit.
+func _controller_is_active(stick_nudge: Vector2) -> bool:
+	return (
+		_controller.is_tilted() or _attract_trigger.is_held()
+		or _repel_trigger.is_held() or not stick_nudge.is_zero_approx()
+	)
 
 
 # Every glowing body the controller's cursor can pick.
@@ -328,12 +349,14 @@ func _trigger_input(motion: InputEventJoypadMotion) -> void:
 		var edge := _attract_trigger.update(motion.axis_value)
 		if edge == TriggerPress.Edge.PRESSED:
 			_aim_scheme = Scheme.CONTROLLER
+			_cursor_fade.mark_active()
 			_latch.press_attract()
 		elif edge == TriggerPress.Edge.RELEASED:
 			_latch.release_attract()
 	elif motion.is_action(&"repel_trigger"):
 		if _repel_trigger.update(motion.axis_value) == TriggerPress.Edge.PRESSED:
 			_aim_scheme = Scheme.CONTROLLER
+			_cursor_fade.mark_active()
 			_latch.fire_repel()
 
 

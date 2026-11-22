@@ -9,3 +9,5 @@ on_rubbley_color = Color(1, 1, 1, 0.6)
 radius_px = 14.0
 crosshair_px = 20.0
 width_px = 2.0
+idle_hold_s = 1.0
+fade_out_s = 0.3
