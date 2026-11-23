@@ -45,6 +45,8 @@ func test_starting_mass_is_inside_the_limits() -> void:
 func test_the_size_curve_rises_over_the_mass_limits() -> void:
 	var curve := STATS.mass_to_radius_m
 	assert_object(curve).is_not_null()
+	if curve == null:
+		return
 	assert_float(curve.min_domain).is_less_equal(STATS.min_mass_kg)
 	assert_float(curve.max_domain).is_greater_equal(STATS.max_mass_kg)
 	assert_float(curve.sample(STATS.min_mass_kg)).is_greater(0.0)
