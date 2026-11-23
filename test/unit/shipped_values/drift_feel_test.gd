@@ -9,6 +9,8 @@ const GRAVITY_TUNING := preload("res://game/gravity/gravity_tuning.tres")
 const SEED := 96
 const SETTLE_S := 1.0
 const MEASURE_S := 5.0
+## ADR 0018's simulated-time cap per feel scenario variant.
+const MAX_VARIANT_SIM_S := 10.0
 ## ADR 0018's wall-time budget for the shipped-values suite on CI.
 const SUITE_BUDGET_MS := 60_000
 const DRIFT_DIRECTION := Vector3.RIGHT
@@ -40,6 +42,7 @@ func test_drift_carries_rubbley_through_empty_space() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
 	for variant in VARIANT_COUNT:
+		var start_tick := Engine.get_physics_frames()
 		var start := _canonical_start() if variant == 0 else _perturbed_start(rng)
 		var world := Node3D.new()
 		add_child(world)
@@ -49,6 +52,10 @@ func test_drift_carries_rubbley_through_empty_space() -> void:
 		await step_seconds(SETTLE_S)
 		var settled_at := rubbley.global_position
 		await step_seconds(MEASURE_S)
+		var sim_s := (
+			float(Engine.get_physics_frames() - start_tick) / float(Engine.physics_ticks_per_second)
+		)
+		assert_float(sim_s).is_less_equal(MAX_VARIANT_SIM_S)
 		var covered := (rubbley.global_position - settled_at).dot(DRIFT_DIRECTION)
 		var drift := Drift.new(GRAVITY_TUNING)
 		var damp := rubbley.tuning.linear_damp_per_second

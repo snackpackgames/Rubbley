@@ -60,6 +60,12 @@ echo "== Import" >&2
 tick_rate="$(sed -n 's|^common/physics_ticks_per_second=\([0-9][0-9]*\)$|\1|p' project.godot)"
 tick_rate="${tick_rate:-60}"
 
+latest_suite_report() {
+	find "reports/$1" -maxdepth 2 -name results.xml 2>/dev/null \
+		| sed -n 's|.*/report_\([0-9][0-9]*\)/results\.xml$|\1 &|p' \
+		| LC_ALL=C sort -n | tail -n 1 | cut -d' ' -f2-
+}
+
 # --- Suites ------------------------------------------------------------------
 
 failed=()
@@ -73,6 +79,7 @@ for run in "${runs[@]}"; do
 		mode_args=(--audio-driver Dummy)
 	fi
 
+	prev_report="$(latest_suite_report "$suite")"
 	echo "== Test $suite: $path (--fixed-fps $tick_rate)" >&2
 	bash addons/gdUnit4/runtest.sh --godot_binary "$GODOT_BIN" \
 		"${mode_args[@]}" --fixed-fps "$tick_rate" \
@@ -83,6 +90,39 @@ for run in "${runs[@]}"; do
 		101) failed+=("$suite (warnings)") ;;
 		*) failed+=("$suite (exit $status)") ;;
 	esac
+
+	# ADR 0018: the whole shipped-values suite logs its combined wall time and fails over 60 s.
+	if [ "$status" -eq 0 ] && { [ "$path" = "res://test/unit" ] || [ "$path" = "res://test/unit/shipped_values" ] || [[ "$path" == res://test/unit/shipped_values/* ]]; }; then
+		latest_report="$(latest_suite_report "$suite")"
+		if [ -z "$latest_report" ] || [ "$latest_report" = "$prev_report" ] || [ ! -f "$latest_report" ]; then
+			failed+=("shipped-values wall time (no new results.xml)")
+		else
+			sv_stats="$(LC_ALL=C awk '
+				/<testsuite / {
+					line = $0
+					gsub(/\\/, "/", line)
+					if (line ~ /package="(res:\/\/)?test\/unit\/shipped_values(\/[^"]*)?"/) {
+						count++
+						if (match(line, /time="[0-9]+(\.[0-9]+)?"/)) {
+							t = substr(line, RSTART + 6, RLENGTH - 7)
+							total += t + 0.0
+						}
+					}
+				}
+				END { printf "%d %.3f\n", count + 0, total + 0.0 }
+			' "$latest_report")"
+			sv_count="${sv_stats%% *}"
+			sv_time="${sv_stats#* }"
+			if [ "$sv_count" -eq 0 ]; then
+				failed+=("shipped-values wall time (0 suites matched in $latest_report)")
+			else
+				echo "== Shipped-values suite wall time: ${sv_time}s across ${sv_count} suites (budget 60s)" >&2
+				if LC_ALL=C awk -v t="$sv_time" 'BEGIN { exit !(t > 60.0) }'; then
+					failed+=("shipped-values wall time (${sv_time}s > 60s)")
+				fi
+			fi
+		fi
+	fi
 done
 
 # --- Result ------------------------------------------------------------------

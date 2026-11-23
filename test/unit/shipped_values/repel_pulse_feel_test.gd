@@ -19,9 +19,10 @@ const SAMPLE_S := 0.1
 # Debris starts at 0.6 × the Capture Radius, 12 m round the shipped planet, so one period
 # is about 6 s.
 const RADIUS_SHARE := 0.6
-# ADR 0018 allows 10 simulated seconds a variant; what the clear time leaves goes to
-# establishing Orbit: about 1.4 periods, one for the 360° and slack for a perturbed start.
-const ESTABLISH_S := 10.0 - 2.0
+# ADR 0018 allows at most 10 simulated seconds per variant; leave margin for firing the
+# Pulse and watching the clear window, giving the rest to establishing Orbit (~1.4 periods).
+const MAX_VARIANT_SIM_S := 10.0
+const FIRE_MARGIN_S := 0.1
 # Where Rubbley waits while the debris settles: far beyond the max range, so he pulls
 # nothing, and nothing pulls him.
 const PARKED_AT := Vector3(500, 0, 0)
@@ -35,6 +36,7 @@ const BREAK_S := 0.5
 # Orbit ends, and the extra quarter shows the debris was flung clear, not swung wide.
 const CLEAR_S := 2.0
 const CLEAR_RADIUS_MULTIPLE := 1.5
+const ESTABLISH_S := MAX_VARIANT_SIM_S - CLEAR_S - FIRE_MARGIN_S
 
 var _suite_start_ms := 0
 
@@ -57,6 +59,7 @@ func test_a_repel_pulse_breaks_orbit() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
 	for variant in VARIANT_COUNT:
+		var start_tick := Engine.get_physics_frames()
 		var start := Start.new(1.0, 0.0, RADIUS_SHARE) if variant == 0 else _perturbed(rng)
 		var label := "variant %d (seed %d, start %s)" % [variant, SEED, start]
 		var world := Node3D.new()
@@ -98,6 +101,10 @@ func test_a_repel_pulse_breaks_orbit() -> void:
 				.override_failure_message("%s: back in Orbit after the Pulse" % label)
 				.is_false()
 			)
+		var sim_s := (
+			float(Engine.get_physics_frames() - start_tick) / float(Engine.physics_ticks_per_second)
+		)
+		assert_float(sim_s).is_less_equal(MAX_VARIANT_SIM_S)
 		world.free()
 
 
@@ -133,10 +140,9 @@ func _pull_strength(planet: PlayPlaneBody) -> float:
 
 # Steps until the debris is in Orbit, for up to the establishing time.
 func _orbit_established(orbit: Orbit, debris: Node3D) -> bool:
-	var elapsed_s := 0.0
-	while elapsed_s < ESTABLISH_S:
+	var max_steps := floori(ESTABLISH_S / SAMPLE_S + 1e-6)
+	for _step in max_steps:
 		await step_seconds(SAMPLE_S)
-		elapsed_s += SAMPLE_S
 		orbit.track(debris.global_position)
 		if orbit.is_in_orbit():
 			return true
@@ -164,10 +170,10 @@ func _fire_pulse_behind(
 # Watches the debris for the clear time after the Pulse. The planet is at the origin.
 func _after_pulse(orbit: Orbit, debris: Node3D, capture_radius_m: float) -> Outcome:
 	var outcome := Outcome.new()
-	var elapsed_s := 0.0
-	while elapsed_s < CLEAR_S:
+	var total_steps := floori(CLEAR_S / SAMPLE_S + 1e-6)
+	for step_index in total_steps:
 		await step_seconds(SAMPLE_S)
-		elapsed_s += SAMPLE_S
+		var elapsed_s := float(step_index + 1) * SAMPLE_S
 		orbit.track(debris.global_position)
 		var in_orbit := orbit.is_in_orbit()
 		if not in_orbit and outcome.out_of_orbit_after_s < 0.0:
