@@ -21,6 +21,7 @@
 [ext_resource type="Resource" path="res://game/bodies/rubbley/repel_cue_tuning.tres" id="19_repel_tuning"]
 [ext_resource type="Script" path="res://game/bodies/rubbley/rubbley_hit_flash.gd" id="20_hit_flash"]
 [ext_resource type="Resource" path="res://game/bodies/rubbley/hit_flash_tuning.tres" id="21_hit_flash_tuning"]
+[ext_resource type="Script" path="res://game/common/rng.gd" id="22_rng"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collider"]
 resource_local_to_scene = true
@@ -63,12 +64,16 @@ resource_local_to_scene = true
 [sub_resource type="BoxMesh" id="BoxMesh_tether"]
 size = Vector3(1, 1, 1)
 
-[node name="Rubbley" type="RigidBody3D"]
+[node name="Rubbley" type="RigidBody3D" node_paths=PackedStringArray("rng")]
 mass = 10.0
 contact_monitor = true
 max_contacts_reported = 32
 script = ExtResource("1_body")
 tuning = ExtResource("2_tuning")
+rng = NodePath("Rng")
+
+[node name="Rng" type="Node" parent="."]
+script = ExtResource("22_rng")
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_collider")

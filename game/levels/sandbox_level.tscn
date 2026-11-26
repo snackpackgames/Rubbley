@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://game/bodies/debris/debris.tscn" id="8_di3dc"]
 [ext_resource type="Script" path="res://game/bodies/debris/debris_field.gd" id="9_field"]
 [ext_resource type="PackedScene" path="res://game/camera/camera_rig.tscn" id="10_rig"]
+[ext_resource type="Script" path="res://game/common/rng.gd" id="11_rng"]
 
 [sub_resource type="Environment" id="Environment_x1j3g"]
 background_mode = 1
@@ -51,10 +52,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -52)
 
 [node name="Debris" type="Node3D" parent="." unique_id=1748990478]
 
-[node name="Planet1Ring" type="Node3D" parent="Debris" unique_id=1305372686 node_paths=PackedStringArray("primary")]
+[node name="Planet1Ring" type="Node3D" parent="Debris" unique_id=1305372686 node_paths=PackedStringArray("rng", "primary")]
 script = ExtResource("9_field")
 debris_scene = ExtResource("8_di3dc")
 gravity_tuning = ExtResource("2_w3g50")
+rng = NodePath("Rng")
 scatter_seed = 1
 count = 12
 min_distance_m = 12.0
@@ -63,10 +65,14 @@ primary = NodePath("../../Planet1")
 min_speed_multiple = 0.97
 max_speed_multiple = 1.03
 
-[node name="Planet2Ellipses" type="Node3D" parent="Debris" unique_id=2128518914 node_paths=PackedStringArray("primary")]
+[node name="Rng" type="Node" parent="Debris/Planet1Ring"]
+script = ExtResource("11_rng")
+
+[node name="Planet2Ellipses" type="Node3D" parent="Debris" unique_id=2128518914 node_paths=PackedStringArray("rng", "primary")]
 script = ExtResource("9_field")
 debris_scene = ExtResource("8_di3dc")
 gravity_tuning = ExtResource("2_w3g50")
+rng = NodePath("Rng")
 scatter_seed = 2
 count = 12
 min_distance_m = 12.0
@@ -75,10 +81,14 @@ primary = NodePath("../../Planet2")
 min_speed_multiple = 0.8
 max_speed_multiple = 1.25
 
-[node name="Planet3WideOrbits" type="Node3D" parent="Debris" unique_id=1944318206 node_paths=PackedStringArray("primary")]
+[node name="Rng" type="Node" parent="Debris/Planet2Ellipses"]
+script = ExtResource("11_rng")
+
+[node name="Planet3WideOrbits" type="Node3D" parent="Debris" unique_id=1944318206 node_paths=PackedStringArray("rng", "primary")]
 script = ExtResource("9_field")
 debris_scene = ExtResource("8_di3dc")
 gravity_tuning = ExtResource("2_w3g50")
+rng = NodePath("Rng")
 scatter_seed = 3
 count = 10
 min_distance_m = 14.0
@@ -88,24 +98,35 @@ min_speed_multiple = 0.9
 max_speed_multiple = 1.15
 anticlockwise_share = 0.0
 
-[node name="FloatingPatchA" type="Node3D" parent="Debris" unique_id=1947130311]
+[node name="Rng" type="Node" parent="Debris/Planet3WideOrbits"]
+script = ExtResource("11_rng")
+
+[node name="FloatingPatchA" type="Node3D" parent="Debris" unique_id=1947130311 node_paths=PackedStringArray("rng")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 45)
 script = ExtResource("9_field")
 debris_scene = ExtResource("8_di3dc")
 gravity_tuning = ExtResource("2_w3g50")
+rng = NodePath("Rng")
 scatter_seed = 4
 count = 8
 min_distance_m = 0.0
 max_distance_m = 9.0
 floating_speed_m_per_s = 1.0
 
-[node name="FloatingPatchB" type="Node3D" parent="Debris" unique_id=1162693368]
+[node name="Rng" type="Node" parent="Debris/FloatingPatchA"]
+script = ExtResource("11_rng")
+
+[node name="FloatingPatchB" type="Node3D" parent="Debris" unique_id=1162693368 node_paths=PackedStringArray("rng")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105, 0, 40)
 script = ExtResource("9_field")
 debris_scene = ExtResource("8_di3dc")
 gravity_tuning = ExtResource("2_w3g50")
+rng = NodePath("Rng")
 scatter_seed = 5
 count = 6
 min_distance_m = 0.0
 max_distance_m = 7.0
 floating_speed_m_per_s = 1.5
+
+[node name="Rng" type="Node" parent="Debris/FloatingPatchB"]
+script = ExtResource("11_rng")

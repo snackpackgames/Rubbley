@@ -114,14 +114,14 @@ if [ "${#game_scripts[@]}" -gt 0 ]; then
 		{
 			line = $0
 			sub(/#.*/, "", line)
-			if (line ~ /(^|[^.A-Za-z0-9_])(randf|randi|randfn|randf_range|randi_range|randomize)[[:space:]]*\(/ \
-				|| line ~ /\.(shuffle|pick_random)[[:space:]]*\(/) {
+			if (line ~ /(^|[^.A-Za-z0-9_])(randf|randi|randfn|randf_range|randi_range|randomize|seed|rand_from_seed)[[:space:]]*\(/ \
+				|| line ~ /\.(shuffle|pick_random|randomize)[[:space:]]*\(/) {
 				print FILENAME ":" FNR ": " $0
 			}
 		}
 	' "${game_scripts[@]}")"
 	if [ -n "$rng_hits" ]; then
-		echo "Global RNG calls are forbidden under game/ (pass a RandomNumberGenerator instead):" >&2
+		echo "Global or unseeded RNG calls are forbidden under game/ (seed a RandomNumberGenerator instead):" >&2
 		echo "$rng_hits" >&2
 		failed+=("global-rng")
 	fi

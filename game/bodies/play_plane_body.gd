@@ -9,13 +9,11 @@ extends RigidBody3D
 ## What turns in place of the body while it is frozen, such as an Anchored planet's
 ## mesh: a frozen body can't turn in the physics, so its starting spin turns this instead.
 @export var spin_visual: Node3D
-
-## The RNG passed in by the spawner or level before this body enters the tree.
-var rng: RandomNumberGenerator
+## The entity's RNG component, whose [signal Rng.seeded] rolls the starting spin.
+@export var rng: Rng
 
 # The starting spin a frozen body's visual turns at, in radians per second round its axis.
 var _visual_spin := Vector3.ZERO
-var _spin_seeded := false
 
 
 func _ready() -> void:
@@ -33,9 +31,8 @@ func _ready() -> void:
 	angular_damp = tuning.angular_damp_per_second
 	continuous_cd = tuning.continuous_cd
 	set_process(false)
-	# A GravityBody child freezes an Anchored body in its own _ready, before this one.
 	if rng != null:
-		apply_starting_spin(rng)
+		rng.seeded.connect(_on_seeded)
 
 
 func _process(delta: float) -> void:
@@ -43,24 +40,13 @@ func _process(delta: float) -> void:
 	spin_visual.basis = Basis(_visual_spin / speed, speed * delta) * spin_visual.basis
 
 
-## Returns whether an external [RandomNumberGenerator] has seeded this body's starting spin.
-func is_spin_seeded() -> bool:
-	return _spin_seeded
-
-
 ## Returns the starting visual spin vector applied to [member spin_visual] while frozen.
 func visual_spin() -> Vector3:
 	return _visual_spin
 
 
-## Rolls and applies this body's starting spin from [param source_rng].
-func apply_starting_spin(source_rng: RandomNumberGenerator) -> void:
-	assert(source_rng != null, "%s needs a RandomNumberGenerator" % name)
-	rng = source_rng
-	_spin_seeded = true
-	if not is_node_ready():
-		return
-	var spin := _starting_spin(source_rng)
+func _on_seeded(source: RandomNumberGenerator) -> void:
+	var spin := _starting_spin(source)
 	if freeze:
 		_visual_spin = spin
 	else:

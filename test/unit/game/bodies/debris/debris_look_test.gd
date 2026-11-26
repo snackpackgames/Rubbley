@@ -75,10 +75,21 @@ func test_same_seed_gives_identical_piece() -> void:
 	assert_float(first.mass).is_equal(second.mass)
 
 
+## A piece placed without seeding still gets a deterministic default rock and collider.
+func test_unseeded_piece_gets_default_rock_and_collider() -> void:
+	var piece: RigidBody3D = auto_free(DEBRIS_SCENE.instantiate())
+	var nominal_mass := piece.mass
+	add_child(piece)
+	assert_object((piece.get_node("Mesh") as MeshInstance3D).mesh).is_not_null()
+	assert_object((piece.get_node("Collider") as CollisionShape3D).shape).is_not_null()
+	assert_vector((piece.get_node("Mesh") as Node3D).scale).is_equal(Vector3.ONE)
+	assert_float(piece.mass).is_equal(nominal_mass)
+
+
 func _spawn_debris(rng: RandomNumberGenerator) -> RigidBody3D:
 	var piece: RigidBody3D = auto_free(DEBRIS_SCENE.instantiate())
-	(piece.get_node("Look") as DebrisLook).rng = rng
 	add_child(piece)
+	Rng.seed_subtree(piece, rng)
 	return piece
 
 

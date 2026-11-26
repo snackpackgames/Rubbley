@@ -7,15 +7,20 @@
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
 [ext_resource type="Script" path="res://game/bodies/targetable.gd" id="5_targetable"]
 [ext_resource type="Material" path="res://game/bodies/targetable_glow.tres" id="6_glow"]
+[ext_resource type="Script" path="res://game/common/rng.gd" id="8_rng"]
 
 [sub_resource type="SphereShape3D" id="collider"]
 radius = 8.0
 
-[node name="Planet" type="RigidBody3D" node_paths=PackedStringArray("spin_visual")]
+[node name="Planet" type="RigidBody3D" node_paths=PackedStringArray("spin_visual", "rng")]
 mass = 250.0
 script = ExtResource("1_body")
 tuning = ExtResource("2_tuning")
 spin_visual = NodePath("Mesh")
+rng = NodePath("Rng")
+
+[node name="Rng" type="Node" parent="."]
+script = ExtResource("8_rng")
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 shape = SubResource("collider")

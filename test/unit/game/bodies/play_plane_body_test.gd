@@ -78,7 +78,9 @@ func test_a_frozen_body_spins_only_its_visual() -> void:
 	var body := PlayPlaneBody.new()
 	body.tuning = tuning
 	body.freeze = true
-	body.rng = _rng(4)
+	var body_rng := Rng.new()
+	body.add_child(body_rng)
+	body.rng = body_rng
 	var visual := Node3D.new()
 	visual.scale = Vector3(8.0, 8.0, 8.0)
 	body.add_child(visual)
@@ -86,6 +88,7 @@ func test_a_frozen_body_spins_only_its_visual() -> void:
 	_world = Node3D.new()
 	add_child(_world)
 	_world.add_child(body)
+	body.rng.seed_with(_rng(4))
 	var start := visual.basis
 	await step_seconds(1.0)
 	var turned := visual.basis.orthonormalized().get_rotation_quaternion().angle_to(
@@ -96,17 +99,21 @@ func test_a_frozen_body_spins_only_its_visual() -> void:
 	assert_bool(body.basis.is_equal_approx(Basis.IDENTITY)).is_true()
 
 
-func _add_body(tuning: BodyTuning, rng: RandomNumberGenerator = null) -> PlayPlaneBody:
+func _add_body(tuning: BodyTuning, source_rng: RandomNumberGenerator = null) -> PlayPlaneBody:
 	if not is_instance_valid(_world):
 		_world = Node3D.new()
 		add_child(_world)
 	var body := PlayPlaneBody.new()
 	body.tuning = tuning
-	body.rng = rng
+	var body_rng := Rng.new()
+	body.add_child(body_rng)
+	body.rng = body_rng
 	var collider := CollisionShape3D.new()
 	collider.shape = SphereShape3D.new()
 	body.add_child(collider)
 	_world.add_child(body)
+	if source_rng != null:
+		body.rng.seed_with(source_rng)
 	return body
 
 

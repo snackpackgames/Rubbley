@@ -3,15 +3,52 @@ extends SimulationTestSuite
 ## spins for every body (ADR 0018).
 
 const SANDBOX_SCENE := preload("res://game/levels/sandbox_level.tscn")
+const GATED_SANDBOX_SCENE := preload("res://game/levels/sandbox_gated_level.tscn")
 
 
 ## Building SandboxLevel twice produces identical Debris meshes, collider shapes, scales,
 ## Masses, positions, linear velocities and starting spins, as well as identical starting
 ## spins for placed bodies (Rubbley and planets).
 func test_building_the_same_level_twice_is_identical() -> void:
-	var first := await _snapshot_sandbox()
-	var second := await _snapshot_sandbox()
+	var first := await _snapshot_level(SANDBOX_SCENE, 1)
+	var second := await _snapshot_level(SANDBOX_SCENE, 1)
+	_assert_snapshots_match(first, second)
 
+
+## Building SandboxGatedLevel twice produces identical Debris layouts, looks and spins.
+func test_building_the_gated_level_twice_is_identical() -> void:
+	var first := await _snapshot_level(GATED_SANDBOX_SCENE, 1)
+	var second := await _snapshot_level(GATED_SANDBOX_SCENE, 1)
+	_assert_snapshots_match(first, second)
+
+
+## Changing a level's stage_seed changes both its scattered Debris and its placed planets'
+## starting spins.
+func test_different_stage_seeds_change_debris_and_planet_spins() -> void:
+	var first := await _snapshot_level(SANDBOX_SCENE, 1)
+	var second := await _snapshot_level(SANDBOX_SCENE, 2)
+
+	assert_int(second.size()).is_equal(first.size())
+	var changed_debris_positions := 0
+	var changed_debris_spins := 0
+	var changed_planet_spins := 0
+	for i in first.size():
+		var a := first[i]
+		var b := second[i]
+		if a.is_debris:
+			if not a.position.is_equal_approx(b.position):
+				changed_debris_positions += 1
+			if not a.angular_velocity.is_equal_approx(b.angular_velocity):
+				changed_debris_spins += 1
+		elif a.is_frozen and not a.visual_spin.is_equal_approx(b.visual_spin):
+			changed_planet_spins += 1
+
+	assert_int(changed_debris_positions).is_greater(0)
+	assert_int(changed_debris_spins).is_greater(0)
+	assert_int(changed_planet_spins).is_greater(0)
+
+
+func _assert_snapshots_match(first: Array[_BodySnapshot], second: Array[_BodySnapshot]) -> void:
 	assert_int(first.size()).is_greater(10)
 	assert_int(second.size()).is_equal(first.size())
 
@@ -43,8 +80,9 @@ func test_building_the_same_level_twice_is_identical() -> void:
 	assert_int(spinning_planets).is_greater(0)
 
 
-func _snapshot_sandbox() -> Array[_BodySnapshot]:
-	var level: Node3D = SANDBOX_SCENE.instantiate()
+func _snapshot_level(scene: PackedScene, stage_seed: int) -> Array[_BodySnapshot]:
+	var level := scene.instantiate() as Level
+	level.stage_seed = stage_seed
 	add_child(level)
 	await get_tree().process_frame
 	var snapshots: Array[_BodySnapshot] = []

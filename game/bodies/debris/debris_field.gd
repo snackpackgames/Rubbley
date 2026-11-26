@@ -10,7 +10,9 @@ extends Node3D
 @export var debris_scene: PackedScene
 ## The level's gravity, for the primary's pull.
 @export var gravity_tuning: GravityTuning
-## Seeds the scatter, so a field lays out the same every run (ADR 0018).
+## The field's RNG component, whose [signal Rng.seeded] triggers scattering from the stage seed.
+@export var rng: Rng
+## Per-field salt mixed into the stage RNG so fields lay out distinctly and reproducibly (ADR 0018).
 @export var scatter_seed := 0
 ## How many pieces to scatter.
 @export_range(1, 200) var count := 8
@@ -40,48 +42,48 @@ extends Node3D
 func _ready() -> void:
 	assert(debris_scene != null, "%s needs a debris scene" % name)
 	assert(primary == null or gravity_tuning != null, "%s needs Gravity Tuning to orbit" % name)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = scatter_seed
+	assert(rng != null, "%s needs an Rng" % name)
+	rng.seeded.connect(_on_seeded)
+
+
+func _on_seeded(source: RandomNumberGenerator) -> void:
+	var field_rng := RandomNumberGenerator.new()
+	field_rng.seed = source.randi() ^ scatter_seed
 	for i in count:
 		var piece := debris_scene.instantiate() as RigidBody3D
-		var play_body := piece as PlayPlaneBody
-		if play_body != null:
-			play_body.rng = rng
-		var look := piece.get_node_or_null("Look") as DebrisLook
-		if look != null:
-			look.rng = rng
 		add_child(piece)
+		Rng.seed_subtree(piece, field_rng)
 		if primary != null:
-			_launch_into_orbit(piece, rng)
+			_launch_into_orbit(piece, field_rng)
 		else:
-			_set_floating(piece, rng)
+			_set_floating(piece, field_rng)
 
 
-func _launch_into_orbit(piece: RigidBody3D, rng: RandomNumberGenerator) -> void:
-	var distance := rng.randf_range(min_distance_m, max_distance_m)
-	var offset := Vector3.RIGHT.rotated(Vector3.UP, rng.randf() * TAU) * distance
+func _launch_into_orbit(piece: RigidBody3D, field_rng: RandomNumberGenerator) -> void:
+	var distance := field_rng.randf_range(min_distance_m, max_distance_m)
+	var offset := Vector3.RIGHT.rotated(Vector3.UP, field_rng.randf() * TAU) * distance
 	var slowest := maxf(
 		min_speed_multiple,
 		OrbitLaunch.slowest_speed_multiple(distance, lowest_point_m),
 	)
-	var speed_multiple := rng.randf_range(slowest, maxf(slowest, max_speed_multiple))
+	var speed_multiple := field_rng.randf_range(slowest, maxf(slowest, max_speed_multiple))
 	var pull_strength := gravity_tuning.gravitational_constant * primary.mass
 	piece.global_position = primary.global_position + offset
 	piece.linear_velocity = OrbitLaunch.velocity(
 		offset,
 		pull_strength,
 		speed_multiple,
-		rng.randf() < anticlockwise_share,
+		field_rng.randf() < anticlockwise_share,
 	)
 
 
-func _set_floating(piece: RigidBody3D, rng: RandomNumberGenerator) -> void:
+func _set_floating(piece: RigidBody3D, field_rng: RandomNumberGenerator) -> void:
 	# The square root spreads the pieces evenly over the ring's area, not bunched at its centre.
-	var share := rng.randf()
+	var share := field_rng.randf()
 	var inner := min_distance_m * min_distance_m
 	var outer := max_distance_m * max_distance_m
 	var distance := sqrt(lerpf(inner, outer, share))
-	var bearing := Vector3.RIGHT.rotated(Vector3.UP, rng.randf() * TAU)
+	var bearing := Vector3.RIGHT.rotated(Vector3.UP, field_rng.randf() * TAU)
 	piece.global_position = global_position + bearing * distance
-	var heading := Vector3.RIGHT.rotated(Vector3.UP, rng.randf() * TAU)
-	piece.linear_velocity = heading * rng.randf_range(0.0, floating_speed_m_per_s)
+	var heading := Vector3.RIGHT.rotated(Vector3.UP, field_rng.randf() * TAU)
+	piece.linear_velocity = heading * field_rng.randf_range(0.0, floating_speed_m_per_s)
