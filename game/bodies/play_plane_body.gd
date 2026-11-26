@@ -2,12 +2,15 @@ class_name PlayPlaneBody
 extends RigidBody3D
 ## A rigid body locked to the Play Plane (ADR 0003): it moves only in XZ, and turns
 ## freely on every axis. Its damping, speed cap and CCD come from its [BodyTuning].
+## Starting spin comes from a passed-in [RandomNumberGenerator] (ADR 0018).
 
 ## The type-wide values for this body's type.
 @export var tuning: BodyTuning
 ## What turns in place of the body while it is frozen, such as an Anchored planet's
 ## mesh: a frozen body can't turn in the physics, so its starting spin turns this instead.
 @export var spin_visual: Node3D
+## The entity's RNG component, whose [signal Rng.seeded] rolls the starting spin.
+@export var rng: Rng
 
 # The starting spin a frozen body's visual turns at, in radians per second round its axis.
 var _visual_spin := Vector3.ZERO
@@ -27,12 +30,9 @@ func _ready() -> void:
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	angular_damp = tuning.angular_damp_per_second
 	continuous_cd = tuning.continuous_cd
-	# A GravityBody child freezes an Anchored body in its own _ready, before this one.
-	if freeze:
-		_visual_spin = _starting_spin()
-	else:
-		angular_velocity = _starting_spin()
-	set_process(spin_visual != null and not _visual_spin.is_zero_approx())
+	set_process(false)
+	if rng != null:
+		rng.seeded.connect(_on_seeded)
 
 
 func _process(delta: float) -> void:
@@ -40,14 +40,37 @@ func _process(delta: float) -> void:
 	spin_visual.basis = Basis(_visual_spin / speed, speed * delta) * spin_visual.basis
 
 
+## Returns the starting visual spin vector applied to [member spin_visual] while frozen.
+func visual_spin() -> Vector3:
+	return _visual_spin
+
+
+func _on_seeded(source: RandomNumberGenerator) -> void:
+	var spin := _starting_spin(source)
+	if freeze:
+		_visual_spin = spin
+	else:
+		_visual_spin = Vector3.ZERO
+		angular_velocity = spin
+	set_process(spin_visual != null and not _visual_spin.is_zero_approx())
+
+
 # A spin round a random axis, at a random speed inside the tuning's starting range.
-func _starting_spin() -> Vector3:
+func _starting_spin(source_rng: RandomNumberGenerator) -> Vector3:
 	if tuning.max_starting_spin_rad_per_s <= 0.0:
 		return Vector3.ZERO
-	var axis := Vector3(randfn(0.0, 1.0), randfn(0.0, 1.0), randfn(0.0, 1.0)).normalized()
-	return axis * randf_range(
-		tuning.min_starting_spin_rad_per_s,
-		tuning.max_starting_spin_rad_per_s,
+	var axis := Vector3(
+		source_rng.randfn(0.0, 1.0),
+		source_rng.randfn(0.0, 1.0),
+		source_rng.randfn(0.0, 1.0),
+	)
+	axis = Vector3.UP if axis.is_zero_approx() else axis.normalized()
+	return (
+		axis
+		* source_rng.randf_range(
+			tuning.min_starting_spin_rad_per_s,
+			tuning.max_starting_spin_rad_per_s,
+		)
 	)
 
 

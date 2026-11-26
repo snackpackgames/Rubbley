@@ -98,6 +98,35 @@ fi
 echo "== Lint" >&2
 "$formatter" lint "${scripts[@]}" || failed+=("lint")
 
+# --- Global RNG --------------------------------------------------------------
+
+# Gameplay code under game/ must draw randomness from a passed-in
+# RandomNumberGenerator (ADR 0018, ADR 0014), never global RNG or unseeded
+# Array helpers.
+game_scripts=()
+for script in "${scripts[@]}"; do
+	case "$script" in game/*) game_scripts+=("$script") ;; esac
+done
+
+echo "== Global RNG" >&2
+if [ "${#game_scripts[@]}" -gt 0 ]; then
+	rng_hits="$(awk '
+		{
+			line = $0
+			sub(/#.*/, "", line)
+			if (line ~ /(^|[^.A-Za-z0-9_])(randf|randi|randfn|randf_range|randi_range|randomize|seed|rand_from_seed)[[:space:]]*\(/ \
+				|| line ~ /\.(shuffle|pick_random|randomize)[[:space:]]*\(/) {
+				print FILENAME ":" FNR ": " $0
+			}
+		}
+	' "${game_scripts[@]}")"
+	if [ -n "$rng_hits" ]; then
+		echo "Global or unseeded RNG calls are forbidden under game/ (seed a RandomNumberGenerator instead):" >&2
+		echo "$rng_hits" >&2
+		failed+=("global-rng")
+	fi
+fi
+
 # --- Skipped tests -----------------------------------------------------------
 
 # A test skipped with gdUnit4's do_skip, on a test function or on before(),

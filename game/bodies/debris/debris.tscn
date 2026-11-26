@@ -6,23 +6,29 @@
 [ext_resource type="Script" path="res://game/gravity/gravity_body.gd" id="4_gravity"]
 [ext_resource type="Script" path="res://game/bodies/debris/debris_look.gd" id="5_look"]
 [ext_resource type="Resource" uid="uid://bmq1ea7ejcjod" path="res://game/bodies/debris/chipped_rock_tuning.tres" id="6_rock"]
+[ext_resource type="Script" path="res://game/common/rng.gd" id="7_rng"]
 
-[node name="Debris" type="RigidBody3D" groups=["debris"]]
+[node name="Debris" type="RigidBody3D" groups=["debris"] node_paths=PackedStringArray("rng")]
 mass = 0.5
 script = ExtResource("1_body")
 tuning = ExtResource("2_tuning")
+rng = NodePath("Rng")
 
 [node name="Collider" type="CollisionShape3D" parent="."]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 material_override = ExtResource("3_material")
 
-[node name="Look" type="Node" parent="." node_paths=PackedStringArray("body", "mesh", "collider")]
+[node name="Rng" type="Node" parent="."]
+script = ExtResource("7_rng")
+
+[node name="Look" type="Node" parent="." node_paths=PackedStringArray("body", "mesh", "collider", "rng")]
 script = ExtResource("5_look")
 tuning = ExtResource("6_rock")
 body = NodePath("..")
 mesh = NodePath("../Mesh")
 collider = NodePath("../Collider")
+rng = NodePath("../Rng")
 
 [node name="GravityBody" type="Node" parent="." node_paths=PackedStringArray("body")]
 script = ExtResource("4_gravity")
