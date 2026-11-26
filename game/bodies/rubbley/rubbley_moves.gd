@@ -46,6 +46,12 @@ var _attract_target: Targetable
 var _gravity_well: GravityWell
 
 
+# Registers Rubbley as the one a controller aims around.
+func _enter_tree() -> void:
+	if MoveInputService.instance != null:
+		MoveInputService.instance.register_rubbley(gravity_body.body)
+
+
 func _ready() -> void:
 	assert(live_stats != null, "%s needs RubbleyLiveStats" % name)
 	assert(gravity_body != null, "%s needs a GravityBody" % name)
@@ -72,6 +78,11 @@ func _physics_process(delta: float) -> void:
 		_repel(frame.aim, frame.aim_hit_radius_m)
 	if frame.spin_fired:
 		_spin()
+
+
+func _exit_tree() -> void:
+	if MoveInputService.instance != null:
+		MoveInputService.instance.unregister_rubbley(gravity_body.body)
 
 
 ## Whether Rubbley is Attracting on self this tick, so debris that hits him is absorbed.

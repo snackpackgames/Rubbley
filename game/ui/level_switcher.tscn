@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://d7m3q8r2w6n4y"]
+
+[ext_resource type="Script" path="res://game/ui/level_switcher.gd" id="1_switcher"]
+
+[node name="LevelSwitcher" type="CanvasLayer" node_paths=PackedStringArray("level_buttons_container", "leaderboard_button", "achievements_button")]
+layer = 2
+script = ExtResource("1_switcher")
+level_buttons_container = NodePath("Bar/Row/Levels")
+leaderboard_button = NodePath("Bar/Row/LeaderboardButton")
+achievements_button = NodePath("Bar/Row/AchievementsButton")
+
+[node name="Bar" type="MarginContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 52.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Bar"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="Levels" type="HBoxContainer" parent="Bar/Row"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LeaderboardButton" type="Button" parent="Bar/Row"]
+visible = false
+layout_mode = 2
+text = "Leaderboard"
+
+[node name="AchievementsButton" type="Button" parent="Bar/Row"]
+visible = false
+layout_mode = 2
+text = "Achievements"

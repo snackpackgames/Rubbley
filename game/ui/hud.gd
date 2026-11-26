@@ -7,12 +7,22 @@ extends CanvasLayer
 ## [br]- a Health bar, where his radius sits between his least and most, by his Stats'
 ## Mass→size curve, so it moves as much as he visibly grows or shrinks (the Size bar);
 ## [br]- a Mass bar, where his Mass sits between his least and most, in kg, off by default.
-## [br]Each of the last two can be turned on or off. It reads Rubbley's live Stats and Mass
-## each frame, listens to [RubbleyMoves] for refusals, and scales with the screen's
-## short side.
+## [br]Each of the last two can be turned on or off. Under the bars, placeholder prompts
+## name the moves' inputs in the scheme that owns the aim (ADR 0013), so they change as
+## the player picks up a controller or the mouse. It reads Rubbley's live Stats and Mass
+## and Move Input's scheme each frame, listens to [RubbleyMoves] for refusals, and scales
+## with the screen's short side.
 
+## The control schemes the prompts are for.
+const SCHEME := MoveInputService.Scheme
 ## The short side, in pixels, at which the HUD is drawn at its authored size.
 const REFERENCE_SHORT_SIDE_PX := 720.0
+## The moves' prompts for each scheme that can own the aim.
+const PROMPTS: Dictionary[MoveInputService.Scheme, String] = {
+	SCHEME.MOUSE_KEYBOARD: "LMB Attract  RMB Repel  Space Spin  WASD Nudge",
+	SCHEME.TOUCH: "Pinch in Attract  Pinch out Repel  Swipe Spin  Two-finger drag Nudge",
+	SCHEME.CONTROLLER: "LT Attract  RT Repel  A/B/X/Y Spin  RS Nudge  RB Next target",
+}
 
 ## The bars' container, scaled with the screen.
 @export var panel: Control
@@ -24,6 +34,8 @@ const REFERENCE_SHORT_SIDE_PX := 720.0
 ## The Size bar, by radius, labelled Health, and its label.
 @export var size_bar: HudBar
 @export var size_label: Control
+## The moves' prompts for the scheme that owns the aim.
+@export var prompt_label: Label
 ## Whether the Mass bar shows. Off: the Health bar says the same thing as he sees it.
 @export var show_mass_bar := false:
 	set(on):
@@ -52,6 +64,7 @@ var _outline_color: Color
 func _ready() -> void:
 	assert(panel != null and stamina_bar != null, "%s needs a Stamina bar" % name)
 	assert(mass_bar != null and size_bar != null, "%s needs Mass and Size bars" % name)
+	assert(prompt_label != null, "%s needs a prompt label" % name)
 	_refused = FadeFlash.new(refused_flash_s)
 	_back_color = stamina_bar.back_color
 	_outline_color = stamina_bar.outline_color
@@ -75,6 +88,8 @@ func _process(delta: float) -> void:
 	var least_m := stats.mass_to_radius_m.sample(stats.min_mass_kg)
 	var most_m := stats.mass_to_radius_m.sample(stats.max_mass_kg)
 	size_bar.value = inverse_lerp(least_m, most_m, _mass.radius_m())
+	if MoveInputService.instance != null:
+		prompt_label.text = PROMPTS[MoveInputService.instance.aim_scheme()]
 
 
 ## Shows [param mass]'s Rubbley: his Stamina, Mass and size, and his refused moves.

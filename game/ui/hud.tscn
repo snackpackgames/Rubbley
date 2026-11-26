@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://game/ui/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://game/ui/hud_bar.gd" id="2_bar"]
 
-[node name="Hud" type="CanvasLayer" node_paths=PackedStringArray("panel", "stamina_bar", "mass_bar", "mass_label", "size_bar", "size_label")]
+[node name="Hud" type="CanvasLayer" node_paths=PackedStringArray("panel", "stamina_bar", "mass_bar", "mass_label", "size_bar", "size_label", "prompt_label")]
 script = ExtResource("1_hud")
 panel = NodePath("Panel")
 stamina_bar = NodePath("Panel/StaminaBar")
@@ -11,6 +11,7 @@ mass_bar = NodePath("Panel/MassBar")
 mass_label = NodePath("Panel/MassLabel")
 size_bar = NodePath("Panel/SizeBar")
 size_label = NodePath("Panel/SizeLabel")
+prompt_label = NodePath("Panel/PromptLabel")
 
 [node name="Panel" type="VBoxContainer" parent="."]
 offset_left = 16.0
@@ -54,3 +55,8 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_bar")
 fill_color = Color(0.6, 0.75, 0.95, 1)
+
+[node name="PromptLabel" type="Label" parent="Panel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+modulate = Color(1, 1, 1, 0.7)
