@@ -41,8 +41,22 @@ _Avoid_: using "Orbit" as the name of a move (the moves are Attract, Repel, Spin
 The distance around a Celestial Body inside which a slower, lighter body is helped into Orbit.
 
 **Drift**:
-The gentle, steady push that carries Rubbley along a stage's path. Rubbley has no other movement of his own; he steers only with Gravega.
+The gentle homing push that carries Rubbley toward a Stage's main exit, re-aimed every frame from where he is, so it hints the way and helps him recover without stopping him exploring. Rubbley has no other movement of his own; he steers only with Gravega.
 _Avoid_: auto-scroll, thrust
+
+### Stages and Chapters
+
+**Stage**:
+One large, explorable sector of space that Rubbley drifts through to its main exit, picked from the Chapter map. It may hide secret exits and challenges, and any unlocked Stage can be replayed.
+_Avoid_: level (for what the player plays; a `Level` scene is how a Stage is built)
+
+**Chapter**:
+A group of Stages with its own look and palette, joined by branching paths on the Chapter map. It tracks a completion percentage, but advancing to the next Chapter only takes beating its final Stage, usually a boss.
+_Avoid_: World, Area
+
+**Chapter map**:
+The Candy Crush–style map the player picks Stages from, Chapter by Chapter, with locked Stages, branches and shortcuts.
+_Avoid_: world map, level select
 
 ### Collecting
 
