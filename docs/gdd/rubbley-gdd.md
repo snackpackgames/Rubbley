@@ -1,4 +1,4 @@
-<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-11-14.
+<!-- Snapshot of the Rubbley GDD exported from Google Docs on 2026-11-27.
      Source of truth: https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/edit
      Re-export with: curl -L "https://docs.google.com/document/d/13WdZPu5QuGl71A4ymnE3wbceHjoKEd8jd4Y91OnHyO0/export?format=md" -->
 
@@ -14,7 +14,7 @@ Rubbley’s powers come from a mysterious crystal called Gravega that was bestow
 
 Debris and elements that Rubbley collects will be stored in a “merge grid” that lets players merge elements into power ups to improve gameplay. This is how Rubbley gains new powers and experience.
 
-Divided into levels selectable from a menu styled to match Rubbley’s journey, like 2 Dots, or Candy Crush. There are distinct "Worlds" or "Areas" with their own styles and color palettes.
+Divided into levels selectable from a menu styled to match Rubbley’s journey, like 2 Dots, or Candy Crush. There are distinct "Chapters" with their own styles and color palettes.
 
 Players traverse levels using the Gravega powers to move around, collect debris and power ups, avoid obstacles, and defeat enemies.
 
@@ -103,7 +103,7 @@ Additionally, consumable items and power-ups can be applied to help a player adv
 
 ## **Overview and Goals**
 
-Levels are different sectors of space. The game offers a Candy Crush style world map, with linear level advancement. Each level offers unique backgrounds and environments, and Rubbley travels automatically through a stage. The player attempts to achieve high scores by increasing Rubbley’s size and also building a multiplier by attacking enemies and collecting power-ups. Attracting debris is one way to achieve this, but also deflecting enemy attacks will protect his size. Each level will end by totaling the player’s score, and high scores will be displayed on an online leaderboard
+Levels are different sectors of space. The game offers a Candy Crush style Chapter map, with linear level advancement. Each level offers unique backgrounds and environments, and Rubbley travels automatically through a stage. The player attempts to achieve high scores by increasing Rubbley’s size and also building a multiplier by attacking enemies and collecting power-ups. Attracting debris is one way to achieve this, but also deflecting enemy attacks will protect his size. Each level will end by totaling the player’s score, and high scores will be displayed on an online leaderboard
 
 ## **Brainstorming**
 
